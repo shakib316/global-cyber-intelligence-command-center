@@ -1,0 +1,21 @@
+// ID: GCI-KQL-VIRT-001
+// Title: VMware vCenter management-plane activity keywords
+// Platform: Microsoft Sentinel
+// Type: Triage hunt (keyword-based; not an exploit signature)
+// Data source: Syslog (VMware vCenter forwarded syslog)
+// Required fields: TimeGenerated, HostName, HostIP, ProcessName, SyslogMessage
+// Maturity: Draft — validate log format and keywords against deployed vCenter version
+// Source: reports/2026/11/22.md
+// ATT&CK: No direct mapping; use as an investigation pivot only.
+// False positives: Normal SSO, directory service, administrative login and configuration activity.
+// Tuning: Establish normal admin patterns; correlate with change records, source IP, account and ESXi operations.
+
+Syslog
+| where TimeGenerated >= ago(24h)
+| where SyslogMessage has_any (
+    "administrator@vsphere.local",
+    "SAML", "vmdir", "data.mdb",
+    "CreateUser", "AddUser", "Login"
+)
+| project TimeGenerated, HostName, HostIP, ProcessName, SyslogMessage
+| order by TimeGenerated desc

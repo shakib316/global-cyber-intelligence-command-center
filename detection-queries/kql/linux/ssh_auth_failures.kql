@@ -1,0 +1,27 @@
+// ID: GCI-KQL-LNX-001
+// Title: Repeated SSH authentication failures by source and target
+// Platform: Microsoft Sentinel
+// Type: Detection hunt
+// Data source: Syslog (Linux auth logs)
+ // Required fields: TimeGenerated, Computer, ProcessName, SyslogMessage
+// Maturity: Draft — validate syslog facility, parser and message formats across distributions
+// Source: GCI baseline library addition
+// ATT&CK: Potential brute-force behaviour; verify successful follow-on authentication before escalation.
+// False positives: Vulnerability scanners, misconfigured automation, stale keys and legitimate admin mistakes.
+// Tuning: Baseline known scanners/jump hosts; tune threshold per exposed service and asset criticality.
+
+let Lookback = 1h;
+let FailureThreshold = 10;
+Syslog
+| where TimeGenerated >= ago(Lookback)
+| where ProcessName has_any ("sshd", "ssh")
+| where SyslogMessage has_any ("Failed password", "authentication failure", "Invalid user")
+| extend SourceIP = extract(@"from ([0-9a-fA-F:.]+)\s", 1, SyslogMessage)
+| extend TargetUser = extract(@"(?:for|user=) (?:invalid user )?([^ ]+)", 1, SyslogMessage)
+| summarize FailedAttempts = count(),
+            TargetUsers = make_set(TargetUser, 20),
+            FirstSeen = min(TimeGenerated),
+            LastSeen = max(TimeGenerated)
+    by Computer, SourceIP
+| where FailedAttempts >= FailureThreshold
+| order by FailedAttempts desc

@@ -1,0 +1,23 @@
+// ID: GCI-KQL-WIN-002
+// Title: PowerShell encoded commands and download/evaluation primitives
+// Platform: Microsoft Defender for Endpoint / Microsoft Sentinel
+// Type: Triage hunt
+// Data source: DeviceProcessEvents
+// Required fields: Timestamp, DeviceName, AccountName, FileName, ProcessCommandLine
+// Maturity: Draft — needs tenant schema, syntax and false-positive validation
+// Source: GCI baseline library addition (not copied from a daily report)
+// ATT&CK: Potential PowerShell / command-and-scripting interpreter activity; confirm context before mapping.
+// False positives: Software deployment, administration scripts, monitoring and IT automation.
+// Tuning: Add signer, parent process, user role, device group and approved script baselines. Do not alert on a single keyword alone.
+
+DeviceProcessEvents
+| where Timestamp >= ago(24h)
+| where FileName in~ ("powershell.exe", "pwsh.exe")
+| where ProcessCommandLine has_any (
+    "-enc", "-encodedcommand", "FromBase64String",
+    "DownloadString", "Invoke-WebRequest", " IEX"
+)
+| project Timestamp, DeviceName, AccountName, FileName,
+          ProcessCommandLine, InitiatingProcessFileName,
+          InitiatingProcessCommandLine
+| order by Timestamp desc
