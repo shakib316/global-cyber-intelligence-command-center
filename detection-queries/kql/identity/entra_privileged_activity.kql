@@ -1,0 +1,26 @@
+// ID: GCI-KQL-ID-001
+// Title: Entra privileged-role and application changes
+// Platform: Microsoft Sentinel
+// Type: Detection hunt / audit review
+// Data source: AuditLogs
+// Required fields: TimeGenerated, Category, ActivityDisplayName, InitiatedBy, TargetResources, Result, CorrelationId
+// Maturity: Draft — validate ActivityDisplayName values and field availability in tenant
+// Source: reports/2026/11/22.md
+// ATT&CK: Identity persistence/privilege escalation investigation lead; map only after confirming event semantics.
+// False positives: Approved IAM administration, access reviews, application onboarding and change windows.
+// Tuning: Maintain approved admin/change windows; correlate actor, target, result, IP and subsequent sign-ins.
+
+let Lookback = 7d;
+AuditLogs
+| where TimeGenerated >= ago(Lookback)
+| where Category in ("RoleManagement", "ApplicationManagement", "DirectoryManagement")
+| where ActivityDisplayName has_any (
+    "Add member to role",
+    "Add eligible member to role",
+    "Add owner to application",
+    "Add service principal",
+    "Consent to application"
+)
+| project TimeGenerated, ActivityDisplayName, InitiatedBy,
+          TargetResources, Result, CorrelationId
+| order by TimeGenerated desc

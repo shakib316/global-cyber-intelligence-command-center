@@ -1,0 +1,21 @@
+// ID: GCI-KQL-BIZ-001
+// Title: Sensitive payment workflow changes
+// Platform: Microsoft Sentinel (custom ERP/payment audit connector)
+ // Type: Business-process audit hunt; sequence correlation recommended
+// Data source: PaymentAudit_CL (custom table; schema is illustrative)
+// Required fields: TimeGenerated, Action_s, User_s, VendorId_s, BeneficiaryId_s, PaymentId_s, SourceIp_s
+// Maturity: Draft — replace table and field names with actual ERP/payment audit schema
+// Source: reports/2026/11/22.md
+// ATT&CK: No technique assigned; this is fraud-control monitoring, not inherently an intrusion detection.
+// False positives: Approved vendor onboarding, bank-detail corrections and finance operations.
+// Tuning: Correlate beneficiary/vendor change → approval → payment release; enforce dual control and out-of-band verification.
+
+PaymentAudit_CL
+| where TimeGenerated >= ago(7d)
+| where Action_s has_any (
+    "BeneficiaryChanged", "VendorBankChanged",
+    "ApprovalChainChanged", "PaymentReleased"
+)
+| project TimeGenerated, User_s, Action_s, VendorId_s,
+          BeneficiaryId_s, PaymentId_s, SourceIp_s
+| order by TimeGenerated desc

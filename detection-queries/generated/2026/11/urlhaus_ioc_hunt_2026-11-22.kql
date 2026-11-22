@@ -1,0 +1,29 @@
+// ID: GCI-KQL-IOC-20261122
+// Title: Daily URLhaus IOC network hunt — 2026-11-22
+// Platform: Microsoft Sentinel / Defender XDR
+// Type: Threat-intelligence hunt (not an auto-block rule)
+// Data source: DeviceNetworkEvents
+// Required fields: Timestamp, DeviceName, RemoteUrl, RemoteIP, InitiatingProcessFileName
+// Prerequisites: Defender for Endpoint network telemetry; feed snapshot reviewed for freshness
+// Maturity: Draft — generated from feed; schema and syntax not validated
+// Source: URLhaus recent URL feed; snapshot intel/indicators/2026/11/22.json
+// False positives: Shared hosting, sinkholes, stale/reassigned infrastructure, benign redirects
+// Tuning: Confirm indicator age and ownership; add approved exclusions; retain source and first-seen context
+// Owner: Detection Engineering
+// Last reviewed: 2026-11-22
+// Review by: 2026-11-29
+
+let UrlIndicators = dynamic([
+    "NO_INDICATORS_COLLECTED"
+]);
+let IpIndicators = dynamic([
+    "NO_INDICATORS_COLLECTED"
+]);
+DeviceNetworkEvents
+| where Timestamp > ago(7d)
+| extend NormalizedRemoteUrl = tolower(RemoteUrl), NormalizedRemoteIP = tostring(RemoteIP)
+| where (isnotempty(NormalizedRemoteUrl) and NormalizedRemoteUrl has_any (UrlIndicators))
+    or (isnotempty(NormalizedRemoteIP) and NormalizedRemoteIP in (IpIndicators))
+| project Timestamp, DeviceName, ActionType, RemoteUrl, RemoteIP,
+          InitiatingProcessFileName, InitiatingProcessCommandLine
+| order by Timestamp desc
