@@ -4,7 +4,7 @@ Daily collection combines public government, vendor and research sources. The co
 
 ## Configured sources
 
-CISA KEV JSON; CISA All and ICS Advisories; CERT-In India public advisory index; Microsoft MSRC; AWS Security Bulletins; Splunk Security Advisories; UK NCSC; Canadian CCCS; Australian ACSC; CERT-EU; SANS Internet Storm Center; Cisco Talos; Palo Alto Unit 42; BleepingComputer; and The Hacker News.
+CISA KEV JSON; CISA All and ICS Advisories; CERT-In India public advisory index; Microsoft MSRC; AWS Security Bulletins; Splunk Security Advisories; UK NCSC; Canadian CCCS; Australian ACSC; CERT-EU; SANS Internet Storm Center; Cisco Talos; Palo Alto Unit 42; Google Threat Intelligence / Mandiant; BleepingComputer; and The Hacker News.
 
 The collector retains dated items from the last 72 hours plus undated CERT-In index entries. KEV additions are separately reported for seven days. Duplicate URLs are consolidated.
 
