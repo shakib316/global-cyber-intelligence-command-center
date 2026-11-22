@@ -60,3 +60,7 @@ Ubuntu 22.04 on an Azure VM (2 vCPU, 4 GB RAM) with Docker. Keep services privat
 ## Security
 
 Never commit `.env`, API tokens, passwords, private keys, or personal notification credentials. Use `.env.example` for placeholders only. Pin container versions and review dependency updates before production deployment.
+
+## Detection query library
+
+A categorized, versioned query collection is maintained in [`detection-queries/`](detection-queries/README.md). KQL is the primary format, organized by Windows, Linux, firewall/network, identity, cloud/containers, virtualization, asset inventory and business applications. SPL and Google SecOps YARA-L equivalents have dedicated locations. Queries carry maturity labels and must be validated against the target tenant's schemas before production use.
