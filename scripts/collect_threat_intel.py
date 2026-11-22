@@ -27,6 +27,32 @@ FEEDS=[
 ("talos","Cisco Talos","https://blog.talosintelligence.com/rss/","research","high"),
 ("unit42","Palo Alto Unit 42","https://unit42.paloaltonetworks.com/feed/","research","high"),
 ("google_ti","Google Threat Intelligence / Mandiant","https://feeds.feedburner.com/threatintelligence/pvexyqv7v0v","research","critical")]
+
+BUSINESS_FEEDS=[
+("google_news_ma","Google News · Cybersecurity M&A","https://news.google.com/rss/search?q=cybersecurity+(acquisition+OR+acquires+OR+merger+OR+buyout)&hl=en-IN&gl=IN&ceid=IN:en"),
+("google_news_funding","Google News · Cybersecurity funding","https://news.google.com/rss/search?q=cybersecurity+(funding+OR+investment+OR+venture+OR+IPO)&hl=en-IN&gl=IN&ceid=IN:en"),
+("google_news_market","Google News · Cybersecurity market moves","https://news.google.com/rss/search?q=cybersecurity+(partnership+OR+launches+OR+appoints+OR+CEO+OR+earnings+OR+layoffs)&hl=en-IN&gl=IN&ceid=IN:en")]
+BUSINESS_RULES=[
+("M&A",r"acquir|acquisition|merger|buyout|takeover|divest"),
+("Funding & investment",r"funding|investment|venture capital|series [a-f]|\bIPO\b|raises? .*million|raises? .*billion"),
+("Partnerships",r"partnership|partners with|strategic alliance|collaboration"),
+("Products & launches",r"launch|unveil|introduc|general availability|releases? .*platform"),
+("Leadership",r"appoint|names? .*ceo|steps down|resign|leadership|chief .* officer"),
+("Financial results",r"quarterly results|revenue|earnings|financial results|forecast"),
+("Workforce & restructuring",r"layoff|job cuts|restructur|workforce|redundanc"),
+("Regulation & policy",r"regulat|antitrust|sanction|policy change")]
+def business_category(s):
+    for name,pattern in BUSINESS_RULES:
+        if re.search(pattern,s,re.I):return name
+    return "Company & market updates"
+def deal_status(s):
+    if re.search(r"rumou?red|reportedly|in talks|exploring a sale|considering acquisition",s,re.I):return "Rumoured"
+    if re.search(r"completed|closed the acquisition|has acquired|finalized|finalised",s,re.I):return "Completed"
+    if re.search(r"terminated|called off|abandoned|withdrawn",s,re.I):return "Terminated"
+    if re.search(r"definitive agreement|agreed to acquire|signed .*agreement|to acquire",s,re.I):return "Signed"
+    if re.search(r"acquisition|acquires|acquired|merger|buyout|takeover",s,re.I):return "Announced"
+    return "Not applicable"
+
 CVE=re.compile(r"\bCVE-\d{4}-\d{4,8}\b",re.I)
 IOCCTX=re.compile(r"(?i)\b(iocs?|indicators? of compromise|c2|command[- ]and[- ]control|callback|malicious (?:ip|domain|url|hash)|payload hash|sha(?:256|1|512)|ip address|domain names?)\b")
 IP=re.compile(r"(?<![\w.])(?:\d{1,3}\.){3}\d{1,3}(?![\w.])")
@@ -106,7 +132,7 @@ def extract_iocs(s,source,url):
     return [{"value":v,"type":t,"source":source,"source_url":url,"confidence":"candidate near explicit IOC wording; verify against primary source"} for v,t in found.items()]
 
 def main():
-    health=[];errors=[];entries=[];kev={};success=0
+    health=[];errors=[];entries=[];business_entries=[];kev={};success=0
     try:
         kev=json.loads(fetch(KEV).decode());success+=1
         health.append({"source":"CISA KEV","status":"success","records":len(kev.get("vulnerabilities",[])),"url":KEV})
@@ -118,6 +144,13 @@ def main():
             health.append({"source":f[1],"status":"success","records":len(rows),"url":f[2]})
         except Exception as e:
             errors.append(f"{f[1]}: {type(e).__name__}: {e}");health.append({"source":f[1],"status":"failed","records":0,"url":f[2],"error":str(e)})
+    for bid,bname,burl in BUSINESS_FEEDS:
+        try:
+            bf=(bid,bname,burl,"business","medium")
+            rows=parse_feed(fetch(burl),bf);business_entries+=rows;success+=1
+            health.append({"source":bname,"status":"success","records":len(rows),"url":burl,"stream":"business"})
+        except Exception as e:
+            errors.append(f"{bname}: {type(e).__name__}: {e}");health.append({"source":bname,"status":"failed","records":0,"url":burl,"error":str(e),"stream":"business"})
     cert_url="https://www.cert-in.org.in/s2cMainServlet?pageid=PUBADVLIST02&year="+str(NOW.year)
     try:
         p=CertParser();p.feed(fetch(cert_url).decode("utf-8",errors="replace"))
@@ -140,6 +173,16 @@ def main():
     items=list(unique.values())
     for x in items:x.pop("_date",None)
     items.sort(key=lambda x:(x.get("published") or "",x["priority"]=="critical"),reverse=True)
+    business_unique={}
+    for x in business_entries:
+        if not x.get("_date") or x["_date"]<cutoff:continue
+        key=x["url"].split("#")[0].rstrip("/") or x["title"]
+        if key in business_unique:continue
+        body=x["title"]+" "+x["summary"]
+        business_unique[key]={"title":x["title"],"summary":x["summary"],"url":x["url"],"publisher":x["source"],
+            "published":x.get("published"),"category":business_category(body),"deal_status":deal_status(body),
+            "companies":[],"confidence":"Reported; verify material claims against company announcements and regulatory filings"}
+    business_items=sorted(business_unique.values(),key=lambda x:x.get("published") or "",reverse=True)
     vulns=kev.get("vulnerabilities",[]) if kev else []
     recentkev=sorted([v for v in vulns if v.get("dateAdded","")>=(NOW.date()-dt.timedelta(days=7)).isoformat()],key=lambda x:x.get("dateAdded",""),reverse=True)
     iocmap={}
@@ -152,7 +195,7 @@ def main():
     snapshot=Path("intel/snapshots")/DAY[:4]/DAY[5:7]/(DAY[8:10]+".json")
     (ROOT/report).parent.mkdir(parents=True,exist_ok=True);(ROOT/snapshot).parent.mkdir(parents=True,exist_ok=True)
     data={"date_utc":DAY,"retrieved_at":STAMP,"window_hours":72,"source_health":health,"successful_sources":good,"total_sources":len(health),
-        "errors":errors,"cisa_kev_catalog_count":len(vulns),"cisa_kev_added_last_7_days":recentkev,"items":items,
+        "errors":errors,"business_items":business_items,"business_feed_count":len(business_items),"cisa_kev_catalog_count":len(vulns),"cisa_kev_added_last_7_days":recentkev,"items":items,
         "ioc_candidates":iocs,"ioc_policy":"Candidate extraction only near explicit IOC wording. Verify against original report and local context.",
         "limitations":["Public feeds are not exhaustive and can fail or change format.","CERT-In is an official index scrape, not an RSS feed; open advisory pages to confirm details.",
         "Authenticated/paid feeds are not configured.","A CVE listing or IOC match is not proof of compromise.","No automatic response actions."]}
@@ -173,6 +216,11 @@ def main():
             f"- CVEs: {', '.join(x['cves']) or 'none extracted'} | Topic signals: {', '.join(x['topics']) or 'analyst review required'}",
             f"- {x['summary'][:400]}",f"- [Open source item]({x['url']})",""]
     else:lines.append("No dated items returned. This does not mean no threats occurred; inspect source health.")
+    lines += ["","## Cyber business & market developments — last 72 hours",""]
+    if business_items:
+        for x in business_items[:60]:
+            lines += ["### "+x["title"],"- Category: "+x["category"]+" | Deal stage: "+x["deal_status"]+" | Publisher: "+x["publisher"]+" | Published: "+(x.get("published") or "unknown"),"- "+x["summary"][:400],"- Evidence: [Original report]("+x["url"]+")",""]
+    else:lines.append("- No business items collected; check business feed health.")
     lines += ["","## IOC candidates — analyst verification required",""]
     if iocs:
         lines += ["Extracted only near explicit IOC-related wording. Do not block without verification.","","| Type | Value | Source |","|---|---|---|"]
