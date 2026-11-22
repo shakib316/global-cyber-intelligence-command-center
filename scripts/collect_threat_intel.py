@@ -25,7 +25,8 @@ FEEDS=[
 ("bleepingcomputer","BleepingComputer","https://www.bleepingcomputer.com/feed/","news","medium"),
 ("thehackernews","The Hacker News","https://thehackernews.com/feeds/posts/default","news","medium"),
 ("talos","Cisco Talos","https://blog.talosintelligence.com/rss/","research","high"),
-("unit42","Palo Alto Unit 42","https://unit42.paloaltonetworks.com/feed/","research","high")]
+("unit42","Palo Alto Unit 42","https://unit42.paloaltonetworks.com/feed/","research","high"),
+("google_ti","Google Threat Intelligence / Mandiant","https://feeds.feedburner.com/threatintelligence/pvexyqv7v0v","research","critical")]
 CVE=re.compile(r"\bCVE-\d{4}-\d{4,8}\b",re.I)
 IOCCTX=re.compile(r"(?i)\b(iocs?|indicators? of compromise|c2|command[- ]and[- ]control|callback|malicious (?:ip|domain|url|hash)|payload hash|sha(?:256|1|512)|ip address|domain names?)\b")
 IP=re.compile(r"(?<![\w.])(?:\d{1,3}\.){3}\d{1,3}(?![\w.])")
