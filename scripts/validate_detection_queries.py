@@ -13,7 +13,7 @@ MATURITY = {"Draft", "Schema-checked", "Syntax-validated",
 ID_RE = re.compile(r"^//\s*ID:\s*([A-Z0-9][A-Z0-9-]+)\s*$", re.M)
 MATURITY_RE = re.compile(r"^//\s*Maturity:\s*([^—\n]+)", re.M)
 errors, seen = [], {}
-queries = sorted(QUERY_ROOT.rglob("*.kql"))
+queries = sorted(p for p in QUERY_ROOT.rglob("*.kql") if p.name != "QUERY_TEMPLATE.kql")
 
 for path in queries:
     body = path.read_text(encoding="utf-8")
