@@ -73,3 +73,16 @@ Never label a query validated merely because it looks syntactically plausible. K
 ## Source report
 
 Initial report queries were consolidated from [Global Cyber Threat Radar — 22 November 2026](../reports/2026/11/22.md). That report is a historical source record, not proof that every referenced incident/CVE is accurate. Independently verify threat claims against primary advisories before relying on a query for incident response.
+
+
+## Automated CI pipeline
+
+GitHub Actions runs on pushes and pull requests touching this library. It checks required metadata, recognized maturity labels, unique detection IDs, non-empty query bodies, basic KQL-operator presence, unresolved placeholders and final newlines.
+
+Run locally:
+
+```bash
+python scripts/validate_detection_queries.py
+```
+
+**Limitation:** these are static repository checks, not a KQL parser, Sentinel schema check or behavioural test. Before promoting a query, validate it in the target Sentinel/Defender workspace, test representative positive and negative events, review false positives, and record evidence in the pull request and changelog. Future stages can add parser/linter integration, synthetic test fixtures, secret scanning and schema-aware tests once actual workspace schemas are available.
