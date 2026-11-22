@@ -1,0 +1,15 @@
+// ID: GCI-KQL-BEH-WIN-002
+// Title: Scheduled task and service persistence creation hunt
+// Platform: Microsoft Defender XDR / Sentinel
+// Type: Behavior-based triage hunt
+// Data source: DeviceProcessEvents
+// Required fields: Timestamp, DeviceName, FileName, ProcessCommandLine, InitiatingProcessFileName, AccountName
+// Maturity: Draft
+// False positives: Legitimate installers, endpoint agents, software deployment and administrator maintenance
+// Tuning: Allowlist approved deployment identities and parent processes; correlate with change tickets
+DeviceProcessEvents
+| where Timestamp > ago(24h)
+| where (FileName in~ ("schtasks.exe","sc.exe") and ProcessCommandLine has_any ("/create","create","config"))
+    or (FileName in~ ("powershell.exe","pwsh.exe") and ProcessCommandLine has_any ("Register-ScheduledTask","New-Service","Set-Service"))
+| project Timestamp, DeviceName, AccountName, FileName, ProcessCommandLine, InitiatingProcessFileName
+| order by Timestamp desc

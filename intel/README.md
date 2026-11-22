@@ -1,17 +1,23 @@
-# Automated Threat Intelligence Snapshots
+# Automated Threat Intelligence Collection
 
-The daily GitHub Actions workflow collects two public feeds:
+Daily collection combines public government, vendor and research sources. The collector records source health, publication timestamps, URLs, CVEs, topic signals and candidate IOCs.
 
-- **CISA Known Exploited Vulnerabilities (KEV):** vulnerability exploitation prioritization. KEV records are not network IOCs.
-- **URLhaus recent feed:** malicious URL observations, normalized into URL/domain or IP indicators.
+## Configured sources
 
-Each UTC-dated run stores:
-- `daily/YYYY/MM/DD.md` — readable snapshot, source health, recent KEV additions, sample indicators and limitations.
-- `indicators/YYYY/MM/DD.json` — raw normalized evidence, source URLs, retrieval time and confidence context.
-- `detection-queries/generated/YYYY/MM/urlhaus_ioc_hunt_YYYY-MM-DD.kql` — generated Defender XDR/Sentinel hunt, always labelled Draft.
+CISA KEV JSON; CISA All and ICS Advisories; CERT-In India public advisory index; Microsoft MSRC; AWS Security Bulletins; Splunk Security Advisories; UK NCSC; Canadian CCCS; Australian ACSC; CERT-EU; SANS Internet Storm Center; Cisco Talos; Palo Alto Unit 42; BleepingComputer; and The Hacker News.
 
-## Important limitations
+The collector retains dated items from the last 72 hours plus undated CERT-In index entries. KEV additions are separately reported for seven days. Duplicate URLs are consolidated.
 
-This is an initial feed-driven pipeline, not comprehensive threat intelligence. It does not automatically discover all ransomware victims, APT campaigns, active intrusions, CERT-In advisories or vendor vulnerabilities. Add source-specific collectors only with documented licensing, rate limits, parsing and provenance.
+## Artifacts
 
-A feed match is an investigation lead, not proof of compromise. Review IOC freshness, tenant telemetry, false positives and query schema before use. The workflow does not block, quarantine, disable accounts or promote queries to production.
+- intel/daily/YYYY/MM/DD.md — readable report and source health.
+- intel/snapshots/YYYY/MM/DD.json — structured evidence and provenance.
+- detection-queries/generated/YYYY/MM/ — candidate IOC KQL only when candidates are extracted.
+
+## IOC and detection policy
+
+IOC extraction is limited to values near explicit IOC language in source summaries. These are candidates, not confirmed malicious indicators; verify source, exact value, age and context before use. Behavior hunts are separate from IOC hunts and are not attributed to campaigns unless primary reporting supports that link. Queries remain Draft until schema-checked, syntax-validated, lab-tested and approved.
+
+## Credentials and limitations
+
+ThreatFox, AlienVault OTX, GreyNoise and Shadowserver may require keys, registration or provider approval; they are not silently scraped. Configure credentials as GitHub Actions secrets only after reviewing terms. Public feeds are not exhaustive and may change or fail. A quiet report does not prove no threats occurred. No automatic blocking or response actions are performed.

@@ -1,0 +1,15 @@
+// ID: GCI-KQL-BEH-WIN-001
+// Title: Suspicious PowerShell and LOLBin execution hunt
+// Platform: Microsoft Defender XDR / Sentinel
+// Type: Behavior-based triage hunt
+// Data source: DeviceProcessEvents
+// Required fields: Timestamp, DeviceName, FileName, ProcessCommandLine, InitiatingProcessFileName, AccountName
+// Maturity: Draft
+// False positives: Admin scripts, software deployment, IT automation and signed management tools
+// Tuning: Baseline by device group, signer, parent process and admin identity; validate column availability
+DeviceProcessEvents
+| where Timestamp > ago(24h)
+| where FileName in~ ("powershell.exe","pwsh.exe","rundll32.exe","regsvr32.exe","mshta.exe","wscript.exe","cscript.exe")
+| where ProcessCommandLine has_any ("-enc","-encodedcommand","downloadstring","frombase64string"," -w hidden"," -windowstyle hidden","javascript:")
+| project Timestamp, DeviceName, AccountName, FileName, ProcessCommandLine, InitiatingProcessFileName
+| order by Timestamp desc

@@ -1,5 +1,5 @@
-# Generated IOC hunts
+# Generated intelligence hunts
 
-Daily feed-derived hunts are stored by year/month. They are **Draft** and require human review, schema validation and positive/negative testing. These files are generated from dated feed snapshots; they are not automatically promoted into the curated production library.
+Candidate IOC hunts are created only when a snapshot contains candidates extracted near explicit IOC language. Verify all values against the original source. Queries remain Draft and require schema, syntax, positive/negative and false-positive testing.
 
-The initial collector uses URLhaus recent URL observations and produces a Microsoft Defender XDR / Sentinel KQL hunt. CISA KEV is tracked separately as vulnerability-priority intelligence because KEV entries are not network indicators.
+No placeholder IOC is inserted when no candidates are found. Generic behavior hunts live separately in detection-queries/kql/threat-hunting/.
