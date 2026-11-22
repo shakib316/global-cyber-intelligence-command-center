@@ -1,6 +1,10 @@
 name: Daily Threat Intelligence Collection
 
 on:
+  push:
+    paths:
+      - "scripts/collect_threat_intel.py"
+      - ".github/workflows/daily-threat-intel.yml"
   schedule:
     - cron: "30 3 * * *" # 09:00 Asia/Kolkata
   workflow_dispatch:
