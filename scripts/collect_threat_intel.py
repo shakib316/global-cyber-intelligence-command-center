@@ -231,10 +231,12 @@ def extract_specific_remediation(text_value):
     """Accept only actionable source sentences with concrete version/configuration evidence."""
     if not text_value:return []
     generic=re.compile(r"apply mitigations? in accordance with|apply mitigations? per (?:the )?vendor|follow (?:the )?vendor (?:instructions|guidance|recommendations)|refer to (?:the )?(?:vendor|security) advisory|consult (?:the )?vendor|contact (?:the )?vendor|apply (?:the )?latest (?:security )?updates?|patch (?:all )?affected systems?|apply (?:security )?patches? (?:to|on) (?:all )?affected systems?|keep (?:your )?systems? up to date|install the latest updates?|update to the latest version",re.I)
-    action=re.compile(r"\b(?:upgrade|update)\s+(?:to|all|the|affected)\b|\b(?:install|apply|deploy|disable|block|restrict|remove|uninstall|revoke|rotate|reset|isolate|turn off|configure|set|enable|rollback)\s+(?:the|all|any|affected|this|these|those|SMBv?\d|SMB|RDP|MFA|TLS|KB|version|security|latest|v?\d)\b|\b(?:upgrade|update)\s+(?-i:[A-Z])[A-Za-z0-9_.-]*(?:\s+(?-i:[A-Z])[A-Za-z0-9_.-]*){0,3}\s+to\s+(?:version|v?\d)|\b(?:fixed|patched)\s+in\b",re.I)
+    action=re.compile(r"\b(?:upgrade|update)\s+(?:to|all|the|affected)\b|\breplace\s+(?:it|the [A-Za-z0-9_.-]+)\s+with\b|\b(?:install|apply|deploy|disable|block|restrict|remove|uninstall|revoke|rotate|reset|isolate|turn off|configure|set|enable|rollback)\s+(?:the|all|any|affected|this|these|those|SMBv?\d|SMB|RDP|MFA|TLS|KB|version|security|latest|v?\d)\b|\b(?:upgrade|update)\s+(?-i:[A-Z])[A-Za-z0-9_.-]*(?:\s+(?-i:[A-Z])[A-Za-z0-9_.-]*){0,3}\s+to\s+(?:version|v?\d)|\b(?:fixed|patched)\s+in\b",re.I)
     concrete=re.compile(r"\b(?:version\s*v?\d|v\d+\.\d|fixed in\s+\S+|KB\d{4,}|build\s*\d|hotfix\s*\S+|patch\s*\S+|CVE-\d{4}-\d+|TCP/UDP\s*\d+|port\s+\d+|\d{1,5}/tcp|\d{1,5}/udp|SMBv?\d|RDP|MFA|PowerShell|WinRM|SSH|TLS\s*1\.[0123]|ASP\.NET|ViewStateUserKey|MAC-verified|registry key|\bHKLM\\|\bHKCU\\|\b(?:sudo|systemctl|iptables|nft|kubectl|az|aws|gcloud)\b)",re.I)
     parts=[re.sub(r"\s+"," ",x).strip(" \t-•") for x in re.split(r"(?<=[.!?])\s+|\n+",str(text_value))];results=[]
-    for sentence in parts:
+    for index,sentence in enumerate(parts):
+        if "such as follows" in sentence.lower() and index+1<len(parts):
+            sentence=sentence.rstrip(" -:")+" Recommended configuration: "+parts[index+1]
         if len(sentence)<35 or len(sentence)>650 or generic.search(sentence):continue
         if action.search(sentence) and concrete.search(sentence) and sentence not in results:results.append(sentence)
     return results[:5]
