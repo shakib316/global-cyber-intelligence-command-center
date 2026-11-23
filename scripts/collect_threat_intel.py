@@ -197,10 +197,12 @@ def extract_specific_remediation(text_value):
     # "Windows hotpatch update" for an instruction to update a system.
     action = re.compile(
         r"\b(?:upgrade|update)\s+(?:to|all|the|affected)\b|"
-        r"\b(?:upgrade|update|install|apply|deploy|replace|disable|block|restrict|remove|uninstall|"
-        r"revoke|rotate|reset|isolate|turn off|configure|set|enable|rollback)\s+"
-        r"(?:the|all|any|affected|this|these|that|those|SMB|RDP|MFA|TLS|KB|version|"
-        r"security|latest|v?\d|[A-Z][A-Za-z0-9_.-]*)|"
+        r"\b(?:install|apply|deploy|disable|block|restrict|remove|uninstall|revoke|rotate|"
+        r"reset|isolate|turn off|configure|set|enable|rollback)\s+"
+        r"(?:the|all|any|affected|this|these|those|SMB|RDP|MFA|TLS|KB|version|"
+        r"security|latest|v?\d)\b|"
+        r"\breplace\s+(?:it|the [A-Za-z0-9_.-]+)\s+with\b|"
+        r"\b(?:upgrade|update)\s+(?-i:[A-Z])[A-Za-z0-9_.-]*(?:\s+(?-i:[A-Z])[A-Za-z0-9_.-]*){0,3}\s+to\s+(?:version|v?\d)|"
         r"\b(?:fixed|patched)\s+in\b", re.I
     )
     concrete = re.compile(
@@ -208,12 +210,14 @@ def extract_specific_remediation(text_value):
         r"build\s*\d|hotfix\s*\S+|patch\s*\S+|CVE-\d{4}-\d+|"
         r"TCP/UDP\s*\d+|port\s+\d+|\d{1,5}/tcp|\d{1,5}/udp|"
         r"SMBv?\d|RDP|MFA|PowerShell|WinRM|SSH|TLS\s*1\.[0123]|"
-        r"registry key|\bHKLM\\|\bHKCU\\|"
+        r"ASP\.NET|ViewStateUserKey|MAC-verified|registry key|\bHKLM\\|\bHKCU\\|"
         r"\b(?:sudo|systemctl|iptables|nft|kubectl|az|aws|gcloud)\b)", re.I
     )
+    parts = [re.sub(r"\s+", " ", x).strip(" \t-•") for x in re.split(r"(?<=[.!?])\s+|\n+", text_value)]
     results = []
-    for raw in re.split(r"(?<=[.!?])\s+|\n+", text_value):
-        sentence = re.sub(r"\s+", " ", raw).strip(" \t-•")
+    for index, sentence in enumerate(parts):
+        if "such as follows" in sentence.lower() and index + 1 < len(parts):
+            sentence = sentence.rstrip(" -:") + " Recommended configuration: " + parts[index + 1]
         if len(sentence) < 35 or len(sentence) > 650:
             continue
         if generic.search(sentence) or not action.search(sentence):
