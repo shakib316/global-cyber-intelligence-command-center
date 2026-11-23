@@ -59,6 +59,12 @@ if not collector_path.exists():
     raise SystemExit("Threat intelligence collector is missing")
 collector_source = collector_path.read_text(encoding="utf-8")
 ast.parse(collector_source, filename=str(collector_path))
+
+daily_workflow_path = root / ".github/workflows/daily-threat-intel.yml"
+daily_workflow = daily_workflow_path.read_text(encoding="utf-8")
+for required_step in ("  deploy:", "    needs: collect", "pages: write", "id-token: write", "actions/upload-pages-artifact@v3", "actions/deploy-pages@v4"):
+    if required_step not in daily_workflow:
+        raise SystemExit("Daily collection workflow does not publish updated Pages content: " + required_step)
 spec = importlib.util.spec_from_file_location("gci_collector", collector_path)
 collector = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(collector)
