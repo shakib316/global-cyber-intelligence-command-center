@@ -191,7 +191,7 @@ def enrich_records(records, max_workers=10):
             except Exception:result={"status":"fetch_failed","details":""}
             feed_summary=item.get("summary","").strip()
             page_details=result.get("details","").strip()
-            item["details"]=page_details if len(page_details)>len(feed_summary) else feed_summary
+            item["details"]=page_details if len(page_details)>len(feed_summary) else (feed_summary or "No description was exposed by the feed or retrieved source page. Review the linked advisory for authoritative details.")
             resolved=result.get("resolved_url","")
             if resolved.startswith("https://") and urlparse(resolved).netloc.lower() not in ("news.google.com","www.google.com"):
                 item["canonical_url"]=resolved
