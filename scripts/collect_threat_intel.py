@@ -164,16 +164,16 @@ class ArticleText(HTMLParser):
 
 
 PROMOTIONAL_TEXT = re.compile(
-    r"^(?:discover why\\b|learn what\\b|start your (?:free )?trial\\b|"
-    r"try (?:our|the)\\b|download (?:our|the|a)\\b|subscribe\\b|"
-    r"sponsored\\b|advertisement\\b|advertising\\b|"
-    r"book a demo\\b|get your free\\b|find out more about our\\b)",
+    r"^(?:discover why\b|learn what\b|start your (?:free )?trial\b|"
+    r"try (?:our|the)\b|download (?:our|the|a)\b|subscribe\b|"
+    r"sponsored\b|advertisement\b|advertising\b|"
+    r"book a demo\b|get your free\b|find out more about our\b)",
     re.I,
 )
 
 def is_promotional_text(value):
     """Exclude obvious sponsored/lead-generation copy from technical context."""
-    return bool(PROMOTIONAL_TEXT.search(re.sub(r"^['\\\"]+|['\\\"]+$", "", str(value or "").strip())))
+    return bool(PROMOTIONAL_TEXT.search(str(value or "").strip()))
 
 
 def enrich_page(url):
