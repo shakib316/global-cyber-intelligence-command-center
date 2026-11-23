@@ -262,6 +262,9 @@ def enrich_records(records,max_workers=10):
             item["enrichment_status"]=result.get("status","unknown");item["enriched_at"]=STAMP
             item["vendor_references"]=result.get("references",[])
             if result.get("error"):item["enrichment_note"]="Source page could not be retrieved; retained feed summary."
+    # Detect CVEs from the retrieved article before deciding whether to follow vendor links.
+    for item in records:
+        item["cves"]=extract_cves(item.get("title"),item.get("summary"),item.get("details"))
     tasks=[]
     for item in records:
         if not item.get("cves"):continue
