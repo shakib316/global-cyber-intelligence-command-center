@@ -32,6 +32,15 @@ critical_start = html.find('$("criticalVulnList").innerHTML=')
 critical_end = html.find('$("kevPreview").innerHTML=', critical_start)
 if critical_start < 0 or critical_end < 0 or 'kevAction(v)' not in html[critical_start:critical_end] or 'v.requiredAction' in html[critical_start:critical_end]:
     raise SystemExit("Critical vulnerability watch bypasses the shared KEV remediation guard")
+
+asset_start = html.find("function matchAssets()")
+asset_end = html.find("async function compareSnapshots()", asset_start)
+if asset_start < 0 or asset_end < 0 or "kevAction(v).text" not in html[asset_start:asset_end] or "v.requiredAction" in html[asset_start:asset_end]:
+    raise SystemExit("Asset exposure matcher bypasses the shared KEV remediation guard")
+digest_start = html.find("async function copyExecutiveDigest()")
+digest_end = html.find("function renderOps()", digest_start)
+if digest_start < 0 or digest_end < 0 or "kevAction(x).text" not in html[digest_start:digest_end] or "x.requiredAction" in html[digest_start:digest_end]:
+    raise SystemExit("Executive digest bypasses the shared KEV remediation guard")
 preview_end = html.find("renderKev();", critical_end)
 if critical_end < 0 or preview_end < 0 or 'kevAction(v)' not in html[critical_end:preview_end] or 'v.requiredAction' in html[critical_end:preview_end]:
     raise SystemExit("Recent KEV preview bypasses the shared KEV remediation guard")
