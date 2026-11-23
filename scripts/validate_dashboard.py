@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Static dashboard and latest-intelligence integrity checks."""
-import ast, json, re, subprocess, tempfile
+import ast, importlib.util, json, re, subprocess, tempfile
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
 html = (root / "index.html").read_text(encoding="utf-8")
-required = ["criticalVulnList", "prepareBriefing", "businessList", "queryGrid", "loadQueries", "reportPicker", "loadReportPath", "threatPrev", "businessPrev", "kevPrev", "cisa_kev_catalog", "CVERecord?id=", "kevStatus", "queriesLoaded", "const groups={}", "globalSearchPanel", "globalSearch", "globalScope", "kevSearch", "kevVendor", "kevDueFilter", "priorityFilter", "v.vulnerabilityName", "function globalSearch", "function filteredKev", "const remediationBlock=", "function relatedFor", "function renderWatchlist", "function matchAssets", "function renderIOC", "function compareSnapshots", "function copyExecutiveDigest", "function renderReadiness", "oldestReport", "intel\\/daily", "remediation_guidance", "No fix stated in the retrieved source text", "function kevHtml", "function itemHtml", "function businessCard", "function businessSignificance", "Article text retrieved", "What to verify next", "businessDetail", "businessClear", "knownRansomwareCampaignUse", "Evidence "]
+required = ["criticalVulnList", "prepareBriefing", "businessList", "queryGrid", "loadQueries", "reportPicker", "loadReportPath", "threatPrev", "businessPrev", "kevPrev", "cisa_kev_catalog", "CVERecord?id=", "kevStatus", "queriesLoaded", "const groups={}", "globalSearchPanel", "globalSearch", "globalScope", "kevSearch", "kevVendor", "kevDueFilter", "priorityFilter", "v.vulnerabilityName", "function globalSearch", "function filteredKev", "const remediationBlock=", "function relatedFor", "function renderWatchlist", "function matchAssets", "function renderIOC", "function compareSnapshots", "function copyExecutiveDigest", "function renderReadiness", "oldestReport", "intel\\/daily", "remediation_guidance", "No specific fix identified in retrieved source text", "function kevHtml", "function itemHtml", "function businessCard", "function businessSignificance", "Article text retrieved", "What to verify next", "businessDetail", "businessClear", "knownRansomwareCampaignUse", "Evidence "]
 missing = [x for x in required if x not in html]
 if missing:
     raise SystemExit("Dashboard missing required UI features: " + ", ".join(missing))
@@ -41,7 +41,24 @@ if not collector_path.exists():
     raise SystemExit("Threat intelligence collector is missing")
 collector_source = collector_path.read_text(encoding="utf-8")
 ast.parse(collector_source, filename=str(collector_path))
-for marker in ("def enrich_records", "class ArticleText", '"details"', '"remediation_guidance"', '"remediation_status"', '"related_sources"', '"attack_techniques"', "CyberScoop", "SecurityWeek", "Dark Reading", "The Record", "TechCrunch Security", "canonical_url"):
+spec = importlib.util.spec_from_file_location("gci_collector", collector_path)
+collector = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(collector)
+generic_fix = "Apply mitigations in accordance with vendor instructions for affected systems."
+if collector.extract_specific_remediation(generic_fix):
+    raise SystemExit("Generic vendor boilerplate was incorrectly accepted as a fix")
+if collector.extract_specific_remediation("Apply patches to affected systems as soon as possible."):
+    raise SystemExit("Non-specific patch advice was incorrectly accepted as a fix")
+specific_fixes = [
+    "Upgrade Example Product to version 4.2.1 to remediate the vulnerability.",
+    "Disable SMBv1 on affected Windows hosts until the patch is installed.",
+    "Install security update KB5031234 on affected endpoints.",
+]
+for example in specific_fixes:
+    if not collector.extract_specific_remediation(example):
+        raise SystemExit("A concrete remediation example was not extracted: " + example)
+
+for marker in ("def extract_specific_remediation", "def enrich_records", "class ArticleText", '"details"', '"remediation_guidance"', '"remediation_status"', '"related_sources"', '"attack_techniques"', "CyberScoop", "SecurityWeek", "Dark Reading", "The Record", "TechCrunch Security", "canonical_url"):
     if marker not in collector_source:
         raise SystemExit("Collector missing source enrichment/correlation capability: " + marker)
 
