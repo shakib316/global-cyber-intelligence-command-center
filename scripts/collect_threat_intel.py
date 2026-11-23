@@ -240,6 +240,8 @@ def extract_specific_remediation(text_value):
     return results[:5]
 
 def kev_remediation_text(vulnerability):
+    vendor_fixes=[fix for ref in vulnerability.get("vendor_remediation",[]) for fix in ref.get("guidance",[])]
+    if vendor_fixes:return " ".join(vendor_fixes[:6])+" (linked vendor advisory; verify affected/fixed versions and deployment)"
     specific=extract_specific_remediation(str(vulnerability.get("requiredAction") or "").strip())
     if specific:return " ".join(specific)
     return ("No product/version-specific patch, command, configuration change or workaround is provided in this CISA KEV record. "
@@ -303,6 +305,32 @@ def enrich_records(records,max_workers=10):
             elif no_patch:item["remediation_status"]="No vendor patch stated in source"
             elif source_action:item["remediation_status"]="Specific actionable guidance extracted"
             else:item["remediation_status"]="No specific fix identified in retrieved source text" if item.get("enrichment_status")=="enriched" else "Fix status unknown — source page not fully retrieved"
+
+def enrich_kev_records(records,max_workers=8):
+    """Follow vendor URLs supplied by CISA KEV for recent additions only."""
+    tasks=[]
+    for record in records:
+        raw=str(record.get("notes") or "")
+        urls=re.findall(r"https://[^\\s,;<>]+",raw)
+        for url in urls[:2]:
+            host=urlparse(url).netloc.lower()
+            if not host or any(domain in host for domain in ("cisa.gov","nvd.nist.gov","cve.org","mitre.org")):continue
+            tasks.append((record,url))
+    if not tasks:return
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        futures={pool.submit(enrich_page,url):(record,url) for record,url in tasks}
+        for future in as_completed(futures):
+            record,url=futures[future]
+            try:page=future.result()
+            except Exception:page={"details":""}
+            guidance=extract_specific_remediation(page.get("details",""))
+            if guidance:
+                record.setdefault("vendor_remediation",[]).append({
+                    "source_url":page.get("resolved_url") or url,
+                    "source_label":"CISA-linked vendor advisory",
+                    "guidance":guidance[:4],
+                    "confidence":"Concrete fix wording extracted from a CISA-linked vendor reference; analyst review required"
+                })
 
 def extract_iocs(s,source,url):
     found={}
@@ -393,6 +421,7 @@ def main():
         x["attack_techniques"]=sorted(set(re.findall(r"\bT\d{4}(?:\.\d{3})?\b",body,re.I)))
     vulns=kev.get("vulnerabilities",[]) if kev else []
     recentkev=sorted([v for v in vulns if v.get("dateAdded","")>=(NOW_IST.date()-dt.timedelta(days=7)).isoformat()],key=lambda x:x.get("dateAdded",""),reverse=True)
+    enrich_kev_records(recentkev[:40])
     iocmap={}
     for x in items:
         for v in extract_iocs(x["title"]+" "+x["summary"]+" "+x.get("details",""),x["source"],x["url"]):
