@@ -85,3 +85,6 @@ Run:
 - python scripts/validate_dashboard.py
 
 A green static check is not a substitute for browser-based testing, KQL execution, tenant-schema validation, or analyst review.
+## Data quality and evidence policy
+
+See [INTELLIGENCE_QUALITY.md](INTELLIGENCE_QUALITY.md) for CVE extraction, vendor remediation evidence, business-event classification, detection-query maturity, and validation limitations.
