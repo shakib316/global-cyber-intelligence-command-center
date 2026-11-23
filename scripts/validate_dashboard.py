@@ -109,6 +109,11 @@ for promo in (
 if collector.is_promotional_text("Researchers discovered why the vulnerability occurs in the parser."):
     raise SystemExit("Legitimate technical reporting was incorrectly classified as promotional")
 
+if not collector.is_stock_market_noise("Why Is Palo Alto Networks Stock Falling?"):
+    raise SystemExit("Stock-price-only business noise was not filtered")
+if collector.is_stock_market_noise("Palo Alto Networks announces acquisition of Applied Compute"):
+    raise SystemExit("A material cybersecurity company transaction was incorrectly filtered")
+
 portal_fix = "While a fix is not yet available, the vendor has shared a temporary workaround in its support portal, which requires signing in."
 portal_status = collector.re.search(r"(?:a )?(?:security )?fix is not yet available|in the absence of an official patch", portal_fix, collector.re.I)
 portal_access = collector.re.search(r"temporary workaround.{0,240}(?:signing in|sign in|support portal|customer portal)", portal_fix, collector.re.I)
