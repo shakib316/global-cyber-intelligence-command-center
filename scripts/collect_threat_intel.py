@@ -255,8 +255,8 @@ def main():
         "5. Keep queries Draft until schema, syntax, positive/negative tests and tuning are recorded.",
         "","## Limitations","",
         "- Broad public-source baseline, not exhaustive global intelligence.",
-        "- ThreatFox, OTX, GreyNoise and Shadowserver are not enabled; review credentials and provider terms before integration.
-        - Business discovery uses a wider 7-day window; Google News results are reported leads and require company-announcement or filing verification.",
+        "- ThreatFox, OTX, GreyNoise and Shadowserver are not enabled; review credentials and provider terms before integration.",
+        "- Business discovery uses a wider 7-day window; Google News results are reported leads and require company-announcement or filing verification.",
         "- Feed failures and quiet periods do not mean absence of threats; timestamps are UTC.",
         "",f"Raw evidence: [JSON snapshot](../../../snapshots/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.json)."]
     (ROOT/report).write_text("\n".join(lines)+"\n",encoding="utf-8")
