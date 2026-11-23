@@ -185,7 +185,7 @@ def extract_specific_remediation(text_value):
     if not text_value:
         return []
     generic = re.compile(
-        r"apply mitigations? in accordance with|follow (?:the )?vendor (?:instructions|guidance|recommendations)|"
+        r"apply mitigations? in accordance with|apply mitigations? per (?:the )?vendor|follow (?:the )?vendor (?:instructions|guidance|recommendations)|"
         r"refer to (?:the )?(?:vendor|security) advisory|consult (?:the )?vendor|"
         r"contact (?:the )?vendor|apply (?:the )?latest (?:security )?updates?|"
         r"patch (?:all )?affected systems?|apply (?:security )?patches? (?:to|on) (?:all )?affected systems?|keep (?:your )?systems? up to date|"
