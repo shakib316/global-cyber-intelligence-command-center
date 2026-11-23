@@ -5,11 +5,17 @@ on:
     paths:
       - "detection-queries/**"
       - "scripts/validate_detection_queries.py"
+      - "scripts/validate_dashboard.py"
+      - "scripts/collect_threat_intel.py"
+      - "index.html"
       - ".github/workflows/detection-query-ci.yml"
   pull_request:
     paths:
       - "detection-queries/**"
       - "scripts/validate_detection_queries.py"
+      - "scripts/validate_dashboard.py"
+      - "scripts/collect_threat_intel.py"
+      - "index.html"
       - ".github/workflows/detection-query-ci.yml"
   workflow_dispatch:
 
@@ -31,5 +37,11 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Validate detection query library
+      - name: Set up Node for dashboard JavaScript syntax checks
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Validate dashboard, collector, CVE extraction and business classification
+        run: python scripts/validate_dashboard.py
+      - name: Validate detection query metadata and KQL structure
         run: python scripts/validate_detection_queries.py
