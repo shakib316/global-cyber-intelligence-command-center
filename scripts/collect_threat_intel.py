@@ -27,7 +27,7 @@ FEEDS=[
 ("talos","Cisco Talos","https://blog.talosintelligence.com/rss/","research","high"),
 ("unit42","Palo Alto Unit 42","https://unit42.paloaltonetworks.com/feed/","research","high"),
 ("google_ti","Google Threat Intelligence / Mandiant","https://feeds.feedburner.com/threatintelligence/pvexyqv7v0v","research","critical"),
-("github_advisories","GitHub Security Advisories","https://github.com/advisories.atom","vendor","high"),
+
 ("cisco_psirt","Cisco PSIRT","https://sec.cloudapps.cisco.com/security/center/psirtrss20/CiscoSecurityAdvisory.xml","vendor","critical"),
 ("fortinet_psirt","Fortinet PSIRT","https://www.fortiguard.com/rss/ir.xml","vendor","high"),
 ("google_security","Google Security Blog","https://security.googleblog.com/feeds/posts/default","vendor","high"),
@@ -35,8 +35,8 @@ FEEDS=[
 ("rapid7","Rapid7 Research","https://www.rapid7.com/blog/rss/","research","high"),
 ("sophos_xops","Sophos X-Ops","https://news.sophos.com/en-us/category/threat-research/feed/","research","high"),
 ("crowdstrike","CrowdStrike Blog","https://www.crowdstrike.com/blog/feed/","research","high"),
-("mozilla_security","Mozilla Security Advisories","https://www.mozilla.org/en-US/security/advisories/feed/","vendor","medium"),
-("google_cloud_security","Google Cloud Security","https://cloud.google.com/feeds/gcp-security-bulletins.xml","vendor","high")]
+("ubuntu_security","Ubuntu Security Notices","https://ubuntu.com/security/notices/rss.xml","vendor","high"),
+("cloudflare_security","Cloudflare Security Blog","https://blog.cloudflare.com/tag/security/rss/","vendor","high")]
 
 BUSINESS_FEEDS=[
 ("google_news_ma","Google News · Cybersecurity M&A","https://news.google.com/rss/search?q=cybersecurity+(acquisition+OR+acquires+OR+merger+OR+buyout)&hl=en-IN&gl=IN&ceid=IN:en"),
