@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 ROOT=Path(__file__).resolve().parents[1]
 NOW=dt.datetime.now(dt.timezone.utc); DAY=NOW.date().isoformat(); STAMP=NOW.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -46,7 +46,12 @@ BUSINESS_FEEDS=[
 ("google_news_deals","Google News · Security company deals","https://news.google.com/rss/search?q=(cybersecurity+OR+security+software)+(acquires+OR+acquisition+OR+merger+OR+buys+OR+deal)&hl=en-IN&gl=IN&ceid=IN:en"),
 ("google_news_companies","Google News · Cybersecurity company updates","https://news.google.com/rss/search?q=(CrowdStrike+OR+Palo+Alto+Networks+OR+Fortinet+OR+Zscaler+OR+SentinelOne+OR+Cloudflare)+(results+OR+launch+OR+partnership+OR+CEO+OR+revenue)&hl=en-IN&gl=IN&ceid=IN:en"),
 ("google_news_india","Google News · India cybersecurity business","https://news.google.com/rss/search?q=India+cybersecurity+(investment+OR+acquisition+OR+partnership+OR+startup+OR+funding)&hl=en-IN&gl=IN&ceid=IN:en"),
-("google_news_workforce","Google News · Security workforce and market","https://news.google.com/rss/search?q=cybersecurity+(layoffs+OR+hiring+OR+workforce+OR+restructuring+OR+leadership)&hl=en-IN&gl=IN&ceid=IN:en")]
+("google_news_workforce","Google News · Security workforce and market","https://news.google.com/rss/search?q=cybersecurity+(layoffs+OR+hiring+OR+workforce+OR+restructuring+OR+leadership)&hl=en-IN&gl=IN&ceid=IN:en"),
+("cyberscoop","CyberScoop","https://cyberscoop.com/feed/"),
+("securityweek","SecurityWeek","https://www.securityweek.com/feed/"),
+("darkreading","Dark Reading","https://www.darkreading.com/rss.xml"),
+("therecord","The Record","https://therecord.media/feed"),
+("techcrunch_security","TechCrunch Security","https://techcrunch.com/category/security/feed/")]
 BUSINESS_RULES=[
 ("M&A",r"acquir|acquisition|merger|buyout|takeover|divest"),
 ("Funding & investment",r"funding|investment|venture capital|series [a-f]|\bIPO\b|raises? .*million|raises? .*billion"),
@@ -106,11 +111,15 @@ def parse_feed(raw,f):
                     if c.attrib.get("rel","alternate") in ("alternate",""):break
         summary=child(n,("description","summary","content","encoded"))
         pub=child(n,("pubdate","published","updated","date"));d=parse_date(pub)
+        source_node=next((c for c in list(n) if lname(c.tag)=="source"),None)
+        publisher="".join(source_node.itertext()).strip() if source_node is not None else ""
+        publisher_url=source_node.attrib.get("url","") if source_node is not None else ""
         if title or link:
             out.append({"source_id":f[0],"source":f[1],"source_type":f[3],"priority":f[4],
+                "publisher":html.unescape(publisher) or f[1],"publisher_url":publisher_url,
                 "title":html.unescape(re.sub(r"<[^>]+>"," ",title)).strip(),
                 "url":urljoin(f[2],html.unescape(link.strip())),
-                "summary":html.unescape(re.sub(r"<[^>]+>"," ",summary)).strip()[:4000],
+                "summary":re.sub(r"\s+"," ",html.unescape(re.sub(r"<[^>]+>"," ",summary))).strip()[:4000],
                 "published":d.isoformat().replace("+00:00","Z") if d else None,"_date":d})
     return out
 class CertParser(HTMLParser):
@@ -164,8 +173,10 @@ def enrich_page(url):
             charset=response.headers.get_content_charset() or "utf-8"
         parser=ArticleText();parser.feed(raw.decode(charset,errors="replace"))
         parts=parser.meta[:1]+parser.paragraphs[:14]
+        parts=[x for x in parts if not re.search(r"comprehensive up-to-date news coverage|aggregated from sources all over the world by google news",x,re.I)]
         text_value="\n\n".join(dict.fromkeys(x for x in parts if len(x)>45))
-        return {"status":"enriched" if len(text_value)>=250 else "limited","details":text_value[:7000]}
+        resolved=response.geturl()
+        return {"status":"enriched" if len(text_value)>=250 else "limited","details":text_value[:7000],"resolved_url":resolved}
     except Exception as exc:
         return {"status":"fetch_failed","details":"","error":type(exc).__name__}
 
@@ -181,6 +192,9 @@ def enrich_records(records, max_workers=10):
             feed_summary=item.get("summary","").strip()
             page_details=result.get("details","").strip()
             item["details"]=page_details if len(page_details)>len(feed_summary) else feed_summary
+            resolved=result.get("resolved_url","")
+            if resolved.startswith("https://") and urlparse(resolved).netloc.lower() not in ("news.google.com","www.google.com"):
+                item["canonical_url"]=resolved
             item["enrichment_status"]=result.get("status","unknown")
             item["enriched_at"]=STAMP
             if result.get("error"):item["enrichment_note"]="Source page could not be retrieved; retained feed summary."
@@ -251,7 +265,7 @@ def main():
         key=x["url"].split("#")[0].rstrip("/") or x["title"]
         if key in business_unique:continue
         body=x["title"]+" "+x["summary"]
-        business_unique[key]={"title":x["title"],"summary":x["summary"],"url":x["url"],"publisher":x["source"],
+        business_unique[key]={"title":x["title"],"summary":x["summary"],"url":x["url"],"publisher":x.get("publisher") or x["source"],
             "published":x.get("published"),"category":business_category(body),"deal_status":deal_status(body),
             "companies":[],"confidence":"Reported; verify material claims against company announcements and regulatory filings"}
     business_items=sorted(business_unique.values(),key=lambda x:x.get("published") or "",reverse=True)
