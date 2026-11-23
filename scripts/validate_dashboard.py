@@ -79,6 +79,19 @@ for example in specific_fixes:
 noun_only = "According to Microsoft, the issue is related to the KB5132043 Windows hotpatch update."
 if collector.extract_specific_remediation(noun_only):
     raise SystemExit("A product/update noun was incorrectly accepted as remediation")
+
+false_positive_fixes = [
+    "kernel: scsi: scsi_debug: Sanity check block descriptor length in resp_mode_select() (CVE-2021-47576)",
+    "kernel: s390/cpum_sf: Handle CPU hotplug remove during sampling (CVE-2024-57849)",
+    "Although BOD 26-04 targets only federal agencies, CISA urged all network defenders to prioritize patching this flaw.",
+]
+for candidate in false_positive_fixes:
+    if collector.extract_specific_remediation(candidate):
+        raise SystemExit("Non-actionable description was incorrectly accepted as remediation: " + candidate)
+workaround_text = "In the absence of an official patch, organizations should discontinue its use and replace it with an actively supported alternative such as follows.\nASP.NET WebForms Page.ViewStateUserKey combined with MAC-verified/encrypted ViewState on postback forms."
+workaround = collector.extract_specific_remediation(workaround_text)
+if not workaround or not any("ViewStateUserKey" in x for x in workaround):
+    raise SystemExit("Concrete workaround details were lost during remediation extraction")
 kev_generic = {"requiredAction": "Apply mitigations in accordance with vendor instructions for affected systems."}
 kev_text = collector.kev_remediation_text(kev_generic)
 if "Apply mitigations in accordance with vendor instructions" in kev_text or "No product/version-specific" not in kev_text:
@@ -86,6 +99,12 @@ if "Apply mitigations in accordance with vendor instructions" in kev_text or "No
 kev_specific = {"requiredAction": "Upgrade Example Product to version 4.2.1 to remediate the vulnerability."}
 if "version 4.2.1" not in collector.kev_remediation_text(kev_specific):
     raise SystemExit("Daily KEV report dropped a concrete source-backed remediation")
+
+portal_fix = "While a fix is not yet available, the vendor has shared a temporary workaround in its support portal, which requires signing in."
+portal_status = collector.re.search(r"(?:a )?(?:security )?fix is not yet available|in the absence of an official patch", portal_fix, collector.re.I)
+portal_access = collector.re.search(r"temporary workaround.{0,240}(?:signing in|sign in|support portal|customer portal)", portal_fix, collector.re.I)
+if not portal_status or not portal_access:
+    raise SystemExit("Portal-gated workaround state is not detected")
 
 for marker in ("def extract_specific_remediation", "def enrich_records", "class ArticleText", '"details"', '"remediation_guidance"', '"remediation_status"', '"related_sources"', '"attack_techniques"', "CyberScoop", "SecurityWeek", "Dark Reading", "The Record", "TechCrunch Security", "canonical_url"):
     if marker not in collector_source:
