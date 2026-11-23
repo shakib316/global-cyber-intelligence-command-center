@@ -5,7 +5,7 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
 html = (root / "index.html").read_text(encoding="utf-8")
-required = ["criticalVulnList", "prepareBriefing", "businessList", "queryGrid", "loadQueries", "reportPicker", "loadReportPath", "threatPrev", "businessPrev", "kevPrev", "cisa_kev_catalog", "CVERecord?id=", "kevStatus", "queriesLoaded", "const groups={}", "globalSearchPanel", "globalSearch", "globalScope", "kevSearch", "kevVendor", "kevDueFilter", "priorityFilter", "v.vulnerabilityName", "function globalSearch", "function filteredKev", "const remediationBlock=", "function relatedFor", "function renderWatchlist", "function matchAssets", "function renderIOC", "function compareSnapshots", "function copyExecutiveDigest", "function renderReadiness", "oldestReport", "intel\\/daily", "remediation_guidance", "No fix stated in the retrieved source text", "function kevHtml", "function itemHtml", "function businessCard"]
+required = ["criticalVulnList", "prepareBriefing", "businessList", "queryGrid", "loadQueries", "reportPicker", "loadReportPath", "threatPrev", "businessPrev", "kevPrev", "cisa_kev_catalog", "CVERecord?id=", "kevStatus", "queriesLoaded", "const groups={}", "globalSearchPanel", "globalSearch", "globalScope", "kevSearch", "kevVendor", "kevDueFilter", "priorityFilter", "v.vulnerabilityName", "function globalSearch", "function filteredKev", "const remediationBlock=", "function relatedFor", "function renderWatchlist", "function matchAssets", "function renderIOC", "function compareSnapshots", "function copyExecutiveDigest", "function renderReadiness", "oldestReport", "intel\\/daily", "remediation_guidance", "No fix stated in the retrieved source text", "function kevHtml", "function itemHtml", "function businessCard", "function businessSignificance", "Limited source detail", "Business significance / what remains unknown"]
 missing = [x for x in required if x not in html]
 if missing:
     raise SystemExit("Dashboard missing required UI features: " + ", ".join(missing))
@@ -37,7 +37,7 @@ if not collector_path.exists():
     raise SystemExit("Threat intelligence collector is missing")
 collector_source = collector_path.read_text(encoding="utf-8")
 ast.parse(collector_source, filename=str(collector_path))
-for marker in ("def enrich_records", "class ArticleText", '"details"', '"remediation_guidance"', '"related_sources"', '"attack_techniques"'):
+for marker in ("def enrich_records", "class ArticleText", '"details"', '"remediation_guidance"', '"remediation_status"', '"related_sources"', '"attack_techniques"', "CyberScoop", "SecurityWeek", "Dark Reading", "The Record", "TechCrunch Security", "canonical_url"):
     if marker not in collector_source:
         raise SystemExit("Collector missing source enrichment/correlation capability: " + marker)
 
