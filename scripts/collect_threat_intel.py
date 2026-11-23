@@ -292,17 +292,21 @@ def main():
     lines += ["","## CISA KEV additions — last 7 days",""]
     if recentkev:
         for v in recentkev[:40]:lines.append(f"- **{v.get('cveID','CVE unavailable')} — {v.get('vulnerabilityName','Name unavailable')}** | {v.get('vendorProject','unknown')} / {v.get('product','unknown')} | added {v.get('dateAdded','unknown')} | due {v.get('dueDate','not stated')} | [CISA record]({v.get('notes','https://www.cisa.gov/known-exploited-vulnerabilities-catalog')})")
+            lines.append("  - Fix / remediation: "+(v.get("requiredAction") or "No fix/action guidance listed in CISA KEV record yet; check the vendor advisory."))
     else:lines.append("- No additions returned, or the feed failed; check source health.")
     lines += ["","## Advisories, campaigns and research — last 72 hours",""]
     if items:
-        for x in items[:100]:lines += [f"### {x['title']}",f"- Source: {x['source']} | Published: {x.get('published') or 'date not exposed in index'}",
+        for x in items[:100]:lines += [f"### {x['title']}",f"- Source: {x['source']} | Published: {x.get('published') or 'date not exposed in index'} | Detail enrichment: {x.get('enrichment_status','feed summary only')}",
             f"- CVEs: {', '.join(x['cves']) or 'none extracted'} | Topic signals: {', '.join(x['topics']) or 'analyst review required'}",
-            f"- {x['summary'][:400]}",f"- [Open source item]({x['url']})",""]
+            f"- Summary: {x.get('summary','')[:900]}",
+            f"- Technical details: {x.get('details') or x.get('summary','')[:900]}",
+            f"- Fix / remediation: {x.get('remediation_guidance') or 'No fix stated in retrieved source text; check the linked vendor advisory for updates.'}",
+            f"- [Open source item]({x['url']})",""]
     else:lines.append("No dated items returned. This does not mean no threats occurred; inspect source health.")
     lines += ["","## Cyber business & market developments — last 72 hours",""]
     if business_items:
         for x in business_items[:60]:
-            lines += ["### "+x["title"],"- Category: "+x["category"]+" | Deal stage: "+x["deal_status"]+" | Publisher: "+x["publisher"]+" | Published: "+(x.get("published") or "unknown"),"- "+x["summary"][:400],"- Evidence: [Original report]("+x["url"]+")",""]
+            lines += ["### "+x["title"],"- Category: "+x["category"]+" | Deal stage: "+x["deal_status"]+" | Publisher: "+x["publisher"]+" | Published: "+(x.get("published") or "unknown")+" | Detail enrichment: "+x.get("enrichment_status","feed summary only"),"- Summary: "+x.get("summary","")[:900],"- Business background / implications: "+(x.get("details") or x.get("summary",""))[:2500],"- Action: Not applicable as a vulnerability fix; verify deal stage and material claims against company announcements or filings.","- Evidence: [Original report]("+x["url"]+")",""]
     else:lines.append("- No business items collected; check business feed health.")
     lines += ["","## IOC candidates — analyst verification required",""]
     if iocs:
@@ -329,6 +333,10 @@ def main():
         "- Feed failures and quiet periods do not mean absence of threats; timestamps are UTC.",
         "",f"Raw evidence: [JSON snapshot](../../../snapshots/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.json)."]
     (ROOT/report).write_text("\n".join(lines)+"\n",encoding="utf-8")
+    enriched_threats=sum(x.get("enrichment_status")=="enriched" for x in items)
+    enriched_business=sum(x.get("enrichment_status")=="enriched" for x in business_items)
+    print(f"Source-page enrichment: threats {enriched_threats}/{len(items)}; business {enriched_business}/{len(business_items)}")
+    print(f"IOC correlations: {len(iocs)} unique candidate indicators")
     if iocs:
         qp=Path("detection-queries/generated")/DAY[:4]/DAY[5:7]/f"candidate_ioc_hunt_{DAY}.kql"
         (ROOT/qp).parent.mkdir(parents=True,exist_ok=True)
