@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Multi-source public cyber-intelligence collector. No automated response actions."""
-import datetime as dt, email.utils, html, ipaddress, json, re, sys, urllib.request
+import datetime as dt, email.utils, html, ipaddress, json, re, sys, urllib.request, difflib
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
@@ -56,6 +56,8 @@ BUSINESS_RULES=[
 ("M&A",r"acquir|acquisition|merger|buyout|takeover|divest"),
 ("Funding & investment",r"funding|investment|venture capital|series [a-f]|\bIPO\b|raises? .*million|raises? .*billion"),
 ("Partnerships",r"partnership|partners with|strategic alliance|collaboration"),
+("Law enforcement & operations",r"operation [A-Z]|launches? (?:a )?nationwide operation|law enforcement operation|FBI .*operation|police operation|arrests? .*cyber|takedown"),
+("Cyber incidents & breaches",r"cyberattack|data breach|breached|ransomware attack|security incident|unauthorized access|unauthorised access|systems? restored after"),
 ("Products & launches",r"launch|unveil|introduc|general availability|releases? .*platform"),
 ("Leadership",r"appoint|names? .*ceo|steps down|resign|leadership|chief .* officer"),
 ("Financial results",r"quarterly results|revenue|earnings|financial results|forecast"),
@@ -66,12 +68,14 @@ def business_category(s):
         if re.search(pattern,s,re.I):return name
     return "Company & market updates"
 def deal_status(s):
-    if re.search(r"rumou?red|reportedly|in talks|exploring a sale|considering acquisition",s,re.I):return "Rumoured"
-    if re.search(r"completed|closed the acquisition|has acquired|finalized|finalised",s,re.I):return "Completed"
-    if re.search(r"terminated|called off|abandoned|withdrawn",s,re.I):return "Terminated"
-    if re.search(r"definitive agreement|agreed to acquire|signed .*agreement|to acquire",s,re.I):return "Signed"
-    if re.search(r"acquisition|acquires|acquired|merger|buyout|takeover",s,re.I):return "Announced"
-    return "Not applicable"
+    text=str(s or "")
+    if not re.search(r"acquir|acquisition|merger|buyout|takeover|divest",text,re.I):return "Not applicable"
+    if re.search(r"terminated|called off|abandoned|withdrawn",text,re.I):return "Terminated"
+    if re.search(r"completed|closed the acquisition|has acquired|finalized|finalised",text,re.I):return "Completed"
+    if re.search(r"rumou?red|reportedly|in talks|talks? (?:to acquire|over acquisition|reported)|reported .*acquisition talks|potential (?:acquisition|merger|buyout)|exploring (?:a sale|an acquisition)|considering acquisition|sources say",text,re.I):return "Rumoured"
+    if re.search(r"definitive agreement|agreed to acquire|signed .*agreement|signed a deal",text,re.I):return "Signed"
+    if re.search(r"announces? (?:plans? to )?acquir|announced .*acquisition|to acquire|acquisition announced|merger announced",text,re.I):return "Announced"
+    return "Rumoured" if re.search(r"report|potential|explor|consider|talk",text,re.I) else "Announced"
 
 def is_stock_market_noise(s):
     """Drop price-target/stock-move stories that do not report a company event."""
@@ -79,7 +83,13 @@ def is_stock_market_noise(s):
     material_event = re.search(r"acquir|merger|buyout|funding|investment|partnership|launch|appoint|resign|layoff|restruct|quarterly results|revenue|earnings|financial results|forecast|regulat|antitrust|sanction", s, re.I)
     return bool(stock_signal and not material_event and business_category(s) == "Company & market updates")
 
-CVE=re.compile(r"\bCVE-\d{4}-\d{4,8}\b",re.I)
+CVE=re.compile(r"\bCVE-\d{4}-\d{4,}\b",re.I)
+def extract_cves(*values):
+    """Extract CVE IDs from every available evidence field; CVE ID length is variable."""
+    return sorted({m.upper() for value in values if value for m in CVE.findall(str(value))})
+def extract_cves(*values):
+    """Extract CVE IDs from every available evidence field; CVE ID length is variable."""
+    return sorted({m.upper() for value in values if value for m in CVE.findall(str(value))})
 IOCCTX=re.compile(r"(?i)\b(iocs?|indicators? of compromise|c2|command[- ]and[- ]control|callback|malicious (?:ip|domain|url|hash)|payload hash|sha(?:256|1|512)|ip address|domain names?)\b")
 IP=re.compile(r"(?<![\w.])(?:\d{1,3}\.){3}\d{1,3}(?![\w.])")
 DOMAIN=re.compile(r"(?i)(?<![@\w.-])(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:com|net|org|info|biz|xyz|top|ru|cn|uk|in|io|dev|app|cloud|site|online|live|me|co|gov|edu|eu|de|fr|br|au|ca|jp|tech|pro|work|shop|store|click|link|pw|cc|to|ws)(?![\w.-])")
@@ -148,25 +158,33 @@ def topics(s):
     "edge_vpn":r"vpn|firewall|gateway|edge device|webshell","malware_botnet":r"malware|botnet|trojan|backdoor|infostealer"}
     return [k for k,p in rules.items() if re.search(p,s,re.I)]
 class ArticleText(HTMLParser):
-    """Conservative extraction of readable article paragraphs and metadata."""
+    """Conservative article text and security-reference link extraction."""
     def __init__(self):
-        super().__init__(convert_charrefs=True);self.skip=0;self.capture=False;self.buf=[];self.paragraphs=[];self.meta=[]
+        super().__init__(convert_charrefs=True)
+        self.skip=0;self.capture=False;self.buf=[];self.paragraphs=[];self.meta=[]
+        self.links=[];self.anchor=None
     def handle_starttag(self,tag,attrs):
         a=dict(attrs);t=tag.lower()
         if t in ("script","style","noscript","svg","nav","footer","header","aside","form"):self.skip+=1
         if t=="meta" and (a.get("name","").lower() in ("description","og:description") or a.get("property","").lower()=="og:description"):
             value=a.get("content","").strip()
             if value:self.meta.append(value)
+        if t=="a" and a.get("href"):self.anchor={"href":a.get("href"),"text":""}
         if t in ("p","li"):self.capture=True;self.buf=[]
     def handle_endtag(self,tag):
         t=tag.lower()
         if t in ("script","style","noscript","svg","nav","footer","header","aside","form"):self.skip=max(0,self.skip-1)
+        if t=="a" and self.anchor is not None:
+            link=self.anchor;self.anchor=None;link["text"]=re.sub(r"\\s+"," ",link["text"]).strip()
+            if link["href"]:self.links.append(link)
         if t in ("p","li") and self.capture:
-            value=re.sub(r"\s+"," "," ".join(self.buf)).strip()
+            value=re.sub(r"\\s+"," "," ".join(self.buf)).strip()
             if len(value)>=55 and value not in self.paragraphs:self.paragraphs.append(value)
             self.capture=False;self.buf=[]
     def handle_data(self,data):
-        if self.skip==0 and self.capture:self.buf.append(data.strip())
+        if self.skip==0:
+            if self.capture:self.buf.append(data.strip())
+            if self.anchor is not None:self.anchor["text"]+=data.strip()
 
 
 PROMOTIONAL_TEXT = re.compile(
@@ -182,115 +200,97 @@ def is_promotional_text(value):
     return bool(PROMOTIONAL_TEXT.search(str(value or "").strip()))
 
 
-def enrich_page(url):
-    """Fetch a public HTTPS source page; return readable paragraphs only."""
+def normalize_story_text(value):
+    return re.sub(r"[^a-z0-9]+"," ",str(value or "").lower()).strip()
+
+def enrich_page(url,title=""):
+    """Fetch readable article text plus candidate security/advisory links."""
     try:
-        if not isinstance(url,str) or not url.startswith("https://"):return {"status":"not_attempted","details":""}
+        if not isinstance(url,str) or not url.startswith("https://"):return {"status":"not_attempted","details":"","references":[]}
         req=urllib.request.Request(url,headers={"User-Agent":UA,"Accept":"text/html,application/xhtml+xml"})
         with urllib.request.urlopen(req,timeout=8) as response:
-            if response.status!=200:return {"status":"http_error","details":""}
-            raw=response.read(1_500_000)
-            charset=response.headers.get_content_charset() or "utf-8"
+            if response.status!=200:return {"status":"http_error","details":"","references":[]}
+            raw=response.read(1_500_000);charset=response.headers.get_content_charset() or "utf-8";resolved=response.geturl()
         parser=ArticleText();parser.feed(raw.decode(charset,errors="replace"))
-        parts=parser.meta[:1]+parser.paragraphs[:14]
-        parts=[x for x in parts if not re.search(r"comprehensive up-to-date news coverage|aggregated from sources all over the world by google news",x,re.I) and not is_promotional_text(x)]
-        text_value="\n\n".join(dict.fromkeys(x for x in parts if len(x)>45))
-        resolved=response.geturl()
-        return {"status":"enriched" if len(text_value)>=250 else "limited","details":text_value[:7000],"resolved_url":resolved}
-    except Exception as exc:
-        return {"status":"fetch_failed","details":"","error":type(exc).__name__}
+        title_norm=normalize_story_text(title);parts=parser.meta[:1]+parser.paragraphs[:18];cleaned=[]
+        for part in parts:
+            part=re.sub(r"\\s+"," ",part).strip();norm=normalize_story_text(part)
+            if not part or is_promotional_text(part):continue
+            if title_norm and norm and difflib.SequenceMatcher(None,norm,title_norm).ratio()>=0.94:continue
+            if re.search(r"comprehensive up-to-date news coverage|aggregated from sources all over the world by google news",part,re.I):continue
+            if len(part)>45 and part not in cleaned:cleaned.append(part)
+        text_value="\\n\\n".join(cleaned);base_host=urlparse(resolved).netloc.lower();references=[]
+        for link in parser.links:
+            href=urljoin(resolved,html.unescape(link.get("href","")).strip());label=link.get("text","")
+            host=urlparse(href).netloc.lower()
+            if not href.startswith("https://") or not host or host==base_host:continue
+            if re.search(r"security|advisory|bulletin|CVE-\\d{4}-|patch|release notes|fixed version|vulnerability|hotfix",label+" "+href,re.I):
+                if href not in [x["url"] for x in references]:references.append({"label":label[:180] or "Vendor/security reference","url":href})
+        return {"status":"enriched" if len(text_value)>=250 else "limited","details":text_value[:9000],"resolved_url":resolved,"references":references[:8]}
+    except Exception as exc:return {"status":"fetch_failed","details":"","references":[],"error":type(exc).__name__}
 
 def extract_specific_remediation(text_value):
-    """Keep only source sentences that contain a concrete, actionable fix."""
-    if not text_value:
-        return []
-    generic = re.compile(
-        r"apply mitigations? in accordance with|apply mitigations? per (?:the )?vendor|follow (?:the )?vendor (?:instructions|guidance|recommendations)|"
-        r"refer to (?:the )?(?:vendor|security) advisory|consult (?:the )?vendor|"
-        r"contact (?:the )?vendor|apply (?:the )?latest (?:security )?updates?|"
-        r"patch (?:all )?affected systems?|apply (?:security )?patches? (?:to|on) (?:all )?affected systems?|keep (?:your )?systems? up to date|"
-        r"see (?:the )?vendor(?:'s)? (?:website|instructions|guidance)|"
-        r"install the latest updates?|update to the latest version",
-        re.I,
-    )
-    # Require an imperative/action construction; do not mistake nouns such as
-    # "Windows hotpatch update" for an instruction to update a system.
-    action = re.compile(
-        r"\b(?:upgrade|update)\s+(?:to|all|the|affected)\b|"
-        r"\b(?:install|apply|deploy|disable|block|restrict|remove|uninstall|revoke|rotate|"
-        r"reset|isolate|turn off|configure|set|enable|rollback)\s+"
-        r"(?:the|all|any|affected|this|these|those|SMBv?\d|SMB|RDP|MFA|TLS|KB|version|"
-        r"security|latest|v?\d)\b|"
-        r"\breplace\s+(?:it|the [A-Za-z0-9_.-]+)\s+with\b|"
-        r"\b(?:upgrade|update)\s+(?-i:[A-Z])[A-Za-z0-9_.-]*(?:\s+(?-i:[A-Z])[A-Za-z0-9_.-]*){0,3}\s+to\s+(?:version|v?\d)|"
-        r"\b(?:fixed|patched)\s+in\b", re.I
-    )
-    concrete = re.compile(
-        r"\b(?:version\s*v?\d|v\d+\.\d|fixed in\s+\S+|KB\d{4,}|"
-        r"build\s*\d|hotfix\s*\S+|patch\s*\S+|CVE-\d{4}-\d+|"
-        r"TCP/UDP\s*\d+|port\s+\d+|\d{1,5}/tcp|\d{1,5}/udp|"
-        r"SMBv?\d|RDP|MFA|PowerShell|WinRM|SSH|TLS\s*1\.[0123]|"
-        r"ASP\.NET|ViewStateUserKey|MAC-verified|registry key|\bHKLM\\|\bHKCU\\|"
-        r"\b(?:sudo|systemctl|iptables|nft|kubectl|az|aws|gcloud)\b)", re.I
-    )
-    parts = [re.sub(r"\s+", " ", x).strip(" \t-•") for x in re.split(r"(?<=[.!?])\s+|\n+", text_value)]
-    results = []
-    for index, sentence in enumerate(parts):
-        if "such as follows" in sentence.lower() and index + 1 < len(parts):
-            sentence = sentence.rstrip(" -:") + " Recommended configuration: " + parts[index + 1]
-        if len(sentence) < 35 or len(sentence) > 650:
-            continue
-        if generic.search(sentence) or not action.search(sentence):
-            continue
-        if not concrete.search(sentence):
-            continue
-        if sentence not in results:
-            results.append(sentence)
+    """Accept only actionable source sentences with concrete version/configuration evidence."""
+    if not text_value:return []
+    generic=re.compile(r"apply mitigations? in accordance with|apply mitigations? per (?:the )?vendor|follow (?:the )?vendor (?:instructions|guidance|recommendations)|refer to (?:the )?(?:vendor|security) advisory|consult (?:the )?vendor|contact (?:the )?vendor|apply (?:the )?latest (?:security )?updates?|patch (?:all )?affected systems?|apply (?:security )?patches? (?:to|on) (?:all )?affected systems?|keep (?:your )?systems? up to date|install the latest updates?|update to the latest version",re.I)
+    action=re.compile(r"\\b(?:upgrade|update)\\s+(?:to|all|the|affected)\\b|\\b(?:install|apply|deploy|disable|block|restrict|remove|uninstall|revoke|rotate|reset|isolate|turn off|configure|set|enable|rollback)\\s+(?:the|all|any|affected|this|these|those|SMBv?\\d|SMB|RDP|MFA|TLS|KB|version|security|latest|v?\\d)\\b|\\b(?:upgrade|update)\\s+(?-i:[A-Z])[A-Za-z0-9_.-]*(?:\\s+(?-i:[A-Z])[A-Za-z0-9_.-]*){0,3}\\s+to\\s+(?:version|v?\\d)|\\b(?:fixed|patched)\\s+in\\b",re.I)
+    concrete=re.compile(r"\\b(?:version\\s*v?\\d|v\\d+\\.\\d|fixed in\\s+\\S+|KB\\d{4,}|build\\s*\\d|hotfix\\s*\\S+|patch\\s*\\S+|CVE-\\d{4}-\\d+|TCP/UDP\\s*\\d+|port\\s+\\d+|\\d{1,5}/tcp|\\d{1,5}/udp|SMBv?\\d|RDP|MFA|PowerShell|WinRM|SSH|TLS\\s*1\\.[0123]|ASP\\.NET|ViewStateUserKey|MAC-verified|registry key|\\bHKLM\\\\|\\bHKCU\\\\|\\b(?:sudo|systemctl|iptables|nft|kubectl|az|aws|gcloud)\\b)",re.I)
+    parts=[re.sub(r"\\s+"," ",x).strip(" \\t-•") for x in re.split(r"(?<=[.!?])\\s+|\\n+",str(text_value))];results=[]
+    for sentence in parts:
+        if len(sentence)<35 or len(sentence)>650 or generic.search(sentence):continue
+        if action.search(sentence) and concrete.search(sentence) and sentence not in results:results.append(sentence)
     return results[:5]
 
-
-
 def kev_remediation_text(vulnerability):
-    """Render only a concrete fix from KEV requiredAction; never echo boilerplate."""
-    raw = str(vulnerability.get("requiredAction") or "").strip()
-    specific = extract_specific_remediation(raw)
-    if specific:
-        return " ".join(specific)
-    return (
-        "No product/version-specific patch, command, configuration change or workaround "
-        "is provided in this CISA KEV record. The catalogue action is general guidance, "
-        "not a verified fix. Check the linked vendor advisory for the current fixed release "
-        "or workaround; this report has not independently verified one."
-    )
+    specific=extract_specific_remediation(str(vulnerability.get("requiredAction") or "").strip())
+    if specific:return " ".join(specific)
+    return ("No product/version-specific patch, command, configuration change or workaround is provided in this CISA KEV record. "
+            "The catalogue action is general guidance, not a verified fix. Check the linked vendor advisory for the current fixed release "
+            "or workaround; this report has not independently verified one.")
 
-
-def enrich_records(records, max_workers=10):
-    """Enrich each record without making publication depend on any one publisher."""
+def enrich_records(records,max_workers=10):
+    """Enrich source pages and follow a small number of explicitly linked security references."""
     if not records:return
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
-        futures={pool.submit(enrich_page,x.get("url","")):x for x in records}
+        futures={pool.submit(enrich_page,x.get("url",""),x.get("title","")):x for x in records}
         for future in as_completed(futures):
             item=futures[future]
             try:result=future.result()
-            except Exception:result={"status":"fetch_failed","details":""}
-            feed_summary=item.get("summary","").strip()
-            page_details=result.get("details","").strip()
+            except Exception:result={"status":"fetch_failed","details":"","references":[]}
+            feed_summary=item.get("summary","").strip();page_details=result.get("details","").strip()
             item["details"]=page_details if len(page_details)>len(feed_summary) else (feed_summary or "No description was exposed by the feed or retrieved source page. Review the linked advisory for authoritative details.")
             resolved=result.get("resolved_url","")
-            if resolved.startswith("https://") and urlparse(resolved).netloc.lower() not in ("news.google.com","www.google.com"):
-                item["canonical_url"]=resolved
-            item["enrichment_status"]=result.get("status","unknown")
-            item["enriched_at"]=STAMP
+            if resolved.startswith("https://") and urlparse(resolved).netloc.lower() not in ("news.google.com","www.google.com"):item["canonical_url"]=resolved
+            item["enrichment_status"]=result.get("status","unknown");item["enriched_at"]=STAMP
+            item["vendor_references"]=result.get("references",[])
             if result.get("error"):item["enrichment_note"]="Source page could not be retrieved; retained feed summary."
-            evidence=page_details+"\n"+feed_summary
-            action=extract_specific_remediation(evidence)
-            item["remediation_guidance"]=" ".join(action)[:1800] if action else ""
+    tasks=[]
+    for item in records:
+        if not item.get("cves"):continue
+        for ref in (item.get("vendor_references") or [])[:2]:tasks.append((item,ref))
+    if tasks:
+        with ThreadPoolExecutor(max_workers=min(max_workers,8)) as pool:
+            futures={pool.submit(enrich_page,ref["url"]):(item,ref) for item,ref in tasks}
+            for future in as_completed(futures):
+                item,ref=futures[future]
+                try:result=future.result()
+                except Exception:result={"details":""}
+                fixes=extract_specific_remediation(result.get("details",""))
+                if fixes:item.setdefault("vendor_remediation",[]).append({"source_url":result.get("resolved_url") or ref["url"],"source_label":ref.get("label") or "Vendor/security advisory","guidance":fixes[:4],"confidence":"Specific version/action wording extracted from linked security reference; analyst review required"})
+    for item in records:
+        evidence=item.get("details","")+"\\n"+item.get("summary","");source_action=extract_specific_remediation(evidence);vendor_fixes=item.get("vendor_remediation",[])
+        if vendor_fixes:
+            combined=[fix for ref in vendor_fixes for fix in ref.get("guidance",[])]
+            item["remediation_guidance"]=" ".join((source_action+combined)[:7])[:2400]
+            item["remediation_status"]="Vendor-linked specific remediation extracted — verify affected/fixed versions"
+        else:
+            item["remediation_guidance"]=" ".join(source_action)[:1800] if source_action else ""
             no_patch=re.search(r"no (?:security )?(?:patch|fix|workaround) (?:is )?(?:currently )?(?:available|released)|vendor (?:has )?not (?:yet )?released (?:a )?(?:patch|fix)|patch is not yet available|(?:a )?(?:security )?fix is not yet available|fix is not currently available|in the absence of an official patch",evidence,re.I)
-            gated_workaround=re.search(r"temporary workaround.{0,240}(?:signing in|sign in|support portal|customer portal)",evidence,re.I)
-            if no_patch and gated_workaround:item["remediation_status"]="No vendor patch stated in source; workaround is referenced but requires vendor portal access"
+            gated=re.search(r"temporary workaround.{0,240}(?:signing in|sign in|support portal|customer portal)",evidence,re.I)
+            if no_patch and gated:item["remediation_status"]="No vendor patch stated in source; workaround is referenced but requires vendor portal access"
             elif no_patch:item["remediation_status"]="No vendor patch stated in source"
-            elif action:item["remediation_status"]="Specific actionable guidance extracted"
-            else:item["remediation_status"]="No specific fix identified in retrieved source text" if result.get("status")=="enriched" else "Fix status unknown — source page not fully retrieved"
+            elif source_action:item["remediation_status"]="Specific actionable guidance extracted"
+            else:item["remediation_status"]="No specific fix identified in retrieved source text" if item.get("enrichment_status")=="enriched" else "Fix status unknown — source page not fully retrieved"
 
 def extract_iocs(s,source,url):
     found={}
@@ -337,7 +337,7 @@ def main():
         errors.append(f"CERT-In index: {type(e).__name__}: {e}");health.append({"source":"CERT-In India advisory index","status":"failed","records":0,"url":cert_url,"error":str(e)})
     cutoff=NOW-dt.timedelta(hours=72);business_cutoff=NOW-dt.timedelta(days=7);selected=[]
     for x in entries:
-        body=x["title"]+" "+x["summary"];x["cves"]=sorted({v.upper() for v in CVE.findall(body)});x["topics"]=topics(body)
+        body=x["title"]+" "+x["summary"];x["cves"]=extract_cves(body);x["topics"]=topics(body)
         if (x["_date"] and x["_date"]>=cutoff) or x.get("undated_certin"):selected.append(x)
     unique={}
     for x in selected:
@@ -351,17 +351,31 @@ def main():
     business_unique={}
     for x in business_entries:
         if not x.get("_date") or x["_date"]<business_cutoff:continue
-        key=x["url"].split("#")[0].rstrip("/") or x["title"]
-        if key in business_unique:continue
-        body=x["title"]+" "+x["summary"]
+        body=x["title"]+" "+x["summary"];category=business_category(body);status=deal_status(body)
         if is_stock_market_noise(body):continue
-        business_unique[key]={"title":x["title"],"summary":x["summary"],"url":x["url"],"publisher":x.get("publisher") or x["source"],
-            "published":x.get("published"),"category":business_category(body),"deal_status":deal_status(body),
-            "companies":[],"confidence":"Reported; verify material claims against company announcements and regulatory filings"}
+        if re.search(r"\\b(?:stock|stocks|share price|price target|analyst rating)\\b",body,re.I) and category=="Company & market updates":continue
+        companies=sorted({name.lower() for name in ("CrowdStrike","Zscaler","Palo Alto Networks","Microsoft","Google","Cisco","Fortinet","Check Point","SentinelOne","Mandiant","Broadcom","VMware","IBM","Amazon","Cloudflare","Okta","Proofpoint","Tenable","Rapid7","Wiz","Rubrik","Splunk","Akamai") if re.search(re.escape(name),body,re.I)})
+        event_key=("m&a:"+ "|".join(companies[:4])+":"+status.lower()) if category=="M&A" and len(companies)>=2 else category+":"+normalize_story_text(x["title"])
+        record={"title":x["title"],"summary":x["summary"],"url":x["url"],"publisher":x.get("publisher") or x["source"],"published":x.get("published"),
+            "category":category,"deal_status":status,"companies":companies,"related_sources":[x.get("publisher") or x["source"]],"related_urls":[x["url"]],
+            "confidence":"Reported; verify material claims against company announcements and regulatory filings"}
+        if event_key not in business_unique:business_unique[event_key]=record
+        else:
+            old=business_unique[event_key]
+            if record["published"] and (not old.get("published") or record["published"]>old["published"]):
+                record["related_sources"]=old["related_sources"];record["related_urls"]=old["related_urls"];business_unique[event_key]=record;old=record
+            if record["publisher"] not in old["related_sources"]:old["related_sources"].append(record["publisher"])
+            if record["url"] not in old["related_urls"]:old["related_urls"].append(record["url"])
     business_items=sorted(business_unique.values(),key=lambda x:x.get("published") or "",reverse=True)
-    # Retrieve article-level context so the dashboard can explain each item in place.
+    # Retrieve article-level context and follow only explicitly linked security references.
     enrich_records(items)
     enrich_records(business_items)
+    # CVEs must be extracted after full-page retrieval; feed snippets alone are incomplete.
+    for item in items:
+        item["cves"]=extract_cves(item.get("title"),item.get("summary"),item.get("details"),
+            " ".join(fix for ref in item.get("vendor_remediation",[]) for fix in ref.get("guidance",[])))
+        item["cve_extraction_scope"]="title + feed summary + retrieved article + linked vendor remediation references"
+        item["cve_count"]=len(item["cves"])
     for x in items:
         body=x.get("title","")+" "+x.get("summary","")+" "+x.get("details","")
         x["attack_techniques"]=sorted(set(re.findall(r"\bT\d{4}(?:\.\d{3})?\b",body,re.I)))
