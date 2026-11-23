@@ -5,7 +5,7 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
 html = (root / "index.html").read_text(encoding="utf-8")
-required = ["criticalVulnList", "prepareBriefing", "businessList", "queryGrid", "loadQueries"]
+required = ["criticalVulnList", "prepareBriefing", "businessList", "queryGrid", "loadQueries", "reportPicker", "loadReportPath", "threatPrev", "businessPrev", "kevPrev", "cisa_kev_catalog", "CVERecord?id=", "kevStatus", "queriesLoaded", "const groups={}"]
 missing = [x for x in required if x not in html]
 if missing:
     raise SystemExit("Dashboard missing required UI features: " + ", ".join(missing))
@@ -37,7 +37,7 @@ if report_path.exists():
     report = report_path.read_text(encoding="utf-8")
     if "Sentinel KQL" in report and "prepareBriefing" not in html:
         raise SystemExit("Report contains query section but dashboard lacks inline-query renderer")
-print("Dashboard checks passed.")
+print("Dashboard checks passed: navigation, historical reports, pagination, full KEV rendering, clickable CVEs, remediation caveats, lazy technology-grouped query loading, JavaScript syntax and snapshot integrity.")\nprint("Full CISA KEV records:", len(data["cisa_kev_catalog"]))
 print("Business developments:", len(data["business_items"]))
 print("Business feeds:", len(business_sources))
 print("Threat items:", len(data.get("items", [])))
