@@ -13,6 +13,9 @@ on:
     paths:
       - "detection-queries/**"
       - "scripts/validate_detection_queries.py"
+      - "scripts/validate_dashboard.py"
+      - "scripts/collect_threat_intel.py"
+      - "index.html"
       - ".github/workflows/detection-query-ci.yml"
   workflow_dispatch:
 
