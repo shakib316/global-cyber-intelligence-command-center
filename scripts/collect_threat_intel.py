@@ -396,8 +396,8 @@ def main():
         body=x["title"]+" "+x["summary"];category=business_category(body);status=deal_status(body)
         if is_stock_market_noise(body):continue
         if re.search(r"\b(?:stock|stocks|share price|price target|analyst rating)\b",body,re.I) and category=="Company & market updates":continue
-        companies=sorted({name.lower() for name in ("CrowdStrike","Zscaler","Palo Alto Networks","Microsoft","Google","Cisco","Fortinet","Check Point","SentinelOne","Mandiant","Broadcom","VMware","IBM","Amazon","Cloudflare","Okta","Proofpoint","Tenable","Rapid7","Wiz","Rubrik","Splunk","Akamai") if re.search(re.escape(name),body,re.I)})
-        event_key=("m&a:"+ "|".join(companies[:4])+":"+status.lower()) if category=="M&A" and len(companies)>=2 else category+":"+normalize_story_text(x["title"])
+        companies=sorted({name for name in ("CrowdStrike","Zscaler","Palo Alto Networks","Microsoft","Google","Cisco","Fortinet","Check Point","SentinelOne","Mandiant","Broadcom","VMware","IBM","Amazon","Cloudflare","Okta","Proofpoint","Tenable","Rapid7","Wiz","Rubrik","Splunk","Akamai") if re.search(re.escape(name),body,re.I)},key=str.lower)
+        event_key=("m&a:"+ "|".join(name.lower() for name in companies[:4])+":"+status.lower()) if category=="M&A" and len(companies)>=2 else category+":"+normalize_story_text(x["title"])
         record={"title":x["title"],"summary":x["summary"],"url":x["url"],"publisher":x.get("publisher") or x["source"],"published":x.get("published"),
             "category":category,"deal_status":status,"companies":companies,"related_sources":[x.get("publisher") or x["source"]],"related_urls":[x["url"]],
             "confidence":"Reported; verify material claims against company announcements and regulatory filings"}
