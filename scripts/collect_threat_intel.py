@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Multi-source public cyber-intelligence collector. No automated response actions."""
 import datetime as dt, email.utils, html, ipaddress, json, re, sys, urllib.request
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 from pathlib import Path
@@ -131,6 +132,63 @@ def topics(s):
     "ai_threat":r"agentic|artificial intelligence|\bai\b|llm|deepfake","supply_chain":r"supply.chain|dependency confusion|package repository",
     "edge_vpn":r"vpn|firewall|gateway|edge device|webshell","malware_botnet":r"malware|botnet|trojan|backdoor|infostealer"}
     return [k for k,p in rules.items() if re.search(p,s,re.I)]
+class ArticleText(HTMLParser):
+    """Conservative extraction of readable article paragraphs and metadata."""
+    def __init__(self):
+        super().__init__(convert_charrefs=True);self.skip=0;self.capture=False;self.buf=[];self.paragraphs=[];self.meta=[]
+    def handle_starttag(self,tag,attrs):
+        a=dict(attrs);t=tag.lower()
+        if t in ("script","style","noscript","svg","nav","footer","header","aside","form"):self.skip+=1
+        if t=="meta" and (a.get("name","").lower() in ("description","og:description") or a.get("property","").lower()=="og:description"):
+            value=a.get("content","").strip()
+            if value:self.meta.append(value)
+        if t in ("p","li"):self.capture=True;self.buf=[]
+    def handle_endtag(self,tag):
+        t=tag.lower()
+        if t in ("script","style","noscript","svg","nav","footer","header","aside","form"):self.skip=max(0,self.skip-1)
+        if t in ("p","li") and self.capture:
+            value=re.sub(r"\s+"," "," ".join(self.buf)).strip()
+            if len(value)>=55 and value not in self.paragraphs:self.paragraphs.append(value)
+            self.capture=False;self.buf=[]
+    def handle_data(self,data):
+        if self.skip==0 and self.capture:self.buf.append(data.strip())
+
+def enrich_page(url):
+    """Fetch a public HTTPS source page; return readable paragraphs only."""
+    try:
+        if not isinstance(url,str) or not url.startswith("https://"):return {"status":"not_attempted","details":""}
+        req=urllib.request.Request(url,headers={"User-Agent":UA,"Accept":"text/html,application/xhtml+xml"})
+        with urllib.request.urlopen(req,timeout=8) as response:
+            if response.status!=200:return {"status":"http_error","details":""}
+            raw=response.read(1_500_000)
+            charset=response.headers.get_content_charset() or "utf-8"
+        parser=ArticleText();parser.feed(raw.decode(charset,errors="replace"))
+        parts=parser.meta[:1]+parser.paragraphs[:14]
+        text_value="\n\n".join(dict.fromkeys(x for x in parts if len(x)>45))
+        return {"status":"enriched" if len(text_value)>=250 else "limited","details":text_value[:7000]}
+    except Exception as exc:
+        return {"status":"fetch_failed","details":"","error":type(exc).__name__}
+
+def enrich_records(records, max_workers=10):
+    """Enrich each record without making publication depend on any one publisher."""
+    if not records:return
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        futures={pool.submit(enrich_page,x.get("url","")):x for x in records}
+        for future in as_completed(futures):
+            item=futures[future]
+            try:result=future.result()
+            except Exception:result={"status":"fetch_failed","details":""}
+            feed_summary=item.get("summary","").strip()
+            page_details=result.get("details","").strip()
+            item["details"]=page_details if len(page_details)>len(feed_summary) else feed_summary
+            item["enrichment_status"]=result.get("status","unknown")
+            item["enriched_at"]=STAMP
+            if result.get("error"):item["enrichment_note"]="Source page could not be retrieved; retained feed summary."
+            evidence=(page_details+"\n"+feed_summary).splitlines()
+            action=[re.sub(r"\s+"," ",p).strip() for p in evidence if re.search(r"\b(patch|patched|update|upgrade|workaround|mitigat|disable|restrict access|rotate credentials|fixed in|fix available)\b",p,re.I)]
+            item["remediation_guidance"]=" ".join(dict.fromkeys(action))[:1800] if action else ""
+            item["remediation_status"]="Guidance found in retrieved source text" if action else "No fix stated in collected source text"
+
 def extract_iocs(s,source,url):
     found={}
     for m in IOCCTX.finditer(s):
@@ -197,11 +255,22 @@ def main():
             "published":x.get("published"),"category":business_category(body),"deal_status":deal_status(body),
             "companies":[],"confidence":"Reported; verify material claims against company announcements and regulatory filings"}
     business_items=sorted(business_unique.values(),key=lambda x:x.get("published") or "",reverse=True)
+    # Retrieve article-level context so the dashboard can explain each item in place.
+    enrich_records(items)
+    enrich_records(business_items)
+    for x in items:
+        body=x.get("title","")+" "+x.get("summary","")+" "+x.get("details","")
+        x["attack_techniques"]=sorted(set(re.findall(r"\bT\d{4}(?:\.\d{3})?\b",body,re.I)))
     vulns=kev.get("vulnerabilities",[]) if kev else []
     recentkev=sorted([v for v in vulns if v.get("dateAdded","")>=(NOW.date()-dt.timedelta(days=7)).isoformat()],key=lambda x:x.get("dateAdded",""),reverse=True)
     iocmap={}
     for x in items:
-        for v in extract_iocs(x["title"]+" "+x["summary"],x["source"],x["url"]):iocmap[(v["type"],v["value"])]=v
+        for v in extract_iocs(x["title"]+" "+x["summary"]+" "+x.get("details",""),x["source"],x["url"]):
+            key=(v["type"],v["value"])
+            if key not in iocmap:iocmap[key]={**v,"related_sources":[],"related_urls":[]}
+            entry=iocmap[key]
+            if v["source"] not in entry["related_sources"]:entry["related_sources"].append(v["source"])
+            if v["source_url"] not in entry["related_urls"]:entry["related_urls"].append(v["source_url"])
     iocs=list(iocmap.values())
     if not success:print("All feeds failed; refusing to publish.");print("\n".join(errors));return 1
     good=sum(x["status"]=="success" for x in health)
