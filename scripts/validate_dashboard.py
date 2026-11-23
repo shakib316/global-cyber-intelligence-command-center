@@ -10,7 +10,7 @@ missing = [x for x in required if x not in html]
 if missing:
     raise SystemExit("Dashboard missing required UI features: " + ", ".join(missing))
 
-scripts = re.findall(r"<script>([\\s\\S]*?)</script>", html, re.I)
+scripts = re.findall(r"<script>([\s\S]*?)</script>", html, re.I)
 if not scripts:
     raise SystemExit("No inline dashboard JavaScript found")
 with tempfile.NamedTemporaryFile("w", suffix=".js", encoding="utf-8") as f:
