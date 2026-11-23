@@ -20,8 +20,10 @@ if 'name==="briefing"' not in html or 'loadReportPath(currentReportPath)' not in
     raise SystemExit("Full daily report is not lazy-loaded on briefing navigation")
 if len(re.findall(r"function itemHtml\(x\)", html)) != 1:
     raise SystemExit("Dashboard must have exactly one threat-card renderer")
-if 'remediationBlock(x,"business")' not in html:
-    raise SystemExit("Business cards are missing adjacent action context")
+if 'descriptionBlock("What to verify next",businessSignificance(x))' not in html or 'remediationBlock(x,"business")' in html:
+    raise SystemExit("Business cards must show useful verification context without irrelevant vulnerability remediation")
+if "function cleanCopy(value)" not in html or "Compact reading layout" not in html:
+    raise SystemExit("Dashboard description cleanup or compact reading styles are missing")
 if 'function kevHtml(v)' not in html or 'v.requiredAction' not in html:
     raise SystemExit("KEV remediation column is missing")
 
