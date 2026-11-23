@@ -6,7 +6,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 QUERY_ROOT = ROOT / "detection-queries"
-REQUIRED = ("ID:", "Title:", "Platform:", "Type:", "Data source:",
+REQUIRED = ("ID:", "Title:", "Platform:", "Type:", "Data source:", "Required fields:",
             "Maturity:", "False positives:", "Tuning:")
 MATURITY = {"Draft", "Schema-checked", "Syntax-validated",
             "Lab-tested", "Production-approved", "Retired"}
@@ -102,6 +102,14 @@ for path in queries:
 
 if not queries:
     errors.append("No KQL files found under detection-queries/")
+
+# Regression checks for the structural lexer itself.
+if structural_kql_errors('DeviceProcessEvents\\n| where ProcessCommandLine has "encoded"'):
+    errors.append("structural lexer rejected a simple valid KQL pipeline")
+if not structural_kql_errors('DeviceProcessEvents\\n| where ProcessCommandLine has "unterminated'):
+    errors.append("structural lexer failed to detect an unterminated string")
+if not structural_kql_errors('DeviceProcessEvents\\n| where (Timestamp > ago(1h)'):
+    errors.append("structural lexer failed to detect an unclosed delimiter")
 
 print(f"Scanned {len(queries)} KQL files; found {len(seen)} unique IDs.")
 if errors:
