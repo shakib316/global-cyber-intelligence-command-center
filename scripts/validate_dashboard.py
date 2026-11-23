@@ -5,7 +5,7 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
 html = (root / "index.html").read_text(encoding="utf-8")
-required = ["criticalVulnList", "prepareBriefing", "businessList", "queryGrid", "loadQueries", "reportPicker", "loadReportPath", "threatPrev", "businessPrev", "kevPrev", "cisa_kev_catalog", "CVERecord?id=", "kevStatus", "queriesLoaded", "const groups={}", "globalSearchPanel", "globalSearch", "globalScope", "kevSearch", "kevVendor", "kevDueFilter", "priorityFilter", "v.vulnerabilityName", "function globalSearch", "function filteredKev", "const remediationBlock=", "function relatedFor", "function renderWatchlist", "function matchAssets", "function renderIOC", "function compareSnapshots", "function copyExecutiveDigest", "function renderReadiness", "oldestReport", "intel\\/daily", "remediation_guidance", "No specific fix identified in retrieved source text", "function kevHtml", "function kevAction", "function itemHtml", "function businessCard", "function businessSignificance", "Article text retrieved", "What to verify next", "businessDetail", "businessClear", "knownRansomwareCampaignUse", "Evidence "]
+required = ["criticalVulnList", "prepareBriefing", "businessList", "queryGrid", "loadQueries", "reportPicker", "loadReportPath", "threatPrev", "businessPrev", "kevPrev", "cisa_kev_catalog", "CVERecord?id=", "kevStatus", "queriesLoaded", "const groups={}", "globalSearchPanel", "globalSearch", "globalScope", "kevSearch", "kevVendor", "kevDueFilter", "priorityFilter", "v.vulnerabilityName", "function globalSearch", "function filteredKev", "const remediationBlock=", "function relatedFor", "function renderWatchlist", "function matchAssets", "function renderIOC", "function compareSnapshots", "function copyExecutiveDigest", "function renderReadiness", "oldestReport", "intel\\/daily", "remediation_guidance", "No specific fix identified in retrieved source text", "function kevHtml", "function kevAction", "function itemHtml", "function businessCard", "function businessSignificance", "vendor_remediation", "LINKED VENDOR ADVISORY", "Article text retrieved", "What to verify next", "businessDetail", "businessClear", "knownRansomwareCampaignUse", "Evidence "]
 missing = [x for x in required if x not in html]
 if missing:
     raise SystemExit("Dashboard missing required UI features: " + ", ".join(missing))
@@ -81,6 +81,24 @@ specific_fixes = [
 for example in specific_fixes:
     if not collector.extract_specific_remediation(example):
         raise SystemExit("A concrete remediation example was not extracted: " + example)
+
+# CVEs must be re-extracted after full-page enrichment, including identifiers of variable length.
+cve_example = "Article text: affected components include CVE-2026-129538, CVE-2026-95325 and CVE-2026-100000001."
+if collector.extract_cves(cve_example) != ["CVE-2026-100000001", "CVE-2026-129538", "CVE-2026-95325"]:
+    raise SystemExit("CVE extraction missed variable-length IDs in full article text")
+if "item.get(\"details\")" not in collector_source or "CVE extraction scope" in collector_source:
+    # The collector must derive the final CVE list from article details after enrichment.
+    if 'item["cves"]=extract_cves(item.get("title"),item.get("summary"),item.get("details")' not in collector_source:
+        raise SystemExit("CVE extraction is not performed after article enrichment")
+
+if collector.deal_status("CrowdStrike-Zscaler acquisition talks reported by multiple outlets") != "Rumoured":
+    raise SystemExit("Reported acquisition discussions must remain Rumoured")
+if collector.deal_status("Company signs a definitive agreement to acquire Example Corp") != "Signed":
+    raise SystemExit("A definitive acquisition agreement must be classified Signed")
+if collector.deal_status("Company completed the acquisition of Example Corp") != "Completed":
+    raise SystemExit("A completed acquisition must be classified Completed")
+if collector.business_category("FBI launches Operation Winter Shield to arrest cybercriminals") != "Law enforcement & operations":
+    raise SystemExit("Law-enforcement operations must not be classified as product launches")
 
 noun_only = "According to Microsoft, the issue is related to the KB5132043 Windows hotpatch update."
 if collector.extract_specific_remediation(noun_only):
@@ -161,6 +179,16 @@ for label, records in (("threat intelligence", items), ("business intelligence",
     missing = [i for i, x in enumerate(records) if not x.get("title") or not x.get("url") or not str(x.get("url")).startswith("https://")]
     if missing:
         raise SystemExit(f"{label} has {len(missing)} records missing a title or safe HTTPS source URL")
+for item in items:
+    if item.get("cve_extraction_scope"):
+        expected = set(collector.extract_cves(item.get("title"), item.get("summary"), item.get("details"),
+            " ".join(fix for ref in item.get("vendor_remediation", []) for fix in ref.get("guidance", []))))
+        actual = set(item.get("cves", []))
+        if expected - actual:
+            raise SystemExit("CVE list omits IDs present in enriched evidence for: " + str(item.get("title", "untitled")))
+for item in business_items:
+    if item.get("business_context_quality") == "limited" and item.get("enrichment_status") == "enriched":
+        raise SystemExit("Headline-only business content is incorrectly labelled enriched: " + str(item.get("title", "untitled")))
 for label, records in (("threat intelligence", items), ("business intelligence", business_items)):
     missing_details = sum(not x.get("details") for x in records)
     if missing_details:
