@@ -90,7 +90,7 @@ const tag=(s,cls="")=>'<span class="tag '+cls+'">'+esc(s)+'</span>';
 const humanize=s=>String(s||"").replace(/[_-]+/g," ").replace(/\b\w/g,c=>c.toUpperCase());
 const severityClass=s=>{const v=String(s||"").toLowerCase();return /critical|actively exploited|zero.day/.test(v)?"red":/high|important|urgent/.test(v)?"amber":/low|informational|patched/.test(v)?"green":""};
 const priorityLabel=s=>{const v=String(s||"").toLowerCase();return /critical/.test(v)?"Critical":/high|important/.test(v)?"High":/medium|moderate/.test(v)?"Medium":/low/.test(v)?"Low":humanize(s||"Analyst review")};
-const function cleanCopy(value){
+function cleanCopy(value){
  if(!value)return "";
  const seen=new Set();
  return String(value).replace(/\r/g,"").split(/\n+/).map(part=>part.replace(/\s+/g," ").trim()).filter(part=>{
@@ -104,7 +104,7 @@ function conciseExcerpt(value,limit=900){
  const cut=text.slice(0,limit);const boundary=Math.max(cut.lastIndexOf(". "),cut.lastIndexOf("? "),cut.lastIndexOf("! "),cut.lastIndexOf("\n"));
  return cut.slice(0,boundary>limit*.55?boundary+1:limit).trim()+" …";
 }
-descriptionBlock=(label,value)=>{const clean=cleanCopy(value);return clean?'<div class="description-block"><span class="field-label">'+esc(label)+'</span><p>'+esc(clean)+'</p></div>':""};
+const descriptionBlock=(label,value)=>{const clean=cleanCopy(value);return clean?'<div class="description-block"><span class="field-label">'+esc(label)+'</span><p>'+esc(clean)+'</p></div>':""};
 const remediationBlock=(x,kind="threat")=>{
  if(kind==="business")return '<div class="remediation-panel no-fix"><span class="field-label">ACTION / OUTCOME</span><p>Not applicable — this is a business or market development, not a vulnerability. Track the deal or announcement status and verify material claims against company statements or regulatory filings.</p></div>';
  const explicit=x.remediation_guidance||x.fix_guidance||x.remediation||x.fix||x.requiredAction||"";
