@@ -8,7 +8,7 @@ from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
 ROOT=Path(__file__).resolve().parents[1]
-NOW=dt.datetime.now(dt.timezone.utc); DAY=NOW.date().isoformat(); STAMP=NOW.strftime("%Y-%m-%dT%H:%M:%SZ")
+NOW=dt.datetime.now(dt.timezone.utc); IST=dt.timezone(dt.timedelta(hours=5,minutes=30)); NOW_IST=NOW.astimezone(IST); DAY=NOW_IST.date().isoformat(); DAY_UTC=NOW.date().isoformat(); STAMP=NOW.strftime("%Y-%m-%dT%H:%M:%SZ"); STAMP_IST=NOW_IST.strftime("%Y-%m-%d %H:%M:%S IST")
 KEV="https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
 CERTIN="https://www.cert-in.org.in/s2cMainServlet?pageid=PUBADVLIST02&year="+str(NOW.year)
 UA="GCI-Command-Center/2.0 (+https://github.com/shakib316/global-cyber-intelligence-command-center)"
@@ -366,7 +366,7 @@ def main():
         body=x.get("title","")+" "+x.get("summary","")+" "+x.get("details","")
         x["attack_techniques"]=sorted(set(re.findall(r"\bT\d{4}(?:\.\d{3})?\b",body,re.I)))
     vulns=kev.get("vulnerabilities",[]) if kev else []
-    recentkev=sorted([v for v in vulns if v.get("dateAdded","")>=(NOW.date()-dt.timedelta(days=7)).isoformat()],key=lambda x:x.get("dateAdded",""),reverse=True)
+    recentkev=sorted([v for v in vulns if v.get("dateAdded","")>=(NOW_IST.date()-dt.timedelta(days=7)).isoformat()],key=lambda x:x.get("dateAdded",""),reverse=True)
     iocmap={}
     for x in items:
         for v in extract_iocs(x["title"]+" "+x["summary"]+" "+x.get("details",""),x["source"],x["url"]):
@@ -381,15 +381,15 @@ def main():
     report=Path("intel/daily")/DAY[:4]/DAY[5:7]/(DAY[8:10]+".md")
     snapshot=Path("intel/snapshots")/DAY[:4]/DAY[5:7]/(DAY[8:10]+".json")
     (ROOT/report).parent.mkdir(parents=True,exist_ok=True);(ROOT/snapshot).parent.mkdir(parents=True,exist_ok=True)
-    data={"date_utc":DAY,"retrieved_at":STAMP,"window_hours":72,"source_health":health,"successful_sources":good,"total_sources":len(health),
+    data={"date_utc":DAY_UTC,"date_ist":DAY,"retrieved_at":STAMP,"retrieved_at_ist":STAMP_IST,"window_hours":72,"source_health":health,"successful_sources":good,"total_sources":len(health),
         "errors":errors,"business_items":business_items,"business_feed_count":len(business_items),"business_window_hours":168,"cisa_kev_catalog_count":len(vulns),"cisa_kev_catalog":vulns,"cisa_kev_added_last_7_days":recentkev,"items":items,
         "ioc_candidates":iocs,"ioc_policy":"Candidate extraction only near explicit IOC wording. Verify against original report and local context.",
         "limitations":["Public feeds are not exhaustive and can fail or change format.","CERT-In is an official index scrape, not an RSS feed; open advisory pages to confirm details.",
         "Authenticated/paid feeds are not configured.","A CVE listing or IOC match is not proof of compromise.","No automatic response actions."]}
     (ROOT/snapshot).write_text(json.dumps(data,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
-    latest={"date_utc":DAY,"retrieved_at":STAMP,"snapshot":f"snapshots/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.json","report":f"daily/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.md"}
+    latest={"date_utc":DAY_UTC,"date_ist":DAY,"retrieved_at":STAMP,"retrieved_at_ist":STAMP_IST,"snapshot":f"snapshots/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.json","report":f"daily/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.md"}
     (ROOT/"intel/latest.json").write_text(json.dumps(latest,indent=2)+"\n",encoding="utf-8")
-    lines=[f"# Global Cyber Threat Radar — Automated Snapshot — {DAY} UTC","",f"- Retrieved: {STAMP}","- Coverage: last 72 hours + undated CERT-In index entries",
+    lines=[f"# Global Cyber Threat Radar — Automated Snapshot — {DAY} IST","",f"- Retrieved: {STAMP_IST} (UTC: {STAMP})","- Coverage: last 72 hours + undated CERT-In index entries",
         f"- Feed health: {good}/{len(health)}",f"- Advisory/research items: {len(items)}",f"- CISA KEV catalog: {len(vulns)}",f"- KEV additions last 7 days: {len(recentkev)}",f"- IOC candidates: {len(iocs)}",
         "","## Feed health","","| Source | Status | Records |","|---|---|---:|"]
     lines += [f"| {x['source']} | {x['status']} | {x['records']} |" for x in health]
@@ -435,7 +435,7 @@ def main():
         "- Broad public-source baseline, not exhaustive global intelligence.",
         "- ThreatFox, OTX, GreyNoise and Shadowserver are not enabled; review credentials and provider terms before integration.",
         "- Business discovery uses a wider 7-day window; Google News results are reported leads and require company-announcement or filing verification.",
-        "- Feed failures and quiet periods do not mean absence of threats; timestamps are UTC.",
+        "- Feed failures and quiet periods do not mean absence of threats; report timestamps are IST and machine timestamps in JSON are UTC.",
         "",f"Raw evidence: [JSON snapshot](../../../snapshots/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.json)."]
     (ROOT/report).write_text("\n".join(lines)+"\n",encoding="utf-8")
     enriched_threats=sum(x.get("enrichment_status")=="enriched" for x in items)
