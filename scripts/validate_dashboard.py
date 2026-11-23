@@ -16,6 +16,8 @@ if duplicates:
     raise SystemExit("Dashboard contains duplicate HTML IDs: " + ", ".join(duplicates))
 if 'function itemHtml(x)' not in html or 'remediationBlock(x,"threat")' not in html:
     raise SystemExit("Threat cards do not show adjacent remediation guidance")
+if 'name==="briefing"' not in html or 'loadReportPath(currentReportPath)' not in html:
+    raise SystemExit("Full daily report is not lazy-loaded on briefing navigation")
 if len(re.findall(r"function itemHtml\(x\)", html)) != 1:
     raise SystemExit("Dashboard must have exactly one threat-card renderer")
 if 'remediationBlock(x,"business")' not in html:
