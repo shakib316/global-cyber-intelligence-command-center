@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: daily-threat-intel
@@ -18,6 +18,8 @@ concurrency:
 
 jobs:
   collect:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -60,3 +62,31 @@ jobs:
           done
           echo "Unable to publish intelligence artifacts after three conflict-recovery attempts."
           exit 1
+  deploy:
+    needs: collect
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: true
+    steps:
+      - name: Check out latest published repository state
+        uses: actions/checkout@v4
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - name: Upload dashboard and latest intelligence artifacts
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - name: Deploy updated dashboard
+        id: deployment
+        uses: actions/deploy-pages@v4
