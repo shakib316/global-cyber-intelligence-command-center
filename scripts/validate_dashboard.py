@@ -124,6 +124,10 @@ kev_specific = {"requiredAction": "Upgrade Example Product to version 4.2.1 to r
 if "version 4.2.1" not in collector.kev_remediation_text(kev_specific):
     raise SystemExit("Daily KEV report dropped a concrete source-backed remediation")
 
+kev_vendor = {"vendor_remediation": [{"guidance": ["Upgrade Example Product to version 4.2.1."], "source_url": "https://vendor.example/security/advisory"}]}
+if "version 4.2.1" not in collector.kev_remediation_text(kev_vendor):
+    raise SystemExit("CISA KEV report did not prioritize linked vendor remediation evidence")
+
 for promo in (
     "Discover why SHA pinning alone isn't enough and learn how to close hidden security gaps.",
     "Learn what 6,000 real-world attacks reveal about MFA weaknesses.",
@@ -144,7 +148,7 @@ portal_access = collector.re.search(r"temporary workaround.{0,240}(?:signing in|
 if not portal_status or not portal_access:
     raise SystemExit("Portal-gated workaround state is not detected")
 
-for marker in ("def extract_specific_remediation", "def enrich_records", "class ArticleText", '"details"', '"remediation_guidance"', '"remediation_status"', '"related_sources"', '"attack_techniques"', "CyberScoop", "SecurityWeek", "Dark Reading", "The Record", "TechCrunch Security", "canonical_url"):
+for marker in ("def extract_specific_remediation", "def enrich_records", "def enrich_kev_records", "class ArticleText", '"details"', '"remediation_guidance"', '"remediation_status"', '"related_sources"', '"attack_techniques"', "CyberScoop", "SecurityWeek", "Dark Reading", "The Record", "TechCrunch Security", "canonical_url"):
     if marker not in collector_source:
         raise SystemExit("Collector missing source enrichment/correlation capability: " + marker)
 
