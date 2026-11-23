@@ -162,6 +162,20 @@ class ArticleText(HTMLParser):
     def handle_data(self,data):
         if self.skip==0 and self.capture:self.buf.append(data.strip())
 
+
+PROMOTIONAL_TEXT = re.compile(
+    r"^(?:discover why\\b|learn what\\b|start your (?:free )?trial\\b|"
+    r"try (?:our|the)\\b|download (?:our|the|a)\\b|subscribe\\b|"
+    r"sponsored\\b|advertisement\\b|advertising\\b|"
+    r"book a demo\\b|get your free\\b|find out more about our\\b)",
+    re.I,
+)
+
+def is_promotional_text(value):
+    """Exclude obvious sponsored/lead-generation copy from technical context."""
+    return bool(PROMOTIONAL_TEXT.search(re.sub(r"^['\\\"]+|['\\\"]+$", "", str(value or "").strip())))
+
+
 def enrich_page(url):
     """Fetch a public HTTPS source page; return readable paragraphs only."""
     try:
@@ -173,7 +187,7 @@ def enrich_page(url):
             charset=response.headers.get_content_charset() or "utf-8"
         parser=ArticleText();parser.feed(raw.decode(charset,errors="replace"))
         parts=parser.meta[:1]+parser.paragraphs[:14]
-        parts=[x for x in parts if not re.search(r"comprehensive up-to-date news coverage|aggregated from sources all over the world by google news",x,re.I)]
+        parts=[x for x in parts if not re.search(r"comprehensive up-to-date news coverage|aggregated from sources all over the world by google news",x,re.I) and not is_promotional_text(x)]
         text_value="\n\n".join(dict.fromkeys(x for x in parts if len(x)>45))
         resolved=response.geturl()
         return {"status":"enriched" if len(text_value)>=250 else "limited","details":text_value[:7000],"resolved_url":resolved}
