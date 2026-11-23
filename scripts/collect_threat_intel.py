@@ -188,7 +188,7 @@ def extract_specific_remediation(text_value):
         r"apply mitigations? in accordance with|follow (?:the )?vendor (?:instructions|guidance|recommendations)|"
         r"refer to (?:the )?(?:vendor|security) advisory|consult (?:the )?vendor|"
         r"contact (?:the )?vendor|apply (?:the )?latest (?:security )?updates?|"
-        r"patch (?:all )?affected systems?|keep (?:your )?systems? up to date|"
+        r"patch (?:all )?affected systems?|apply (?:security )?patches? (?:to|on) (?:all )?affected systems?|keep (?:your )?systems? up to date|"
         r"see (?:the )?vendor(?:'s)? (?:website|instructions|guidance)|"
         r"install the latest updates?|update to the latest version",
         re.I,
