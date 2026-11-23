@@ -209,7 +209,7 @@ def main():
     snapshot=Path("intel/snapshots")/DAY[:4]/DAY[5:7]/(DAY[8:10]+".json")
     (ROOT/report).parent.mkdir(parents=True,exist_ok=True);(ROOT/snapshot).parent.mkdir(parents=True,exist_ok=True)
     data={"date_utc":DAY,"retrieved_at":STAMP,"window_hours":72,"source_health":health,"successful_sources":good,"total_sources":len(health),
-        "errors":errors,"business_items":business_items,"business_feed_count":len(business_items),"business_window_hours":168,"cisa_kev_catalog_count":len(vulns),"cisa_kev_added_last_7_days":recentkev,"items":items,
+        "errors":errors,"business_items":business_items,"business_feed_count":len(business_items),"business_window_hours":168,"cisa_kev_catalog_count":len(vulns),"cisa_kev_catalog":vulns,"cisa_kev_added_last_7_days":recentkev,"items":items,
         "ioc_candidates":iocs,"ioc_policy":"Candidate extraction only near explicit IOC wording. Verify against original report and local context.",
         "limitations":["Public feeds are not exhaustive and can fail or change format.","CERT-In is an official index scrape, not an RSS feed; open advisory pages to confirm details.",
         "Authenticated/paid feeds are not configured.","A CVE listing or IOC match is not proof of compromise.","No automatic response actions."]}
