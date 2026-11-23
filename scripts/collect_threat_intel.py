@@ -260,6 +260,17 @@ def enrich_records(records,max_workers=10):
             resolved=result.get("resolved_url","")
             if resolved.startswith("https://") and urlparse(resolved).netloc.lower() not in ("news.google.com","www.google.com"):item["canonical_url"]=resolved
             item["enrichment_status"]=result.get("status","unknown");item["enriched_at"]=STAMP
+            if "category" in item:
+                title_norm=normalize_story_text(item.get("title",""))
+                details_norm=normalize_story_text(item.get("details",""))
+                similarity=difflib.SequenceMatcher(None,title_norm,details_norm).ratio() if title_norm and details_norm else 0
+                if item["enrichment_status"]!="enriched" or similarity>=0.78:
+                    item["enrichment_status"]="limited"
+                    item["business_context_quality"]="limited"
+                    item["business_context_note"]="Article-level context was not independently retrieved; the card uses only the publisher feed snippet."
+                else:
+                    item["business_context_quality"]="article-enriched"
+                    item["business_context_note"]="Readable article text retrieved; verify material claims against the primary company or regulator announcement."
             item["vendor_references"]=result.get("references",[])
             if result.get("error"):item["enrichment_note"]="Source page could not be retrieved; retained feed summary."
     # Detect CVEs from the retrieved article before deciding whether to follow vendor links.
