@@ -193,9 +193,15 @@ def extract_specific_remediation(text_value):
         r"install the latest updates?|update to the latest version",
         re.I,
     )
+    # Require an imperative/action construction; do not mistake nouns such as
+    # "Windows hotpatch update" for an instruction to update a system.
     action = re.compile(
-        r"\b(?:fixed|upgrade|update|install|apply|deploy|replace|disable|block|restrict|remove|"
-        r"uninstall|revoke|rotate|reset|isolate|turn off|configure|set|enable|rollback)\b", re.I
+        r"\b(?:upgrade|update)\s+(?:to|all|the|affected)\b|"
+        r"\b(?:install|apply|deploy|replace|disable|block|restrict|remove|uninstall|"
+        r"revoke|rotate|reset|isolate|turn off|configure|set|enable|rollback)\s+"
+        r"(?:the|all|any|affected|this|these|that|those|SMB|RDP|MFA|TLS|KB|version|"
+        r"security|latest|v?\d|[A-Z][A-Za-z0-9_.-]*)|"
+        r"\b(?:fixed|patched)\s+in\b", re.I
     )
     concrete = re.compile(
         r"\b(?:version\s*v?\d|v\d+\.\d|fixed in\s+\S+|KB\d{4,}|"
@@ -217,6 +223,21 @@ def extract_specific_remediation(text_value):
         if sentence not in results:
             results.append(sentence)
     return results[:5]
+
+
+
+def kev_remediation_text(vulnerability):
+    """Render only a concrete fix from KEV requiredAction; never echo boilerplate."""
+    raw = str(vulnerability.get("requiredAction") or "").strip()
+    specific = extract_specific_remediation(raw)
+    if specific:
+        return " ".join(specific)
+    return (
+        "No product/version-specific patch, command, configuration change or workaround "
+        "is provided in this CISA KEV record. The catalogue action is general guidance, "
+        "not a verified fix. Check the linked vendor advisory for the current fixed release "
+        "or workaround; this report has not independently verified one."
+    )
 
 
 def enrich_records(records, max_workers=10):
@@ -347,7 +368,7 @@ def main():
     if recentkev:
         for v in recentkev[:40]:
             lines.append(f"- **{v.get('cveID','CVE unavailable')} — {v.get('vulnerabilityName','Name unavailable')}** | {v.get('vendorProject','unknown')} / {v.get('product','unknown')} | added {v.get('dateAdded','unknown')} | due {v.get('dueDate','not stated')} | [CISA record]({v.get('notes','https://www.cisa.gov/known-exploited-vulnerabilities-catalog')})")
-            lines.append("  - Fix / remediation: "+(v.get("requiredAction") or "No fix/action guidance listed in CISA KEV record yet; check the vendor advisory."))
+            lines.append("  - Fix / remediation: "+kev_remediation_text(v))
     else:lines.append("- No additions returned, or the feed failed; check source health.")
     lines += ["","## Advisories, campaigns and research — last 72 hours",""]
     if items:
