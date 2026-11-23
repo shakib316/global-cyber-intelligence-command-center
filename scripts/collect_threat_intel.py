@@ -311,7 +311,7 @@ def enrich_kev_records(records,max_workers=8):
     tasks=[]
     for record in records:
         raw=str(record.get("notes") or "")
-        urls=re.findall(r"https://[^\\s,;<>]+",raw)
+        urls=re.findall(r"https://[^\s,;<>]+",raw)
         for url in urls[:2]:
             host=urlparse(url).netloc.lower()
             if not host or any(domain in host for domain in ("cisa.gov","nvd.nist.gov","cve.org","mitre.org")):continue
