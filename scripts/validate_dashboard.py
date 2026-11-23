@@ -5,7 +5,7 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
 html = (root / "index.html").read_text(encoding="utf-8")
-required = ["criticalVulnList", "prepareBriefing", "businessList", "queryGrid", "loadQueries", "reportPicker", "loadReportPath", "threatPrev", "businessPrev", "kevPrev", "cisa_kev_catalog", "CVERecord?id=", "kevStatus", "queriesLoaded", "const groups={}", "globalSearchPanel", "globalSearch", "globalScope", "kevSearch", "kevVendor", "kevDueFilter", "priorityFilter", "v.vulnerabilityName", "function globalSearch", "function filteredKev", "const remediationBlock=", "function relatedFor", "function renderWatchlist", "function matchAssets", "function renderIOC", "function compareSnapshots", "function copyExecutiveDigest", "function renderReadiness", "oldestReport", "intel\\/daily", "remediation_guidance", "No specific fix identified in retrieved source text", "function kevHtml", "function itemHtml", "function businessCard", "function businessSignificance", "Article text retrieved", "What to verify next", "businessDetail", "businessClear", "knownRansomwareCampaignUse", "Evidence "]
+required = ["criticalVulnList", "prepareBriefing", "businessList", "queryGrid", "loadQueries", "reportPicker", "loadReportPath", "threatPrev", "businessPrev", "kevPrev", "cisa_kev_catalog", "CVERecord?id=", "kevStatus", "queriesLoaded", "const groups={}", "globalSearchPanel", "globalSearch", "globalScope", "kevSearch", "kevVendor", "kevDueFilter", "priorityFilter", "v.vulnerabilityName", "function globalSearch", "function filteredKev", "const remediationBlock=", "function relatedFor", "function renderWatchlist", "function matchAssets", "function renderIOC", "function compareSnapshots", "function copyExecutiveDigest", "function renderReadiness", "oldestReport", "intel\\/daily", "remediation_guidance", "No specific fix identified in retrieved source text", "function kevHtml", "function kevAction", "function itemHtml", "function businessCard", "function businessSignificance", "Article text retrieved", "What to verify next", "businessDetail", "businessClear", "knownRansomwareCampaignUse", "Evidence "]
 missing = [x for x in required if x not in html]
 if missing:
     raise SystemExit("Dashboard missing required UI features: " + ", ".join(missing))
@@ -26,6 +26,15 @@ if "function cleanCopy(value)" not in html or "Compact reading layout" not in ht
     raise SystemExit("Dashboard description cleanup or compact reading styles are missing")
 if 'function kevHtml(v)' not in html or 'v.requiredAction' not in html:
     raise SystemExit("KEV remediation column is missing")
+if 'function kevAction(v)' not in html or 'const a=kevAction(v)' not in html or 'kevStatus(v),a.specific?"green":"amber"' not in html:
+    raise SystemExit("Critical watch and KEV previews must use the shared specific-remediation guard")
+critical_start = html.find('$("criticalVulnList").innerHTML=')
+critical_end = html.find('$("kevPreview").innerHTML=', critical_start)
+if critical_start < 0 or critical_end < 0 or 'kevAction(v)' not in html[critical_start:critical_end] or 'v.requiredAction' in html[critical_start:critical_end]:
+    raise SystemExit("Critical vulnerability watch bypasses the shared KEV remediation guard")
+preview_end = html.find("renderKev();", critical_end)
+if critical_end < 0 or preview_end < 0 or 'kevAction(v)' not in html[critical_end:preview_end] or 'v.requiredAction' in html[critical_end:preview_end]:
+    raise SystemExit("Recent KEV preview bypasses the shared KEV remediation guard")
 
 scripts = re.findall(r"<script>([\s\S]*?)</script>", html, re.I)
 if not scripts:
