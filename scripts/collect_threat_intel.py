@@ -265,8 +265,12 @@ def enrich_records(records, max_workers=10):
             evidence=page_details+"\n"+feed_summary
             action=extract_specific_remediation(evidence)
             item["remediation_guidance"]=" ".join(action)[:1800] if action else ""
-            no_patch=re.search(r"no (?:security )?(?:patch|fix|workaround) (?:is )?(?:currently )?(?:available|released)|vendor (?:has )?not (?:yet )?released (?:a )?(?:patch|fix)|patch is not yet available",evidence,re.I)
-            item["remediation_status"]=("No vendor patch stated in source" if no_patch else "Specific actionable guidance extracted") if action or no_patch else ("No specific fix identified in retrieved source text" if result.get("status")=="enriched" else "Fix status unknown — source page not fully retrieved")
+            no_patch=re.search(r"no (?:security )?(?:patch|fix|workaround) (?:is )?(?:currently )?(?:available|released)|vendor (?:has )?not (?:yet )?released (?:a )?(?:patch|fix)|patch is not yet available|(?:a )?(?:security )?fix is not yet available|fix is not currently available|in the absence of an official patch",evidence,re.I)
+            gated_workaround=re.search(r"temporary workaround.{0,240}(?:signing in|sign in|support portal|customer portal)",evidence,re.I)
+            if no_patch and gated_workaround:item["remediation_status"]="No vendor patch stated in source; workaround is referenced but requires vendor portal access"
+            elif no_patch:item["remediation_status"]="No vendor patch stated in source"
+            elif action:item["remediation_status"]="Specific actionable guidance extracted"
+            else:item["remediation_status"]="No specific fix identified in retrieved source text" if result.get("status")=="enriched" else "Fix status unknown — source page not fully retrieved"
 
 def extract_iocs(s,source,url):
     found={}
