@@ -1,0 +1,36 @@
+name: Dashboard Quality Watch
+on:
+  push:
+    branches: [main]
+    paths:
+      - "index.html"
+      - "scripts/collect_threat_intel.py"
+      - "scripts/validate_dashboard.py"
+      - "intel/**"
+      - "reports/**"
+      - ".github/workflows/dashboard-quality-watch.yml"
+  workflow_run:
+    workflows:
+      - Daily Threat Intelligence Collection
+      - Deploy GCI dashboard to GitHub Pages
+    types: [completed]
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: dashboard-quality-watch
+  cancel-in-progress: true
+jobs:
+  validate:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate dashboard and latest data
+        run: python scripts/validate_dashboard.py
