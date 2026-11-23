@@ -1,14 +1,25 @@
 #!/usr/bin/env python3
 """Static dashboard and latest-intelligence integrity checks."""
-import json, re, subprocess, tempfile
+import ast, json, re, subprocess, tempfile
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
 html = (root / "index.html").read_text(encoding="utf-8")
-required = ["criticalVulnList", "prepareBriefing", "businessList", "queryGrid", "loadQueries", "reportPicker", "loadReportPath", "threatPrev", "businessPrev", "kevPrev", "cisa_kev_catalog", "CVERecord?id=", "kevStatus", "queriesLoaded", "const groups={}", "globalSearchPanel", "globalSearch", "globalScope", "kevSearch", "kevVendor", "kevDueFilter", "priorityFilter", "v.vulnerabilityName", "function globalSearch", "function filteredKev"]
+required = ["criticalVulnList", "prepareBriefing", "businessList", "queryGrid", "loadQueries", "reportPicker", "loadReportPath", "threatPrev", "businessPrev", "kevPrev", "cisa_kev_catalog", "CVERecord?id=", "kevStatus", "queriesLoaded", "const groups={}", "globalSearchPanel", "globalSearch", "globalScope", "kevSearch", "kevVendor", "kevDueFilter", "priorityFilter", "v.vulnerabilityName", "function globalSearch", "function filteredKev", "function remediationBlock", "function relatedFor", "function renderWatchlist", "function matchAssets", "function renderIOC", "function compareSnapshots", "function copyExecutiveDigest", "function renderReadiness", "oldestReport", "prevReportArrow", "intel\\/daily", "remediation_guidance", "No fix stated yet", "function kevHtml", "function itemHtml", "function businessCard"]
 missing = [x for x in required if x not in html]
 if missing:
     raise SystemExit("Dashboard missing required UI features: " + ", ".join(missing))
+
+ids = re.findall(r'\\bid="([^"]+)"', html)
+duplicates = sorted({x for x in ids if ids.count(x) > 1})
+if duplicates:
+    raise SystemExit("Dashboard contains duplicate HTML IDs: " + ", ".join(duplicates))
+if 'function itemHtml(x)' not in html or 'remediationBlock(x,"threat")' not in html:
+    raise SystemExit("Threat cards do not show adjacent remediation guidance")
+if 'remediationBlock(x,"business")' not in html:
+    raise SystemExit("Business cards are missing adjacent action context")
+if 'function kevHtml(v)' not in html or 'v.requiredAction' not in html:
+    raise SystemExit("KEV remediation column is missing")
 
 scripts = re.findall(r"<script>([\s\S]*?)</script>", html, re.I)
 if not scripts:
@@ -18,6 +29,15 @@ with tempfile.NamedTemporaryFile("w", suffix=".js", encoding="utf-8") as f:
     result = subprocess.run(["node", "--check", f.name], capture_output=True, text=True)
     if result.returncode:
         raise SystemExit("Dashboard JavaScript syntax error:\\n" + result.stderr)
+
+collector_path = root / "scripts/collect_threat_intel.py"
+if not collector_path.exists():
+    raise SystemExit("Threat intelligence collector is missing")
+collector_source = collector_path.read_text(encoding="utf-8")
+ast.parse(collector_source, filename=str(collector_path))
+for marker in ("def enrich_records", "class ArticleText", '"details"', '"remediation_guidance"', '"related_sources"', '"attack_techniques"'):
+    if marker not in collector_source:
+        raise SystemExit("Collector missing source enrichment/correlation capability: " + marker)
 
 pointer_path = root / "intel/latest.json"
 if not pointer_path.exists():
@@ -54,7 +74,7 @@ if report_path.exists():
     report = report_path.read_text(encoding="utf-8")
     if "Sentinel KQL" in report and "prepareBriefing" not in html:
         raise SystemExit("Report contains query section but dashboard lacks inline-query renderer")
-print("Dashboard checks passed: navigation, historical reports, global search, section filters, CVE titles, clickable CVEs, KEV filtering, remediation caveats, lazy query loading, JavaScript syntax and snapshot integrity.")
+print("Dashboard checks passed: unique DOM IDs, latest/newer/older/oldest date navigation, historical report discovery, global search, filters, detailed threat/business cards, adjacent remediation, full KEV actions, watchlist, asset matcher, IOC correlation, ATT&CK/readiness, executive digest, JavaScript and collector syntax.")
 print("Full CISA KEV records:", len(kev), "| titles present:", len(kev), "| duplicate CVEs:", len(kev_ids) - len(set(kev_ids)))
 print("Business developments:", len(data["business_items"]))
 print("Business feeds:", len(business_sources))
