@@ -1,6 +1,8 @@
 {
   "date_utc": "2026-11-23",
-  "retrieved_at": "2026-11-23T10:41:57Z",
+  "date_ist": "2026-11-23",
+  "retrieved_at": "2026-11-23T10:44:49Z",
+  "retrieved_at_ist": "2026-11-23 16:14:49 IST",
   "snapshot": "snapshots/2026/11/23.json",
   "report": "daily/2026/11/23.md"
 }
