@@ -10,7 +10,7 @@ missing = [x for x in required if x not in html]
 if missing:
     raise SystemExit("Dashboard missing required UI features: " + ", ".join(missing))
 
-ids = re.findall(r'\\bid="([^"]+)"', html)
+ids = re.findall(r'\bid="([^"]+)"', html)
 duplicates = sorted({x for x in ids if ids.count(x) > 1})
 if duplicates:
     raise SystemExit("Dashboard contains duplicate HTML IDs: " + ", ".join(duplicates))
