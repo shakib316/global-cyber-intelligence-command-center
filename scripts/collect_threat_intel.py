@@ -26,12 +26,26 @@ FEEDS=[
 ("thehackernews","The Hacker News","https://thehackernews.com/feeds/posts/default","news","medium"),
 ("talos","Cisco Talos","https://blog.talosintelligence.com/rss/","research","high"),
 ("unit42","Palo Alto Unit 42","https://unit42.paloaltonetworks.com/feed/","research","high"),
-("google_ti","Google Threat Intelligence / Mandiant","https://feeds.feedburner.com/threatintelligence/pvexyqv7v0v","research","critical")]
+("google_ti","Google Threat Intelligence / Mandiant","https://feeds.feedburner.com/threatintelligence/pvexyqv7v0v","research","critical"),
+("github_advisories","GitHub Security Advisories","https://github.com/advisories.atom","vendor","high"),
+("cisco_psirt","Cisco PSIRT","https://sec.cloudapps.cisco.com/security/center/psirtrss20/CiscoSecurityAdvisory.xml","vendor","critical"),
+("fortinet_psirt","Fortinet PSIRT","https://www.fortiguard.com/rss/ir.xml","vendor","high"),
+("google_security","Google Security Blog","https://security.googleblog.com/feeds/posts/default","vendor","high"),
+("redhat_security","Red Hat Security Advisories","https://access.redhat.com/security/data/metrics/rhsa.rss","vendor","high"),
+("rapid7","Rapid7 Research","https://www.rapid7.com/blog/rss/","research","high"),
+("sophos_xops","Sophos X-Ops","https://news.sophos.com/en-us/category/threat-research/feed/","research","high"),
+("crowdstrike","CrowdStrike Blog","https://www.crowdstrike.com/blog/feed/","research","high"),
+("mozilla_security","Mozilla Security Advisories","https://www.mozilla.org/en-US/security/advisories/feed/","vendor","medium"),
+("google_cloud_security","Google Cloud Security","https://cloud.google.com/feeds/gcp-security-bulletins.xml","vendor","high")]
 
 BUSINESS_FEEDS=[
 ("google_news_ma","Google News · Cybersecurity M&A","https://news.google.com/rss/search?q=cybersecurity+(acquisition+OR+acquires+OR+merger+OR+buyout)&hl=en-IN&gl=IN&ceid=IN:en"),
 ("google_news_funding","Google News · Cybersecurity funding","https://news.google.com/rss/search?q=cybersecurity+(funding+OR+investment+OR+venture+OR+IPO)&hl=en-IN&gl=IN&ceid=IN:en"),
-("google_news_market","Google News · Cybersecurity market moves","https://news.google.com/rss/search?q=cybersecurity+(partnership+OR+launches+OR+appoints+OR+CEO+OR+earnings+OR+layoffs)&hl=en-IN&gl=IN&ceid=IN:en")]
+("google_news_market","Google News · Cybersecurity market moves","https://news.google.com/rss/search?q=cybersecurity+(partnership+OR+launches+OR+appoints+OR+CEO+OR+earnings+OR+layoffs)&hl=en-IN&gl=IN&ceid=IN:en"),
+("google_news_deals","Google News · Security company deals","https://news.google.com/rss/search?q=(cybersecurity+OR+security+software)+(acquires+OR+acquisition+OR+merger+OR+buys+OR+deal)&hl=en-IN&gl=IN&ceid=IN:en"),
+("google_news_companies","Google News · Cybersecurity company updates","https://news.google.com/rss/search?q=(CrowdStrike+OR+Palo+Alto+Networks+OR+Fortinet+OR+Zscaler+OR+SentinelOne+OR+Cloudflare)+(results+OR+launch+OR+partnership+OR+CEO+OR+revenue)&hl=en-IN&gl=IN&ceid=IN:en"),
+("google_news_india","Google News · India cybersecurity business","https://news.google.com/rss/search?q=India+cybersecurity+(investment+OR+acquisition+OR+partnership+OR+startup+OR+funding)&hl=en-IN&gl=IN&ceid=IN:en"),
+("google_news_workforce","Google News · Security workforce and market","https://news.google.com/rss/search?q=cybersecurity+(layoffs+OR+hiring+OR+workforce+OR+restructuring+OR+leadership)&hl=en-IN&gl=IN&ceid=IN:en")]
 BUSINESS_RULES=[
 ("M&A",r"acquir|acquisition|merger|buyout|takeover|divest"),
 ("Funding & investment",r"funding|investment|venture capital|series [a-f]|\bIPO\b|raises? .*million|raises? .*billion"),
@@ -160,7 +174,7 @@ def main():
         success+=1;health.append({"source":"CERT-In India advisory index","status":"success","records":len(p.rows),"url":cert_url,"note":"Index scrape; open advisory to confirm details"})
     except Exception as e:
         errors.append(f"CERT-In index: {type(e).__name__}: {e}");health.append({"source":"CERT-In India advisory index","status":"failed","records":0,"url":cert_url,"error":str(e)})
-    cutoff=NOW-dt.timedelta(hours=72);selected=[]
+    cutoff=NOW-dt.timedelta(hours=72);business_cutoff=NOW-dt.timedelta(days=7);selected=[]
     for x in entries:
         body=x["title"]+" "+x["summary"];x["cves"]=sorted({v.upper() for v in CVE.findall(body)});x["topics"]=topics(body)
         if (x["_date"] and x["_date"]>=cutoff) or x.get("undated_certin"):selected.append(x)
@@ -175,7 +189,7 @@ def main():
     items.sort(key=lambda x:(x.get("published") or "",x["priority"]=="critical"),reverse=True)
     business_unique={}
     for x in business_entries:
-        if not x.get("_date") or x["_date"]<cutoff:continue
+        if not x.get("_date") or x["_date"]<business_cutoff:continue
         key=x["url"].split("#")[0].rstrip("/") or x["title"]
         if key in business_unique:continue
         body=x["title"]+" "+x["summary"]
@@ -195,7 +209,7 @@ def main():
     snapshot=Path("intel/snapshots")/DAY[:4]/DAY[5:7]/(DAY[8:10]+".json")
     (ROOT/report).parent.mkdir(parents=True,exist_ok=True);(ROOT/snapshot).parent.mkdir(parents=True,exist_ok=True)
     data={"date_utc":DAY,"retrieved_at":STAMP,"window_hours":72,"source_health":health,"successful_sources":good,"total_sources":len(health),
-        "errors":errors,"business_items":business_items,"business_feed_count":len(business_items),"cisa_kev_catalog_count":len(vulns),"cisa_kev_added_last_7_days":recentkev,"items":items,
+        "errors":errors,"business_items":business_items,"business_feed_count":len(business_items),"business_window_hours":168,"cisa_kev_catalog_count":len(vulns),"cisa_kev_added_last_7_days":recentkev,"items":items,
         "ioc_candidates":iocs,"ioc_policy":"Candidate extraction only near explicit IOC wording. Verify against original report and local context.",
         "limitations":["Public feeds are not exhaustive and can fail or change format.","CERT-In is an official index scrape, not an RSS feed; open advisory pages to confirm details.",
         "Authenticated/paid feeds are not configured.","A CVE listing or IOC match is not proof of compromise.","No automatic response actions."]}
@@ -241,7 +255,8 @@ def main():
         "5. Keep queries Draft until schema, syntax, positive/negative tests and tuning are recorded.",
         "","## Limitations","",
         "- Broad public-source baseline, not exhaustive global intelligence.",
-        "- ThreatFox, OTX, GreyNoise and Shadowserver are not enabled; review credentials and provider terms before integration.",
+        "- ThreatFox, OTX, GreyNoise and Shadowserver are not enabled; review credentials and provider terms before integration.
+        - Business discovery uses a wider 7-day window; Google News results are reported leads and require company-announcement or filing verification.",
         "- Feed failures and quiet periods do not mean absence of threats; timestamps are UTC.",
         "",f"Raw evidence: [JSON snapshot](../../../snapshots/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.json)."]
     (ROOT/report).write_text("\n".join(lines)+"\n",encoding="utf-8")
