@@ -45,6 +45,12 @@ pointer_path = root / "intel/latest.json"
 if not pointer_path.exists():
     raise SystemExit("intel/latest.json is missing")
 pointer = json.loads(pointer_path.read_text(encoding="utf-8"))
+daily_report_path = root / "intel" / pointer.get("report", "")
+if not daily_report_path.exists():
+    raise SystemExit("Latest daily intelligence report is missing")
+daily_report = daily_report_path.read_text(encoding="utf-8")
+if "Fix / remediation:" not in daily_report or "Business background / implications:" not in daily_report:
+    raise SystemExit("Daily report is missing adjacent threat remediation or business context")
 snapshot_path = root / "intel" / pointer["snapshot"]
 if not snapshot_path.exists():
     raise SystemExit("Latest intelligence snapshot is missing: " + str(snapshot_path))
