@@ -215,7 +215,7 @@ def enrich_page(url,title=""):
             part=re.sub(r"\s+"," ",part).strip();norm=normalize_story_text(part)
             if not part or is_promotional_text(part):continue
             if title_norm and norm and difflib.SequenceMatcher(None,norm,title_norm).ratio()>=0.94:continue
-            if re.search(r"comprehensive up-to-date news coverage|aggregated from sources all over the world by google news",part,re.I):continue
+            if re.search(r"comprehensive up-to-date news coverage|aggregated from sources all over the world by google news|identify and remediate systems affected by this advisory|for more details on how to apply this update|refer to the cve page\\(s\\) listed in the references section",part,re.I):continue
             if len(part)>45 and part not in cleaned:cleaned.append(part)
         text_value="\n\n".join(cleaned);base_host=urlparse(resolved).netloc.lower();references=[]
         for link in parser.links:
@@ -417,6 +417,12 @@ def main():
         item["cves"]=extract_cves(item.get("title"),item.get("summary"),item.get("details"),
             " ".join(fix for ref in item.get("vendor_remediation",[]) for fix in ref.get("guidance",[])))
         item["cve_extraction_scope"]="title + feed summary + retrieved article + linked vendor remediation references"
+        # Fail-safe backfill: every CVE visible in the full text must also be indexed.
+        evidence_cves=set(extract_cves(item.get("title"),item.get("summary"),item.get("details")))
+        missing_cves=evidence_cves-set(item["cves"])
+        if missing_cves:
+            item["cves"]=sorted(set(item["cves"])|evidence_cves)
+            item["cve_extraction_recovered"]=sorted(missing_cves)
         item["cve_count"]=len(item["cves"])
     for x in items:
         body=x.get("title","")+" "+x.get("summary","")+" "+x.get("details","")
