@@ -29,15 +29,34 @@ jobs:
         run: python scripts/collect_threat_intel.py
       - name: Run static detection query quality checks
         run: python scripts/validate_detection_queries.py
-      - name: Commit dated intelligence artifacts
+      - name: Commit dated intelligence artifacts with conflict recovery
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add intel/ detection-queries/generated/
           if git diff --cached --quiet; then
             echo "No intelligence changes to commit."
-          else
-            git commit -m "Daily threat intelligence snapshot $(date -u +%F)"
-            git pull --rebase origin main
-            git push
+            exit 0
           fi
+          git commit -m "Daily threat intelligence snapshot $(date -u +%F)"
+          for attempt in 1 2 3; do
+            git fetch origin main
+            if git rebase origin/main && git push origin HEAD:main; then
+              echo "Intelligence artifacts pushed successfully."
+              exit 0
+            fi
+            echo "Concurrent daily run changed the same dated files; regenerating from latest main (attempt $attempt)."
+            git rebase --abort || true
+            git fetch origin main
+            git reset --hard origin/main
+            python scripts/collect_threat_intel.py
+            python scripts/validate_detection_queries.py
+            git add intel/ detection-queries/generated/
+            if git diff --cached --quiet; then
+              echo "Latest main already contains the current intelligence snapshot."
+              exit 0
+            fi
+            git commit -m "Daily threat intelligence snapshot $(date -u +%F) retry $attempt"
+          done
+          echo "Unable to publish intelligence artifacts after three conflict-recovery attempts."
+          exit 1
