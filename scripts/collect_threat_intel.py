@@ -199,7 +199,7 @@ def extract_specific_remediation(text_value):
         r"\b(?:upgrade|update)\s+(?:to|all|the|affected)\b|"
         r"\b(?:install|apply|deploy|disable|block|restrict|remove|uninstall|revoke|rotate|"
         r"reset|isolate|turn off|configure|set|enable|rollback)\s+"
-        r"(?:the|all|any|affected|this|these|those|SMB|RDP|MFA|TLS|KB|version|"
+        r"(?:the|all|any|affected|this|these|those|SMBv?\\d|SMB|RDP|MFA|TLS|KB|version|"
         r"security|latest|v?\d)\b|"
         r"\breplace\s+(?:it|the [A-Za-z0-9_.-]+)\s+with\b|"
         r"\b(?:upgrade|update)\s+(?-i:[A-Z])[A-Za-z0-9_.-]*(?:\s+(?-i:[A-Z])[A-Za-z0-9_.-]*){0,3}\s+to\s+(?:version|v?\d)|"
