@@ -197,7 +197,7 @@ def extract_specific_remediation(text_value):
     # "Windows hotpatch update" for an instruction to update a system.
     action = re.compile(
         r"\b(?:upgrade|update)\s+(?:to|all|the|affected)\b|"
-        r"\b(?:install|apply|deploy|replace|disable|block|restrict|remove|uninstall|"
+        r"\b(?:upgrade|update|install|apply|deploy|replace|disable|block|restrict|remove|uninstall|"
         r"revoke|rotate|reset|isolate|turn off|configure|set|enable|rollback)\s+"
         r"(?:the|all|any|affected|this|these|that|those|SMB|RDP|MFA|TLS|KB|version|"
         r"security|latest|v?\d|[A-Z][A-Za-z0-9_.-]*)|"
