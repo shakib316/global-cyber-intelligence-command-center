@@ -92,10 +92,10 @@ function renderQueries(){
  $("kQueries").textContent=QUERIES.length;
  $("queryGrid").innerHTML=list.length?list.map((x,i)=>{
   const id="lib"+i;
-  const meta=(x.content.match(/^\\/\\/\\s*(?:Maturity|Status|Query ID|Description|Tables):.*$/gim)||[]).slice(0,4).join("\n");
+  const meta=x.content.split("\n").filter(line=>["// Maturity:","// Status:","// Query ID:","// Description:","// Tables:"].some(prefix=>line.startsWith(prefix))).slice(0,4).join("\n");
   const titleLine=x.content.split("\n").find(line=>line.toLowerCase().startsWith("// title:"));
   const title=titleLine?titleLine.slice(titleLine.indexOf(":")+1).trim():x.name;
-  const cve=(x.content.match(/CVE-\\d{4}-\\d{4,8}/i)||[])[0];
+  const cve=(x.content.match(/CVE-[0-9]{4}-[0-9]{4,8}/i)||[])[0];
   const heading=(cve?cve+" — ":"")+title;
   return '<article class="query"><h4>'+esc(heading)+'</h4><div class="path">'+esc(x.path)+'</div><p>'+tag(x.lang)+' '+tag(x.maturity||"Review maturity","amber")+'</p><p class="muted">'+esc(meta||"Review query header and schema assumptions before use.")+'</p><div class="codehead"><span>FULL QUERY · '+esc(x.lang)+'</span><button class="copy" data-copy="'+id+'">Copy query</button></div><pre data-code="'+id+'"><code>'+esc(x.content)+'</code></pre></article>';
  }).join(""):'<div class="empty">No query files match your search.</div>';
