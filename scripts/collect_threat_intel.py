@@ -87,9 +87,7 @@ CVE=re.compile(r"\bCVE-\d{4}-\d{4,}\b",re.I)
 def extract_cves(*values):
     """Extract CVE IDs from every available evidence field; CVE ID length is variable."""
     return sorted({m.upper() for value in values if value for m in CVE.findall(str(value))})
-def extract_cves(*values):
-    """Extract CVE IDs from every available evidence field; CVE ID length is variable."""
-    return sorted({m.upper() for value in values if value for m in CVE.findall(str(value))})
+
 IOCCTX=re.compile(r"(?i)\b(iocs?|indicators? of compromise|c2|command[- ]and[- ]control|callback|malicious (?:ip|domain|url|hash)|payload hash|sha(?:256|1|512)|ip address|domain names?)\b")
 IP=re.compile(r"(?<![\w.])(?:\d{1,3}\.){3}\d{1,3}(?![\w.])")
 DOMAIN=re.compile(r"(?i)(?<![@\w.-])(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:com|net|org|info|biz|xyz|top|ru|cn|uk|in|io|dev|app|cloud|site|online|live|me|co|gov|edu|eu|de|fr|br|au|ca|jp|tech|pro|work|shop|store|click|link|pw|cc|to|ws)(?![\w.-])")
@@ -175,10 +173,10 @@ class ArticleText(HTMLParser):
         t=tag.lower()
         if t in ("script","style","noscript","svg","nav","footer","header","aside","form"):self.skip=max(0,self.skip-1)
         if t=="a" and self.anchor is not None:
-            link=self.anchor;self.anchor=None;link["text"]=re.sub(r"\\s+"," ",link["text"]).strip()
+            link=self.anchor;self.anchor=None;link["text"]=re.sub(r"\s+"," ",link["text"]).strip()
             if link["href"]:self.links.append(link)
         if t in ("p","li") and self.capture:
-            value=re.sub(r"\\s+"," "," ".join(self.buf)).strip()
+            value=re.sub(r"\s+"," "," ".join(self.buf)).strip()
             if len(value)>=55 and value not in self.paragraphs:self.paragraphs.append(value)
             self.capture=False;self.buf=[]
     def handle_data(self,data):
@@ -214,17 +212,17 @@ def enrich_page(url,title=""):
         parser=ArticleText();parser.feed(raw.decode(charset,errors="replace"))
         title_norm=normalize_story_text(title);parts=parser.meta[:1]+parser.paragraphs[:18];cleaned=[]
         for part in parts:
-            part=re.sub(r"\\s+"," ",part).strip();norm=normalize_story_text(part)
+            part=re.sub(r"\s+"," ",part).strip();norm=normalize_story_text(part)
             if not part or is_promotional_text(part):continue
             if title_norm and norm and difflib.SequenceMatcher(None,norm,title_norm).ratio()>=0.94:continue
             if re.search(r"comprehensive up-to-date news coverage|aggregated from sources all over the world by google news",part,re.I):continue
             if len(part)>45 and part not in cleaned:cleaned.append(part)
-        text_value="\\n\\n".join(cleaned);base_host=urlparse(resolved).netloc.lower();references=[]
+        text_value="\n\n".join(cleaned);base_host=urlparse(resolved).netloc.lower();references=[]
         for link in parser.links:
             href=urljoin(resolved,html.unescape(link.get("href","")).strip());label=link.get("text","")
             host=urlparse(href).netloc.lower()
             if not href.startswith("https://") or not host or host==base_host:continue
-            if re.search(r"security|advisory|bulletin|CVE-\\d{4}-|patch|release notes|fixed version|vulnerability|hotfix",label+" "+href,re.I):
+            if re.search(r"security|advisory|bulletin|CVE-\d{4}-|patch|release notes|fixed version|vulnerability|hotfix",label+" "+href,re.I):
                 if href not in [x["url"] for x in references]:references.append({"label":label[:180] or "Vendor/security reference","url":href})
         return {"status":"enriched" if len(text_value)>=250 else "limited","details":text_value[:9000],"resolved_url":resolved,"references":references[:8]}
     except Exception as exc:return {"status":"fetch_failed","details":"","references":[],"error":type(exc).__name__}
@@ -233,9 +231,9 @@ def extract_specific_remediation(text_value):
     """Accept only actionable source sentences with concrete version/configuration evidence."""
     if not text_value:return []
     generic=re.compile(r"apply mitigations? in accordance with|apply mitigations? per (?:the )?vendor|follow (?:the )?vendor (?:instructions|guidance|recommendations)|refer to (?:the )?(?:vendor|security) advisory|consult (?:the )?vendor|contact (?:the )?vendor|apply (?:the )?latest (?:security )?updates?|patch (?:all )?affected systems?|apply (?:security )?patches? (?:to|on) (?:all )?affected systems?|keep (?:your )?systems? up to date|install the latest updates?|update to the latest version",re.I)
-    action=re.compile(r"\\b(?:upgrade|update)\\s+(?:to|all|the|affected)\\b|\\b(?:install|apply|deploy|disable|block|restrict|remove|uninstall|revoke|rotate|reset|isolate|turn off|configure|set|enable|rollback)\\s+(?:the|all|any|affected|this|these|those|SMBv?\\d|SMB|RDP|MFA|TLS|KB|version|security|latest|v?\\d)\\b|\\b(?:upgrade|update)\\s+(?-i:[A-Z])[A-Za-z0-9_.-]*(?:\\s+(?-i:[A-Z])[A-Za-z0-9_.-]*){0,3}\\s+to\\s+(?:version|v?\\d)|\\b(?:fixed|patched)\\s+in\\b",re.I)
-    concrete=re.compile(r"\\b(?:version\\s*v?\\d|v\\d+\\.\\d|fixed in\\s+\\S+|KB\\d{4,}|build\\s*\\d|hotfix\\s*\\S+|patch\\s*\\S+|CVE-\\d{4}-\\d+|TCP/UDP\\s*\\d+|port\\s+\\d+|\\d{1,5}/tcp|\\d{1,5}/udp|SMBv?\\d|RDP|MFA|PowerShell|WinRM|SSH|TLS\\s*1\\.[0123]|ASP\\.NET|ViewStateUserKey|MAC-verified|registry key|\\bHKLM\\\\|\\bHKCU\\\\|\\b(?:sudo|systemctl|iptables|nft|kubectl|az|aws|gcloud)\\b)",re.I)
-    parts=[re.sub(r"\\s+"," ",x).strip(" \\t-•") for x in re.split(r"(?<=[.!?])\\s+|\\n+",str(text_value))];results=[]
+    action=re.compile(r"\b(?:upgrade|update)\s+(?:to|all|the|affected)\b|\b(?:install|apply|deploy|disable|block|restrict|remove|uninstall|revoke|rotate|reset|isolate|turn off|configure|set|enable|rollback)\s+(?:the|all|any|affected|this|these|those|SMBv?\d|SMB|RDP|MFA|TLS|KB|version|security|latest|v?\d)\b|\b(?:upgrade|update)\s+(?-i:[A-Z])[A-Za-z0-9_.-]*(?:\s+(?-i:[A-Z])[A-Za-z0-9_.-]*){0,3}\s+to\s+(?:version|v?\d)|\b(?:fixed|patched)\s+in\b",re.I)
+    concrete=re.compile(r"\b(?:version\s*v?\d|v\d+\.\d|fixed in\s+\S+|KB\d{4,}|build\s*\d|hotfix\s*\S+|patch\s*\S+|CVE-\d{4}-\d+|TCP/UDP\s*\d+|port\s+\d+|\d{1,5}/tcp|\d{1,5}/udp|SMBv?\d|RDP|MFA|PowerShell|WinRM|SSH|TLS\s*1\.[0123]|ASP\.NET|ViewStateUserKey|MAC-verified|registry key|\bHKLM\\|\bHKCU\\|\b(?:sudo|systemctl|iptables|nft|kubectl|az|aws|gcloud)\b)",re.I)
+    parts=[re.sub(r"\s+"," ",x).strip(" \t-•") for x in re.split(r"(?<=[.!?])\s+|\n+",str(text_value))];results=[]
     for sentence in parts:
         if len(sentence)<35 or len(sentence)>650 or generic.search(sentence):continue
         if action.search(sentence) and concrete.search(sentence) and sentence not in results:results.append(sentence)
@@ -278,7 +276,7 @@ def enrich_records(records,max_workers=10):
                 fixes=extract_specific_remediation(result.get("details",""))
                 if fixes:item.setdefault("vendor_remediation",[]).append({"source_url":result.get("resolved_url") or ref["url"],"source_label":ref.get("label") or "Vendor/security advisory","guidance":fixes[:4],"confidence":"Specific version/action wording extracted from linked security reference; analyst review required"})
     for item in records:
-        evidence=item.get("details","")+"\\n"+item.get("summary","");source_action=extract_specific_remediation(evidence);vendor_fixes=item.get("vendor_remediation",[])
+        evidence=item.get("details","")+"\n"+item.get("summary","");source_action=extract_specific_remediation(evidence);vendor_fixes=item.get("vendor_remediation",[])
         if vendor_fixes:
             combined=[fix for ref in vendor_fixes for fix in ref.get("guidance",[])]
             item["remediation_guidance"]=" ".join((source_action+combined)[:7])[:2400]
@@ -353,7 +351,7 @@ def main():
         if not x.get("_date") or x["_date"]<business_cutoff:continue
         body=x["title"]+" "+x["summary"];category=business_category(body);status=deal_status(body)
         if is_stock_market_noise(body):continue
-        if re.search(r"\\b(?:stock|stocks|share price|price target|analyst rating)\\b",body,re.I) and category=="Company & market updates":continue
+        if re.search(r"\b(?:stock|stocks|share price|price target|analyst rating)\b",body,re.I) and category=="Company & market updates":continue
         companies=sorted({name.lower() for name in ("CrowdStrike","Zscaler","Palo Alto Networks","Microsoft","Google","Cisco","Fortinet","Check Point","SentinelOne","Mandiant","Broadcom","VMware","IBM","Amazon","Cloudflare","Okta","Proofpoint","Tenable","Rapid7","Wiz","Rubrik","Splunk","Akamai") if re.search(re.escape(name),body,re.I)})
         event_key=("m&a:"+ "|".join(companies[:4])+":"+status.lower()) if category=="M&A" and len(companies)>=2 else category+":"+normalize_story_text(x["title"])
         record={"title":x["title"],"summary":x["summary"],"url":x["url"],"publisher":x.get("publisher") or x["source"],"published":x.get("published"),
