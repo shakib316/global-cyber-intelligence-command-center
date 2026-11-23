@@ -33,7 +33,7 @@ business_items = data.get("business_items", [])
 if not kev:
     raise SystemExit("CISA KEV catalogue is empty")
 kev_ids = [x.get("cveID") for x in kev]
-if any(not re.fullmatch(r"CVE-\\d{4}-\\d{4,}", str(x or "")) for x in kev_ids):
+if any(not re.fullmatch(r"CVE-\d{4}-\d{4,}", str(x or "")) for x in kev_ids):
     raise SystemExit("CISA KEV contains a missing or malformed CVE identifier")
 if len(kev_ids) != len(set(kev_ids)):
     raise SystemExit("CISA KEV contains duplicate CVE identifiers")
