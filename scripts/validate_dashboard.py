@@ -66,6 +66,14 @@ for label, records in (("threat intelligence", items), ("business intelligence",
     missing = [i for i, x in enumerate(records) if not x.get("title") or not x.get("url") or not str(x.get("url")).startswith("https://")]
     if missing:
         raise SystemExit(f"{label} has {len(missing)} records missing a title or safe HTTPS source URL")
+for label, records in (("threat intelligence", items), ("business intelligence", business_items)):
+    missing_details = sum(not x.get("details") for x in records)
+    if missing_details:
+        raise SystemExit(f"{label} has {missing_details} records without an in-page detail field")
+if any(not x.get("remediation_status") for x in items):
+    raise SystemExit("Threat intelligence records are missing explicit remediation status")
+if not isinstance(data.get("ioc_candidates", []), list):
+    raise SystemExit("IOC correlation candidates must be a list")
 if not isinstance(data.get("business_items"), list):
     raise SystemExit("Latest snapshot has no business_items array")
 business_sources = [x for x in data.get("source_health", []) if x.get("stream") == "business"]
