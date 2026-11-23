@@ -199,9 +199,9 @@ def enrich_records(records, max_workers=10):
             item["enriched_at"]=STAMP
             if result.get("error"):item["enrichment_note"]="Source page could not be retrieved; retained feed summary."
             evidence=(page_details+"\n"+feed_summary).splitlines()
-            action=[re.sub(r"\s+"," ",p).strip() for p in evidence if re.search(r"\b(patch|patched|update|upgrade|workaround|mitigat|disable|restrict access|rotate credentials|fixed in|fix available)\b",p,re.I)]
+            action=[re.sub(r"\s+"," ",p).strip() for p in evidence if re.search(r"\b(patch|patched|security update|apply updates|upgrade to|workaround|mitigat|disable|restrict access|rotate credentials|fixed in|fix available)\b",p,re.I)]
             item["remediation_guidance"]=" ".join(dict.fromkeys(action))[:1800] if action else ""
-            item["remediation_status"]="Guidance found in retrieved source text" if action else "No fix stated in collected source text"
+            item["remediation_status"]="Guidance found in retrieved source text" if action else ("No fix stated in retrieved source text" if result.get("status")=="enriched" else "Fix status unknown — source page not fully retrieved")
 
 def extract_iocs(s,source,url):
     found={}
@@ -315,7 +315,7 @@ def main():
             f"- CVEs: {', '.join(x['cves']) or 'none extracted'} | Topic signals: {', '.join(x['topics']) or 'analyst review required'}",
             f"- Summary: {x.get('summary','')[:900]}",
             f"- Technical details: {x.get('details') or x.get('summary','')[:900]}",
-            f"- Fix / remediation: {x.get('remediation_guidance') or 'No fix stated in retrieved source text; check the linked vendor advisory for updates.'}",
+            f"- Fix / remediation: {x.get('remediation_guidance') or x.get('remediation_status') or 'Fix status unknown; check the linked vendor advisory for updates.'}",
             f"- [Open source item]({x['url']})",""]
     else:lines.append("No dated items returned. This does not mean no threats occurred; inspect source health.")
     lines += ["","## Cyber business & market developments — last 72 hours",""]
