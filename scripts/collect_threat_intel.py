@@ -194,7 +194,7 @@ def extract_specific_remediation(text_value):
         re.I,
     )
     action = re.compile(
-        r"\b(?:upgrade|update|install|apply|deploy|replace|disable|block|restrict|remove|"
+        r"\b(?:fixed|upgrade|update|install|apply|deploy|replace|disable|block|restrict|remove|"
         r"uninstall|revoke|rotate|reset|isolate|turn off|configure|set|enable|rollback)\b", re.I
     )
     concrete = re.compile(
