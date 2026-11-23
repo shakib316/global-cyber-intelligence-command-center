@@ -180,6 +180,45 @@ def enrich_page(url):
     except Exception as exc:
         return {"status":"fetch_failed","details":"","error":type(exc).__name__}
 
+def extract_specific_remediation(text_value):
+    """Keep only source sentences that contain a concrete, actionable fix."""
+    if not text_value:
+        return []
+    generic = re.compile(
+        r"apply mitigations? in accordance with|follow (?:the )?vendor (?:instructions|guidance|recommendations)|"
+        r"refer to (?:the )?(?:vendor|security) advisory|consult (?:the )?vendor|"
+        r"contact (?:the )?vendor|apply (?:the )?latest (?:security )?updates?|"
+        r"patch (?:all )?affected systems?|keep (?:your )?systems? up to date|"
+        r"see (?:the )?vendor(?:'s)? (?:website|instructions|guidance)|"
+        r"install the latest updates?|update to the latest version",
+        re.I,
+    )
+    action = re.compile(
+        r"\b(?:upgrade|update|install|apply|deploy|replace|disable|block|restrict|remove|"
+        r"uninstall|revoke|rotate|reset|isolate|turn off|configure|set|enable|rollback)\b", re.I
+    )
+    concrete = re.compile(
+        r"\b(?:version\s*v?\d|v\d+\.\d|fixed in\s+\S+|KB\d{4,}|"
+        r"build\s*\d|hotfix\s*\S+|patch\s*\S+|CVE-\d{4}-\d+|"
+        r"TCP/UDP\s*\d+|port\s+\d+|\d{1,5}/tcp|\d{1,5}/udp|"
+        r"SMBv?\d|RDP|MFA|PowerShell|WinRM|SSH|TLS\s*1\.[0123]|"
+        r"registry key|\bHKLM\\|\bHKCU\\|"
+        r"\b(?:sudo|systemctl|iptables|nft|kubectl|az|aws|gcloud)\b)", re.I
+    )
+    results = []
+    for raw in re.split(r"(?<=[.!?])\s+|\n+", text_value):
+        sentence = re.sub(r"\s+", " ", raw).strip(" \t-•")
+        if len(sentence) < 35 or len(sentence) > 650:
+            continue
+        if generic.search(sentence) or not action.search(sentence):
+            continue
+        if not concrete.search(sentence):
+            continue
+        if sentence not in results:
+            results.append(sentence)
+    return results[:5]
+
+
 def enrich_records(records, max_workers=10):
     """Enrich each record without making publication depend on any one publisher."""
     if not records:return
@@ -198,10 +237,11 @@ def enrich_records(records, max_workers=10):
             item["enrichment_status"]=result.get("status","unknown")
             item["enriched_at"]=STAMP
             if result.get("error"):item["enrichment_note"]="Source page could not be retrieved; retained feed summary."
-            evidence=(page_details+"\n"+feed_summary).splitlines()
-            action=[re.sub(r"\s+"," ",p).strip() for p in evidence if re.search(r"\b(patch|patched|security update|apply updates|upgrade to|workaround|mitigat|disable|restrict access|rotate credentials|fixed in|fix available)\b",p,re.I)]
-            item["remediation_guidance"]=" ".join(dict.fromkeys(action))[:1800] if action else ""
-            item["remediation_status"]="Guidance found in retrieved source text" if action else ("No fix stated in retrieved source text" if result.get("status")=="enriched" else "Fix status unknown — source page not fully retrieved")
+            evidence=page_details+"\n"+feed_summary
+            action=extract_specific_remediation(evidence)
+            item["remediation_guidance"]=" ".join(action)[:1800] if action else ""
+            no_patch=re.search(r"no (?:security )?(?:patch|fix|workaround) (?:is )?(?:currently )?(?:available|released)|vendor (?:has )?not (?:yet )?released (?:a )?(?:patch|fix)|patch is not yet available",evidence,re.I)
+            item["remediation_status"]=("No vendor patch stated in source" if no_patch else "Specific actionable guidance extracted") if action or no_patch else ("No specific fix identified in retrieved source text" if result.get("status")=="enriched" else "Fix status unknown — source page not fully retrieved")
 
 def extract_iocs(s,source,url):
     found={}
