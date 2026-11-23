@@ -47,7 +47,7 @@ body{font-size:14px;line-height:1.65;color:var(--ink)}p{line-height:1.7}
 </main></div></div>
 <script>
 const OWNER="shakib316",REPO="global-cyber-intelligence-command-center",BRANCH="main",API="https://api.github.com/repos/"+OWNER+"/"+REPO;
-const $=id=>document.getElementById(id);let DATA=null,ALL=[],QUERIES=[],BUSINESS=[],REPORT_PATHS=[],KEV=[],threatPage=0,businessPage=0,kevPage=0,queriesLoaded=false;const PAGE_SIZE=15,BUSINESS_PAGE_SIZE=12,KEV_PAGE_SIZE=25;
+const $=id=>document.getElementById(id);let DATA=null,ALL=[],QUERIES=[],BUSINESS=[],REPORT_PATHS=[],KEV=[],threatPage=0,businessPage=0,kevPage=0,queriesLoaded=false,globalQueryLoadPromise=null;const PAGE_SIZE=15,BUSINESS_PAGE_SIZE=12,KEV_PAGE_SIZE=25;
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const safeUrl=u=>{try{const x=new URL(u);return x.protocol==="https:"?x.href:"#"}catch{return "#"}};
 const fmt=d=>{if(!d)return "Date unavailable";const x=new Date(d);return isNaN(x)?"Date unavailable":x.toLocaleString("en-IN",{timeZone:"Asia/Kolkata",dateStyle:"medium",timeStyle:"short"})+" IST"};
@@ -118,7 +118,7 @@ function globalSearch(){
  if(scope==="all"||scope==="kev")KEV.filter(x=>[x.cveID,x.vulnerabilityName,x.shortDescription,x.vendorProject,x.product,x.requiredAction].join(" ").toLowerCase().includes(q)).slice(0,10).forEach(x=>add("CVE / KEV",x.cveID+" · "+(x.vulnerabilityName||"Title unavailable"),(x.vendorProject||"Vendor unknown")+" / "+(x.product||"Product unknown"),"kev",x.cveID));
  if(scope==="all"||scope==="business")BUSINESS.filter(x=>[x.title,x.summary,x.publisher,(x.companies||[]).join(" "),x.category].join(" ").toLowerCase().includes(q)).slice(0,8).forEach(x=>add("Business",x.title,(x.publisher||"Publisher")+" · "+(x.category||"Market"),"business",x.title));
  if((scope==="all"||scope==="queries")&&queriesLoaded)QUERIES.filter(x=>(x.path+" "+x.content).toLowerCase().includes(q)).slice(0,8).forEach(x=>add("Detection query",x.name,x.path,"queries",x.name));
- if((scope==="all"||scope==="queries")&&!queriesLoaded){loadQueries().then(globalSearch)}
+ if((scope==="all"||scope==="queries")&&!queriesLoaded&&!globalQueryLoadPromise){globalQueryLoadPromise=loadQueries().then(()=>{globalQueryLoadPromise=null;globalSearch()}).catch(()=>{globalQueryLoadPromise=null})}
  box.innerHTML=out.length?'<div class="global-result-summary">'+out.length+' matches shown · select a result to open its section</div>'+out.slice(0,24).map(x=>'<button class="global-result" type="button" data-global-view="'+x.view+'" data-global-search="'+esc(x.search)+'"><span>'+tag(x.kind,"blue")+' <strong>'+esc(x.title)+'</strong><small>'+esc(x.detail)+'</small></span><span aria-hidden="true">↗</span></button>').join(""):'<div class="empty">No matches found in the selected scope.</div>';
 }
 function openGlobalResult(view,term){showView(view);if(view==="threats"){$("threatSearch").value=term;threatPage=0;renderThreats()}else if(view==="kev"){$("kevSearch").value=term;kevPage=0;renderKev()}else if(view==="business"){$("businessSearch").value=term;businessPage=0;renderBusiness()}else if(view==="queries"){loadQueries().then(()=>{$("querySearch").value=term;renderQueries()})}$("globalResults").innerHTML=""}
