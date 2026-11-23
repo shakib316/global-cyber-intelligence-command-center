@@ -73,6 +73,12 @@ def deal_status(s):
     if re.search(r"acquisition|acquires|acquired|merger|buyout|takeover",s,re.I):return "Announced"
     return "Not applicable"
 
+def is_stock_market_noise(s):
+    """Drop price-target/stock-move stories that do not report a company event."""
+    stock_signal = re.search(r"\b(?:stock|stocks|share price|shares|price target|fair value|analyst rating|trading session|market valuation)\b", s, re.I)
+    material_event = re.search(r"acquir|merger|buyout|funding|investment|partnership|launch|appoint|resign|layoff|restruct|quarterly results|revenue|earnings|financial results|forecast|regulat|antitrust|sanction", s, re.I)
+    return bool(stock_signal and not material_event and business_category(s) == "Company & market updates")
+
 CVE=re.compile(r"\bCVE-\d{4}-\d{4,8}\b",re.I)
 IOCCTX=re.compile(r"(?i)\b(iocs?|indicators? of compromise|c2|command[- ]and[- ]control|callback|malicious (?:ip|domain|url|hash)|payload hash|sha(?:256|1|512)|ip address|domain names?)\b")
 IP=re.compile(r"(?<![\w.])(?:\d{1,3}\.){3}\d{1,3}(?![\w.])")
@@ -348,6 +354,7 @@ def main():
         key=x["url"].split("#")[0].rstrip("/") or x["title"]
         if key in business_unique:continue
         body=x["title"]+" "+x["summary"]
+        if is_stock_market_noise(body):continue
         business_unique[key]={"title":x["title"],"summary":x["summary"],"url":x["url"],"publisher":x.get("publisher") or x["source"],
             "published":x.get("published"),"category":business_category(body),"deal_status":deal_status(body),
             "companies":[],"confidence":"Reported; verify material claims against company announcements and regulatory filings"}
