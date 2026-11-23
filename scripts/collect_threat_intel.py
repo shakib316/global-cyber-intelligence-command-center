@@ -455,6 +455,8 @@ def main():
         for v in recentkev[:40]:
             lines.append(f"- **{v.get('cveID','CVE unavailable')} — {v.get('vulnerabilityName','Name unavailable')}** | {v.get('vendorProject','unknown')} / {v.get('product','unknown')} | added {v.get('dateAdded','unknown')} | due {v.get('dueDate','not stated')} | [CISA record]({v.get('notes','https://www.cisa.gov/known-exploited-vulnerabilities-catalog')})")
             lines.append("  - Fix / remediation: "+kev_remediation_text(v))
+            for ref in v.get("vendor_remediation",[]):
+                lines.append("  - Vendor evidence: ["+str(ref.get("source_label") or "Vendor advisory")+"]("+str(ref.get("source_url") or "")+") — analyst review required")
     else:lines.append("- No additions returned, or the feed failed; check source health.")
     lines += ["","## Advisories, campaigns and research — last 72 hours",""]
     if items:
