@@ -86,10 +86,8 @@ for example in specific_fixes:
 cve_example = "Article text: affected components include CVE-2026-129538, CVE-2026-95325 and CVE-2026-100000001."
 if collector.extract_cves(cve_example) != ["CVE-2026-100000001", "CVE-2026-129538", "CVE-2026-95325"]:
     raise SystemExit("CVE extraction missed variable-length IDs in full article text")
-if "item.get(\"details\")" not in collector_source or "CVE extraction scope" in collector_source:
-    # The collector must derive the final CVE list from article details after enrichment.
-    if 'item["cves"]=extract_cves(item.get("title"),item.get("summary"),item.get("details")' not in collector_source:
-        raise SystemExit("CVE extraction is not performed after article enrichment")
+if 'item["cves"]=extract_cves(item.get("title"),item.get("summary"),item.get("details")' not in collector_source:
+    raise SystemExit("CVE extraction is not performed after article enrichment")
 
 if collector.deal_status("CrowdStrike-Zscaler acquisition talks reported by multiple outlets") != "Rumoured":
     raise SystemExit("Reported acquisition discussions must remain Rumoured")
@@ -183,6 +181,14 @@ for label, records in (("threat intelligence", items), ("business intelligence",
     missing = [i for i, x in enumerate(records) if not x.get("title") or not x.get("url") or not str(x.get("url")).startswith("https://")]
     if missing:
         raise SystemExit(f"{label} has {len(missing)} records missing a title or safe HTTPS source URL")
+for item in items:
+    for ref in item.get("vendor_remediation", []):
+        if not str(ref.get("source_url", "")).startswith("https://") or not ref.get("guidance"):
+            raise SystemExit("Vendor remediation lacks a safe source URL or extracted guidance: " + str(item.get("title", "untitled")))
+for item in data.get("cisa_kev_added_last_7_days", []):
+    for ref in item.get("vendor_remediation", []):
+        if not str(ref.get("source_url", "")).startswith("https://") or not ref.get("guidance"):
+            raise SystemExit("KEV vendor remediation lacks a safe source URL or extracted guidance: " + str(item.get("cveID", "unknown CVE")))
 for item in items:
     if item.get("cve_extraction_scope"):
         expected = set(collector.extract_cves(item.get("title"), item.get("summary"), item.get("details"),
