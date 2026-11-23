@@ -108,14 +108,14 @@ const descriptionBlock=(label,value)=>{const clean=cleanCopy(value);return clean
 const remediationBlock=(x,kind="threat")=>{
  if(kind==="business")return '<div class="remediation-panel no-fix"><span class="field-label">ACTION / OUTCOME</span><p>Not applicable — this is a business or market development, not a vulnerability. Track the deal or announcement status and verify material claims against company statements or regulatory filings.</p></div>';
  const rawExplicit=x.remediation_guidance||x.fix_guidance||x.remediation||x.fix||x.requiredAction||"";
- const genericFix=/apply mitigations? in accordance with|follow (?:the )?vendor (?:instructions|guidance)|consult (?:the )?vendor|refer to (?:the )?(?:vendor|security) advisory|apply (?:the )?latest (?:security )?updates?|patch affected systems?|keep systems? up to date|install the latest updates?/i.test(rawExplicit);
+ const genericFix=/apply mitigations? in accordance with|apply mitigations? per (?:the )?vendor|follow (?:the )?vendor (?:instructions|guidance)|consult (?:the )?vendor|refer to (?:the )?(?:vendor|security) advisory|apply (?:the )?latest (?:security )?updates?|patch affected systems?|keep systems? up to date|install the latest updates?/i.test(rawExplicit);
  const explicit=genericFix?"":rawExplicit;
  const textValue=[x.details,x.summary,x.title].filter(Boolean).join(" ");
  const explicitlyNoFix=/no (?:patch|fix|workaround) (?:is )?(?:available|released|known)|patch(?:es)? (?:is|are) not yet available|no vendor fix/i.test(textValue);
  const pageRetrieved=x.enrichment_status==="enriched";
  const status=explicit?(x.remediation_status||"Specific actionable guidance extracted"):(explicitlyNoFix?"No vendor patch available yet — source explicitly states this":pageRetrieved?"No specific fix identified in retrieved source text":"Fix status unknown — source page not retrieved");
  const detail=explicit||(explicitlyNoFix?"The source explicitly reports that a vendor patch or workaround is not yet available. Re-check the linked advisory for a later release.":pageRetrieved?"No product/version-specific patch, command, configuration change or workaround was identified in the retrieved text. This does not prove that no fix exists. Open the original advisory for the latest vendor release or workaround.":"No actionable fix could be verified because the source page was not retrieved. Fix availability is unknown; open the original advisory.");
- return '<div class="remediation-panel '+(explicit||explicitlyNoFix?"":"no-fix")+'"><span class="field-label">FIX / REMEDIATION · '+esc(status)+'</span><p>'+esc(detail)+'</p></div>';
+ return '<div class="remediation-panel '+(explicit||explicitlyNoFix?"":"no-fix")+'"><span class="field-label">FIX / REMEDIATION · '+(explicit?"SOURCE-BACKED FIX":"FIX STATUS")+'</span><p>'+esc(detail)+'</p></div>';
 };
 const watchKey=(kind,id)=>kind+":"+id;
 function getWatchlist(){try{return JSON.parse(localStorage.getItem("gciWatchlist")||"[]")}catch{return []}}
