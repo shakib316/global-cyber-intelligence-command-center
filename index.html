@@ -53,7 +53,7 @@ const humanize=s=>String(s||"").replace(/[_-]+/g," ").replace(/\b\w/g,c=>c.toUpp
 const severityClass=s=>{const v=String(s||"").toLowerCase();return /critical|actively exploited|zero.day/.test(v)?"red":/high|important|urgent/.test(v)?"amber":/low|informational|patched/.test(v)?"green":""};
 const priorityLabel=s=>{const v=String(s||"").toLowerCase();return /critical/.test(v)?"Critical":/high|important/.test(v)?"High":/medium|moderate/.test(v)?"Medium":/low/.test(v)?"Low":humanize(s||"Analyst review")};
 const descriptionBlock=(label,value)=>value?'<div class="description-block"><span class="field-label">'+esc(label)+'</span><p>'+esc(value)+'</p></div>':"";
-const headerValue=(content,key)=>{const line=content.split("\n").find(x=>new RegExp("^//\\\\s*"+key+"\\\\s*:","i").test(x));return line?line.slice(line.indexOf(":")+1).trim():""};
+const headerValue=(content,key)=>{const line=content.split("\n").find(x=>new RegExp("^//\\s*"+key+"\\s*:","i").test(x));return line?line.slice(line.indexOf(":")+1).trim():""};
 
 function inlineMd(s){let x=esc(s);x=x.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,(m,t,u)=>'<a href="'+safeUrl(u)+'" target="_blank" rel="noopener">'+t+'</a>');x=x.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/\*([^*]+)\*/g,"<em>$1</em>").replace(/`([^`]+)`/g,"<code>$1</code>");return x}
 
