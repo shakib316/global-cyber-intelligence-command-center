@@ -5,7 +5,7 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
 html = (root / "index.html").read_text(encoding="utf-8")
-required = ["criticalVulnList", "prepareBriefing", "businessList", "queryGrid", "loadQueries", "reportPicker", "loadReportPath", "threatPrev", "businessPrev", "kevPrev", "cisa_kev_catalog", "CVERecord?id=", "kevStatus", "queriesLoaded", "const groups={}"]
+required = ["criticalVulnList", "prepareBriefing", "businessList", "queryGrid", "loadQueries", "reportPicker", "loadReportPath", "threatPrev", "businessPrev", "kevPrev", "cisa_kev_catalog", "CVERecord?id=", "kevStatus", "queriesLoaded", "const groups={}", "globalSearchPanel", "globalSearch", "globalScope", "kevSearch", "kevVendor", "kevDueFilter", "priorityFilter", "v.vulnerabilityName", "function globalSearch", "function filteredKev"]
 missing = [x for x in required if x not in html]
 if missing:
     raise SystemExit("Dashboard missing required UI features: " + ", ".join(missing))
@@ -27,6 +27,23 @@ snapshot_path = root / "intel" / pointer["snapshot"]
 if not snapshot_path.exists():
     raise SystemExit("Latest intelligence snapshot is missing: " + str(snapshot_path))
 data = json.loads(snapshot_path.read_text(encoding="utf-8"))
+kev = data.get("cisa_kev_catalog", [])
+items = data.get("items", [])
+business_items = data.get("business_items", [])
+if not kev:
+    raise SystemExit("CISA KEV catalogue is empty")
+kev_ids = [x.get("cveID") for x in kev]
+if any(not re.fullmatch(r"CVE-\\d{4}-\\d{4,}", str(x or "")) for x in kev_ids):
+    raise SystemExit("CISA KEV contains a missing or malformed CVE identifier")
+if len(kev_ids) != len(set(kev_ids)):
+    raise SystemExit("CISA KEV contains duplicate CVE identifiers")
+missing_kev_titles = [x.get("cveID") for x in kev if not x.get("vulnerabilityName")]
+if missing_kev_titles:
+    raise SystemExit("CISA KEV records missing vulnerabilityName: " + ", ".join(missing_kev_titles[:10]))
+for label, records in (("threat intelligence", items), ("business intelligence", business_items)):
+    missing = [i for i, x in enumerate(records) if not x.get("title") or not x.get("url") or not str(x.get("url")).startswith("https://")]
+    if missing:
+        raise SystemExit(f"{label} has {len(missing)} records missing a title or safe HTTPS source URL")
 if not isinstance(data.get("business_items"), list):
     raise SystemExit("Latest snapshot has no business_items array")
 business_sources = [x for x in data.get("source_health", []) if x.get("stream") == "business"]
@@ -37,8 +54,8 @@ if report_path.exists():
     report = report_path.read_text(encoding="utf-8")
     if "Sentinel KQL" in report and "prepareBriefing" not in html:
         raise SystemExit("Report contains query section but dashboard lacks inline-query renderer")
-print("Dashboard checks passed: navigation, historical reports, pagination, full KEV rendering, clickable CVEs, remediation caveats, lazy technology-grouped query loading, JavaScript syntax and snapshot integrity.")
-print("Full CISA KEV records:", len(data["cisa_kev_catalog"]))
+print("Dashboard checks passed: navigation, historical reports, global search, section filters, CVE titles, clickable CVEs, KEV filtering, remediation caveats, lazy query loading, JavaScript syntax and snapshot integrity.")
+print("Full CISA KEV records:", len(kev), "| titles present:", len(kev), "| duplicate CVEs:", len(kev_ids) - len(set(kev_ids)))
 print("Business developments:", len(data["business_items"]))
 print("Business feeds:", len(business_sources))
 print("Threat items:", len(data.get("items", [])))
