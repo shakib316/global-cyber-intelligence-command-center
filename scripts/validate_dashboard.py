@@ -37,7 +37,8 @@ if report_path.exists():
     report = report_path.read_text(encoding="utf-8")
     if "Sentinel KQL" in report and "prepareBriefing" not in html:
         raise SystemExit("Report contains query section but dashboard lacks inline-query renderer")
-print("Dashboard checks passed: navigation, historical reports, pagination, full KEV rendering, clickable CVEs, remediation caveats, lazy technology-grouped query loading, JavaScript syntax and snapshot integrity.")\nprint("Full CISA KEV records:", len(data["cisa_kev_catalog"]))
+print("Dashboard checks passed: navigation, historical reports, pagination, full KEV rendering, clickable CVEs, remediation caveats, lazy technology-grouped query loading, JavaScript syntax and snapshot integrity.")
+print("Full CISA KEV records:", len(data["cisa_kev_catalog"]))
 print("Business developments:", len(data["business_items"]))
 print("Business feeds:", len(business_sources))
 print("Threat items:", len(data.get("items", [])))
