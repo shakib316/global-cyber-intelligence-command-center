@@ -34,7 +34,37 @@ const safeUrl=u=>{try{const x=new URL(u);return x.protocol==="https:"?x.href:"#"
 const fmt=d=>{if(!d)return "Date unavailable";const x=new Date(d);return isNaN(x)?"Date unavailable":x.toLocaleString("en-IN",{timeZone:"Asia/Kolkata",dateStyle:"medium",timeStyle:"short"})+" IST"};
 const tag=(s,cls="")=>'<span class="tag '+cls+'">'+esc(s)+'</span>';
 function inlineMd(s){let x=esc(s);x=x.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,(m,t,u)=>'<a href="'+safeUrl(u)+'" target="_blank" rel="noopener">'+t+'</a>');x=x.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/\*([^*]+)\*/g,"<em>$1</em>").replace(/`([^`]+)`/g,"<code>$1</code>");return x}
-function markdown(src){const lines=src.replace(/\r/g,"").split("\n");let out="",i=0,codeN=0;while(i<lines.length){let l=lines[i];if(!l.trim()){i++;continue}
+
+function prepareBriefing(src){
+  const marker="## Sentinel KQL";
+  const start=src.indexOf(marker);
+  if(start<0)return src;
+  const next=src.indexOf("\\n## ",start+marker.length);
+  const finish=next<0?src.length:next;
+  const section=src.slice(start,finish);
+  let body=src.slice(0,start)+src.slice(finish);
+  const chunks=section.split(/(?=^### )/m);
+  for(const chunk of chunks){
+    const heading=(chunk.match(/^### (.+)$/m)||[])[1]||"";
+    const id=(heading.match(/\\b(Q\\d+[a-z]?)\\b/i)||[])[1]||"";
+    const match=chunk.match(/\\x60\\x60\\x60kql\\s*([\\s\\S]*?)\\x60\\x60\\x60/i);
+    if(!id||!match)continue;
+    const isQ1=id.toUpperCase().startsWith("Q1");
+    const target=isQ1?"### 1. GL.iNet":"### 2. MONAI Label";
+    const threat=isQ1?"GL.iNet GoodCloud compromise":"MONAI Label path traversal";
+    const cve=isQ1?"":" (CVE-2026-133968)";
+    const block="\\n\\n#### Detection — "+threat+cve+" · "+id+"\\n\\n**Maturity:** Draft / illustrative. Validate tenant schema, URL normalization and telemetry before use.\\n\\n\\x60\\x60\\x60kql\\n"+match[1].trim()+"\\n\\x60\\x60\\x60\\n";
+    const at=body.indexOf(target);
+    if(at<0)continue;
+    let end=body.indexOf("\\n### ",at+target.length);
+    const sec=body.indexOf("\\n## ",at+target.length);
+    if(end<0||(sec>=0&&sec<end))end=sec;
+    if(end<0)end=body.length;
+    body=body.slice(0,end)+block+body.slice(end);
+  }
+  return body;
+}
+\nfunction markdown(src){const lines=src.replace(/\r/g,"").split("\n");let out="",i=0,codeN=0;while(i<lines.length){let l=lines[i];if(!l.trim()){i++;continue}
 if(l.startsWith("```")){const lang=l.slice(3).trim()||"text";let code=[];i++;while(i<lines.length&&!lines[i].startsWith("```"))code.push(lines[i++]);i++;codeN++;const raw=code.join("\n");out+='<div class="codehead"><span>'+esc(lang.toUpperCase())+'</span><button class="copy" data-copy="'+codeN+'">Copy query</button></div><pre data-code="'+codeN+'"><code>'+esc(raw)+'</code></pre>';continue}
 if(/^#{1,4} /.test(l)){const n=l.match(/^#+/)[0].length;out+='<h'+n+'>'+inlineMd(l.slice(n+1))+'</h'+n+'>';i++;continue}
 if(l.startsWith(">")){let b=[];while(i<lines.length&&lines[i].startsWith(">"))b.push(lines[i++].replace(/^>\s?/,""));out+='<blockquote>'+b.map(p=>'<p>'+inlineMd(p)+'</p>').join("")+'</blockquote>';continue}
@@ -62,7 +92,7 @@ $("criticalVulnList").innerHTML=kev.length?kev.slice(0,9).map(v=>'<article class
 $("kevPreview").innerHTML=kev.slice(0,6).map(v=>'<div class="feedrow"><strong>'+esc(v.cveID)+' · '+esc(v.vulnerabilityName)+'</strong><p>'+esc(v.vendorProject)+' / '+esc(v.product)+' · added '+esc(v.dateAdded)+' · due '+esc(v.dueDate)+'</p></div>').join("")||'<div class="empty">No recent KEV additions.</div>';$("kevTable").innerHTML=kev.map(kevHtml).join("")||'<tr><td colspan="4">No recent additions.</td></tr>';
 $("sourceCount").textContent=sources.length+" configured sources";$("sourceTable").innerHTML=sources.map(s=>'<tr><td>'+esc(s.source)+'</td><td><span class="status '+(s.status==="success"?"ok":"bad")+'">'+esc(s.status)+'</span></td><td>'+esc(s.records)+'</td><td><a href="'+safeUrl(s.url)+'" target="_blank" rel="noopener">Feed ↗</a>'+(s.error?'<br><span class="muted">'+esc(s.error)+'</span>':"")+'</td></tr>').join("");$("errors").textContent=(DATA.errors||[]).length?"Collection notes: "+DATA.errors.join(" · "):"No collection errors recorded.";
 const topics=[...new Set(ALL.flatMap(x=>x.topics||[]))].sort(),srcs=[...new Set(ALL.map(x=>x.source))].sort();$("topicFilter").innerHTML='<option value="">All topics</option>'+topics.map(t=>'<option value="'+esc(t)+'">'+esc(t)+'</option>').join("");$("sourceFilter").innerHTML='<option value="">All sources</option>'+srcs.map(s=>'<option value="'+esc(s)+'">'+esc(s)+'</option>').join("");renderThreats();const cats=[...new Set(BUSINESS.map(x=>x.category).filter(Boolean))].sort();$("businessCategory").innerHTML='<option value="">All developments</option>'+cats.map(c=>'<option value="'+esc(c)+'">'+esc(c)+'</option>').join("");renderBusiness();
-const tree=await fetch(API+"/git/trees/"+BRANCH+"?recursive=1",{cache:"no-store"});if(tree.ok){const t=await tree.json();const reports=(t.tree||[]).filter(x=>x.type==="blob"&&/^reports\/\d{4}\/\d{2}\/\d{2}\.md$/.test(x.path)).sort((a,b)=>b.path.localeCompare(a.path));if(reports.length){const path=reports[0].path;const rr=await fetch("https://raw.githubusercontent.com/"+OWNER+"/"+REPO+"/"+BRANCH+"/"+path+"?ts="+Date.now(),{cache:"no-store"});if(rr.ok){const md=await rr.text();$("briefingContent").innerHTML=markdown(md);$("reportDate").textContent=path.split("/").slice(-3).join("/");$("briefDate").textContent=path.split("/").slice(-3).join("/");$("assessment").textContent=md.split("\n").find(x=>x.startsWith("**Assessment:**"))?.replace("**Assessment:**","").trim()||"Full briefing is available.";}}}
+const tree=await fetch(API+"/git/trees/"+BRANCH+"?recursive=1",{cache:"no-store"});if(tree.ok){const t=await tree.json();const reports=(t.tree||[]).filter(x=>x.type==="blob"&&/^reports\/\d{4}\/\d{2}\/\d{2}\.md$/.test(x.path)).sort((a,b)=>b.path.localeCompare(a.path));if(reports.length){const path=reports[0].path;const rr=await fetch("https://raw.githubusercontent.com/"+OWNER+"/"+REPO+"/"+BRANCH+"/"+path+"?ts="+Date.now(),{cache:"no-store"});if(rr.ok){const md=await rr.text();$("briefingContent").innerHTML=markdown(prepareBriefing(md));$("reportDate").textContent=path.split("/").slice(-3).join("/");$("briefDate").textContent=path.split("/").slice(-3).join("/");$("assessment").textContent=md.split("\n").find(x=>x.startsWith("**Assessment:**"))?.replace("**Assessment:**","").trim()||"Full briefing is available.";}}}
 setTimeout(()=>loadQueries(),180);
 }catch(e){$("connection").textContent="DATA UNAVAILABLE";$("assessment").textContent=e.message;$("briefingContent").innerHTML='<div class="empty">'+esc(e.message)+'</div>'}}
 ["threatSearch","topicFilter","sourceFilter"].forEach(id=>$(id).addEventListener(id==="threatSearch"?"input":"change",renderThreats));["businessSearch","businessCategory","businessStatus"].forEach(id=>$(id).addEventListener(id==="businessSearch"?"input":"change",renderBusiness));["querySearch","queryLang"].forEach(id=>$(id).addEventListener(id==="querySearch"?"input":"change",renderQueries));$("refresh").addEventListener("click",load);load();
