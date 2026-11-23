@@ -21,3 +21,10 @@ IOC extraction is limited to values near explicit IOC language in source summari
 ## Credentials and limitations
 
 ThreatFox, AlienVault OTX, GreyNoise and Shadowserver may require keys, registration or provider approval; they are not silently scraped. Configure credentials as GitHub Actions secrets only after reviewing terms. Public feeds are not exhaustive and may change or fail. A quiet report does not prove no threats occurred. No automatic blocking or response actions are performed.
+
+
+## Current dashboard data behavior
+
+- Threat intelligence uses a rolling 72-hour collection window.
+- Cyber business and market developments use a wider 7-day window to avoid an empty feed on quieter days.
+- The dashboard renders the latest snapshot referenced by `intel/latest.json`; source failures remain visible in source health.
