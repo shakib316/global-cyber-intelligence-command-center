@@ -168,7 +168,8 @@ if not isinstance(data.get("business_items"), list):
 business_sources = [x for x in data.get("source_health", []) if x.get("stream") == "business"]
 if not business_sources:
     raise SystemExit("No cyber-business sources are represented in source_health")
-report_path = root / "reports" / pointer["date_utc"][:4] / pointer["date_utc"][5:7] / (pointer["date_utc"][8:10] + ".md")
+report_date = pointer.get("date_ist", pointer["date_utc"])
+report_path = root / "reports" / report_date[:4] / report_date[5:7] / (report_date[8:10] + ".md")
 if report_path.exists():
     report = report_path.read_text(encoding="utf-8")
     if "Sentinel KQL" in report and "prepareBriefing" not in html:
