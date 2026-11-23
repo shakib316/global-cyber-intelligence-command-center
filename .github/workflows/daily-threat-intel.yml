@@ -38,5 +38,6 @@ jobs:
             echo "No intelligence changes to commit."
           else
             git commit -m "Daily threat intelligence snapshot $(date -u +%F)"
+            git pull --rebase origin main
             git push
           fi
