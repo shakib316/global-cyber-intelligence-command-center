@@ -67,6 +67,17 @@ for example in specific_fixes:
     if not collector.extract_specific_remediation(example):
         raise SystemExit("A concrete remediation example was not extracted: " + example)
 
+noun_only = "According to Microsoft, the issue is related to the KB5132043 Windows hotpatch update."
+if collector.extract_specific_remediation(noun_only):
+    raise SystemExit("A product/update noun was incorrectly accepted as remediation")
+kev_generic = {"requiredAction": "Apply mitigations in accordance with vendor instructions for affected systems."}
+kev_text = collector.kev_remediation_text(kev_generic)
+if "Apply mitigations in accordance with vendor instructions" in kev_text or "No product/version-specific" not in kev_text:
+    raise SystemExit("Daily KEV report still emits generic CISA remediation boilerplate")
+kev_specific = {"requiredAction": "Upgrade Example Product to version 4.2.1 to remediate the vulnerability."}
+if "version 4.2.1" not in collector.kev_remediation_text(kev_specific):
+    raise SystemExit("Daily KEV report dropped a concrete source-backed remediation")
+
 for marker in ("def extract_specific_remediation", "def enrich_records", "class ArticleText", '"details"', '"remediation_guidance"', '"remediation_status"', '"related_sources"', '"attack_techniques"', "CyberScoop", "SecurityWeek", "Dark Reading", "The Record", "TechCrunch Security", "canonical_url"):
     if marker not in collector_source:
         raise SystemExit("Collector missing source enrichment/correlation capability: " + marker)
