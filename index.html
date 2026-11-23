@@ -107,7 +107,9 @@ function conciseExcerpt(value,limit=900){
 const descriptionBlock=(label,value)=>{const clean=cleanCopy(value);return clean?'<div class="description-block"><span class="field-label">'+esc(label)+'</span><p>'+esc(clean)+'</p></div>':""};
 const remediationBlock=(x,kind="threat")=>{
  if(kind==="business")return '<div class="remediation-panel no-fix"><span class="field-label">ACTION / OUTCOME</span><p>Not applicable — this is a business or market development, not a vulnerability. Track the deal or announcement status and verify material claims against company statements or regulatory filings.</p></div>';
- const explicit=x.remediation_guidance||x.fix_guidance||x.remediation||x.fix||x.requiredAction||"";
+ const rawExplicit=x.remediation_guidance||x.fix_guidance||x.remediation||x.fix||x.requiredAction||"";
+ const genericFix=/apply mitigations? in accordance with|follow (?:the )?vendor (?:instructions|guidance)|consult (?:the )?vendor|refer to (?:the )?(?:vendor|security) advisory|apply (?:the )?latest (?:security )?updates?|patch affected systems?|keep systems? up to date|install the latest updates?/i.test(rawExplicit);
+ const explicit=genericFix?"":rawExplicit;
  const textValue=[x.details,x.summary,x.title].filter(Boolean).join(" ");
  const explicitlyNoFix=/no (?:patch|fix|workaround) (?:is )?(?:available|released|known)|patch(?:es)? (?:is|are) not yet available|no vendor fix/i.test(textValue);
  const pageRetrieved=x.enrichment_status==="enriched";
