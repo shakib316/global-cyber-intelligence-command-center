@@ -100,6 +100,15 @@ kev_specific = {"requiredAction": "Upgrade Example Product to version 4.2.1 to r
 if "version 4.2.1" not in collector.kev_remediation_text(kev_specific):
     raise SystemExit("Daily KEV report dropped a concrete source-backed remediation")
 
+for promo in (
+    "Discover why SHA pinning alone isn't enough and learn how to close hidden security gaps.",
+    "Learn what 6,000 real-world attacks reveal about MFA weaknesses.",
+):
+    if not collector.is_promotional_text(promo):
+        raise SystemExit("Promotional content was not filtered from article enrichment: " + promo)
+if collector.is_promotional_text("Researchers discovered why the vulnerability occurs in the parser."):
+    raise SystemExit("Legitimate technical reporting was incorrectly classified as promotional")
+
 portal_fix = "While a fix is not yet available, the vendor has shared a temporary workaround in its support portal, which requires signing in."
 portal_status = collector.re.search(r"(?:a )?(?:security )?fix is not yet available|in the absence of an official patch", portal_fix, collector.re.I)
 portal_access = collector.re.search(r"temporary workaround.{0,240}(?:signing in|sign in|support portal|customer portal)", portal_fix, collector.re.I)
