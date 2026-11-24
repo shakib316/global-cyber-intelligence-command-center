@@ -297,8 +297,31 @@ function globalSearch(){
 function openGlobalResult(view,term){showView(view);if(view==="threats"){$("threatSearch").value=term;threatPage=0;renderThreats()}else if(view==="kev"){$("kevSearch").value=term;kevPage=0;renderKev()}else if(view==="business"){$("businessSearch").value=term;businessPage=0;renderBusiness()}else if(view==="queries"){loadQueries().then(()=>{$("querySearch").value=term;renderQueries()})}$("globalResults").innerHTML=""}
 
 function renderIOC(){const box=$("iocCorrelations"),iocs=DATA?.ioc_candidates||[];if(!box)return;if(!iocs.length){box.innerHTML='<span class="tag amber">No IOC candidates extracted</span><p class="muted">The current collection has no indicators meeting the collector’s explicit-IOC-context rule. No placeholder indicators are generated.</p>';return}const grouped=new Map();iocs.forEach(i=>{const k=i.type+":"+i.value;if(!grouped.has(k))grouped.set(k,{...i,sources:new Set(i.related_sources||[i.source])});else (i.related_sources||[i.source]).forEach(s=>grouped.get(k).sources.add(s))});box.innerHTML=[...grouped.values()].slice(0,12).map(i=>'<div class="tool-line"><strong>'+esc(i.type.toUpperCase())+'</strong> <code>'+esc(i.defanged_value||i.value)+'</code><div class="muted">'+esc([...i.sources].join(", "))+'</div><div class="muted">'+esc(i.confidence||"Candidate; analyst verification required")+'</div></div>').join("")}
-function renderReadiness(){const box=$("attackCoverage");if(!box)return;const ids=[...new Set(ALL.flatMap(x=>x.attack_techniques||[]))].sort(),queryIds=new Set(QUERIES.flatMap(q=>q.content.match(/\bT\d{4}(?:\.\d{3})?\b/gi)||[]).map(x=>x.toUpperCase())),mapped=ids.filter(x=>queryIds.has(x)),unmapped=ids.filter(x=>!queryIds.has(x));const counts={};QUERIES.forEach(q=>{const m=q.content.match(/^\/\/\s*Maturity:\s*(.+)$/im);const key=m?m[1].trim():"Unspecified";counts[key]=(counts[key]||0)+1});const maturity=Object.entries(counts).map(([k,v])=>tag(k+": "+v,"blue")).join(" ");box.innerHTML='<div><strong>'+ids.length+'</strong> unique ATT&amp;CK technique IDs explicitly mentioned in collected threat content</div><div class="label-row">'+(ids.slice(0,12).map(x=>tag(x,"blue")).join("")||tag("No explicit technique IDs found","amber"))+'</div><div class="field-label">EXPLICIT QUERY MAPPING</div><div class="label-row">'+tag(mapped.length+" technique IDs also referenced in query headers","green")+' '+tag(unmapped.length+" without an explicit query reference","amber")+'</div><div class="field-label">QUERY MATURITY · '+QUERIES.length+' FILES LOADED</div><div class="label-row">'+(maturity||"Open Detection Library to load maturity metadata.")+'</div><p class="muted">This is a text-reference coverage indicator, not proof of ATT&amp;CK technique coverage or detection effectiveness. No effectiveness score is inferred without positive/negative test evidence and production telemetry.</p>'}
-function matchAssets(){
+function renderReadiness(){
+ const box=$("attackCoverage");if(!box)return;
+ const ids=new Set(ALL.flatMap(x=>x.attack_techniques||[]));
+ if(PHASE2){(PHASE2.actors||[]).forEach(a=>(a.techniques||[]).forEach(t=>ids.add(t)));(PHASE2.campaigns||[]).forEach(c=>(c.techniques||[]).forEach(t=>ids.add(t)))}
+ const techniques=[...ids].sort(),queryMap=new Map();
+ const field=(q,label)=>{const m=q.content.match(new RegExp("^\\s*(?://|#)\\s*"+label+"\\s*:\\s*(.+)$","im"));return m?m[1].trim():"Not stated"};
+ QUERIES.forEach(q=>{
+  const line=q.content.split(/\r?\n/).find(x=>/^\s*(?:\/\/|#)\s*ATT&CK\s*:/i.test(x))||"";
+  const mapped=[...new Set(line.match(/\bT\d{4}(?:\.\d{3})?\b/gi)||[])].map(x=>x.toUpperCase());
+  mapped.forEach(id=>{if(!queryMap.has(id))queryMap.set(id,[]);queryMap.get(id).push(q)});
+ });
+ const mapped=techniques.filter(t=>queryMap.has(t)),unmapped=techniques.filter(t=>!queryMap.has(t));
+ const rows=techniques.map(t=>{
+  const rules=queryMap.get(t)||[];
+  const names=rules.map(q=>esc(field(q,"Title"))).join("<br>")||"—";
+  const languages=[...new Set(rules.map(q=>q.lang))].map(esc).join(", ")||"—";
+  const maturity=[...new Set(rules.map(q=>field(q,"Maturity")))].map(esc).join("<br>")||"No explicit rule";
+  const telemetry=rules.map(q=>esc(field(q,"Data source"))+" · "+esc(field(q,"Required fields"))).join("<br>")||"No mapped telemetry";
+  const status=rules.length?"Rule mapped; effectiveness unverified":"No explicitly mapped detection";
+  return "<tr><td>"+esc(t)+"</td><td>"+names+"</td><td>"+languages+"</td><td>"+esc(status)+"</td><td>"+maturity+"</td><td>"+telemetry+"</td></tr>";
+ }).join("");
+ const counts={};QUERIES.forEach(q=>{const m=q.content.match(/^\/\/\s*Maturity:\s*(.+)$/im)||q.content.match(/^#\s*Maturity:\s*(.+)$/im);const key=m?m[1].trim():"Unspecified";counts[key]=(counts[key]||0)+1});
+ const maturity=Object.entries(counts).map(([k,v])=>tag(k+": "+v,"blue")).join(" ");
+ box.innerHTML='<div><strong>'+techniques.length+'</strong> techniques mentioned in collected intelligence or sourced Phase 2 profiles</div><div class="label-row">'+tag(mapped.length+" with an explicit ATT&CK query-header mapping","green")+' '+tag(unmapped.length+" without an explicit query mapping","amber")+'</div><div class="field-label">QUERY MATURITY · '+QUERIES.length+' FILES LOADED</div><div class="label-row">'+(maturity||"Open Detection Library to load query metadata.")+'</div>'+(QUERIES.length?'<div class="tablewrap"><table><thead><tr><th>ATT&CK technique</th><th>Mapped detection</th><th>Language</th><th>Coverage state</th><th>Validation maturity</th><th>Declared telemetry prerequisites</th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<p class="muted">Open Detection Library to load the rule inventory and explicit ATT&CK mappings.</p>')+'<p class="muted">A technique mentioned in intelligence is not automatically covered. Only IDs in a detection file ATT&CK metadata header are mapped here. Required log sources and fields are declarations, not evidence that tenant telemetry is present. No rule is considered effective without positive/negative testing and production telemetry.</p>';
+}function matchAssets(){
  const raw=$("assetInventory").value.trim(),box=$("assetMatches");
  if(!raw){box.textContent="Enter one asset per line using the documented pipe-delimited format.";return}
  const rows=raw.split(/\r?\n/).map(line=>line.split("|").map(x=>x.trim())).filter(parts=>parts.some(Boolean)).map(parts=>{
@@ -359,13 +382,27 @@ function renderPhase2Intel(){
   const opportunities=(c.detection_opportunities||[]).map(x=>'<div class="tool-line"><strong>'+esc(x.technique)+'</strong> '+esc(x.suggestion)+'<div class="muted">'+esc(x.validation)+'</div></div>').join("");
   return '<article class="intel-card" id="campaign-'+esc(c.id)+'" tabindex="-1"><div class="card-title-row"><h4>'+esc(c.name)+' · '+esc(c.id)+'</h4>'+tag(c.status||"Status unknown","amber")+'</div><p>'+esc(c.summary)+'</p><p><strong>Timeline:</strong> '+esc(c.first_observed||"Unknown")+' → '+esc(c.last_observed||"Unknown")+' · <strong>Actors:</strong> '+(actorLinks||"Not attributed")+'</p><p><strong>Targets:</strong> '+list(c.targeted_industries)+' · <strong>Regions:</strong> '+list(c.targeted_regions)+'</p><p><strong>Objectives:</strong> '+esc(c.objectives||"Not stated")+' · <strong>Initial access:</strong> '+list(c.initial_access_methods)+'</p><p><strong>Malware / tools:</strong> '+list(c.malware_and_tools)+'</p><p><strong>ATT&CK techniques:</strong> '+list(c.techniques)+'</p><p><strong>Related CVEs:</strong> '+list(c.cve_ids)+' · <strong>Related IOCs:</strong> '+list(c.ioc_ids)+'</p><div class="field-label">DETECTION OPPORTUNITIES · NOT TENANT-VALIDATED</div>'+(opportunities||'<p class="muted">No source-backed detection opportunities recorded.</p>')+'<p><strong>Mitigations:</strong> '+list(c.mitigations)+'</p><p><strong>Confidence:</strong> '+esc(c.confidence||"Unknown")+' — '+esc(c.confidence_rationale||"Not recorded")+'</p><p><strong>Evidence quality:</strong> '+esc(c.evidence_quality||"Not stated")+' · <strong>Sources:</strong> '+sourceLinks+'</p><p class="muted">Record updated: '+esc(c.record_updated_at||"Unknown")+'</p></article>';
  }).join(""):'<div class="empty">No evidence-qualified campaign records are currently available.</div>';
- $("relationshipSummary2").innerHTML=relations.length?relations.map(r=>'<div class="tool-line"><strong>'+esc(r.from_type)+': '+esc(r.from_id)+'</strong> — '+esc(r.type)+' → <strong>'+esc(r.to_type)+': '+esc(r.to_id)+'</strong><div class="muted">Confidence: '+esc(r.confidence)+' · '+esc(r.rationale)+'</div></div>').join(""):'No evidence-linked relationships are recorded.';
+ function phase2EntityLink(type,id){
+ const kind=String(type||"").toLowerCase(),value=esc(id||"Unknown");
+ if(kind==="actor")return '<button type="button" class="tag blue" data-jump-actor="'+value+'">'+value+'</button>';
+ if(kind==="campaign")return '<button type="button" class="tag blue" data-jump-campaign="'+value+'">'+value+'</button>';
+ if(kind==="technique")return '<button type="button" class="tag blue" data-jump-technique="'+value+'">'+value+'</button>';
+ if(kind==="cve")return '<a class="tag amber" href="https://nvd.nist.gov/vuln/detail/'+encodeURIComponent(id)+'" target="_blank" rel="noopener">'+value+'</a>';
+ if(kind==="ioc")return '<code>'+value+'</code>';
+ return '<span>'+esc(type||"entity")+': '+value+'</span>';
+}
+$("relationshipSummary2").innerHTML=relations.length?relations.map(r=>{
+ const evidence=(r.source_ids||[]).map(id=>{const s=sources.get(id);return s?'<a href="'+safeUrl(s.url)+'" target="_blank" rel="noopener">'+esc(s.title)+'</a>':''}).filter(Boolean).join(" · ");
+ return '<div class="tool-line"><strong>'+phase2EntityLink(r.from_type,r.from_id)+'</strong> — '+esc(r.type)+' → <strong>'+phase2EntityLink(r.to_type,r.to_id)+'</strong><div class="muted">Confidence: '+esc(r.confidence||"Unknown")+' · observed: '+esc(r.observed_at||"Not stated")+' · '+esc(r.rationale||"No rationale recorded")+'</div><div class="muted">Evidence: '+(evidence||"No linked source")+'</div></div>';
+}).join(""):'No evidence-linked relationships are recorded.';
 }
 document.addEventListener("click",e=>{
  const campaign=e.target.closest("[data-jump-campaign]");
  const actor=e.target.closest("[data-jump-actor]");
+ const technique=e.target.closest("[data-jump-technique]");
  if(campaign){showView("campaigns");const target=document.getElementById("campaign-"+campaign.dataset.jumpCampaign);if(target){target.scrollIntoView({block:"start"});target.focus()}return}
- if(actor){showView("actors");const target=document.getElementById("actor-"+actor.dataset.jumpActor);if(target){target.scrollIntoView({block:"start"});target.focus()}}
+ if(actor){showView("actors");const target=document.getElementById("actor-"+actor.dataset.jumpActor);if(target){target.scrollIntoView({block:"start"});target.focus()}return}
+ if(technique){showView("queries");loadQueries().then(()=>{$("querySearch").value=technique.dataset.jumpTechnique;renderQueries()});}
 });
 function showView(name){document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="view-"+name));document.querySelectorAll(".nav").forEach(n=>{const active=n.dataset.view===name;n.classList.toggle("active",active);if(active)n.setAttribute("aria-current","page");else n.removeAttribute("aria-current")});const titles={overview:"Operational overview",briefing:"Complete daily threat briefing",threats:"New intelligence feed",kev:"CISA KEV watch",business:"Cyber business & market",queries:"Detection query library",actors:"Threat actor profiles",campaigns:"Campaign tracking",sources:"Source health"};$("pageTitle").textContent=titles[name]||"Overview";if(name==="briefing"&&currentReportPath&&$("briefingContent").dataset.loaded!=="true")loadReportPath(currentReportPath).catch(()=>{})}
 document.querySelectorAll(".nav").forEach(n=>n.addEventListener("click",()=>{showView(n.dataset.view);if(n.dataset.view==="queries")loadQueries();if(n.dataset.view==="actors"||n.dataset.view==="campaigns")loadPhase2Intel()}));document.querySelectorAll("[data-open]").forEach(b=>b.addEventListener("click",()=>{showView(b.dataset.open);if(b.dataset.open==="queries")loadQueries();if(b.dataset.open==="actors"||b.dataset.open==="campaigns")loadPhase2Intel()}));
