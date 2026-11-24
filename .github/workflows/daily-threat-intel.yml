@@ -119,6 +119,18 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: main
+      - name: Verify checked-out main revision
+        run: |
+          checked_out="$(git rev-parse HEAD)"
+          remote_main="$(git ls-remote origin refs/heads/main | awk '{print $1}')"
+          echo "Pages artifact source SHA: ${checked_out}"
+          echo "Remote main SHA: ${remote_main}"
+          if [ "${checked_out}" != "${remote_main}" ]; then
+            echo "::error::Pages artifact checkout is not current main."
+            exit 1
+          fi
+          echo "Latest intelligence pointer:"
+          cat intel/latest.json
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
