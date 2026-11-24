@@ -1,0 +1,67 @@
+# Phase 1 and Phase 2 completion matrix
+
+Repository: shakib316/global-cyber-intelligence-command-center  
+Branch: main  
+Assessment date: 2026-11-24  
+Overall: Phase 1 and Phase 2 are partially complete. This report intentionally does not equate code presence or green static CI with production effectiveness.
+
+## Phase 1 — Reliability, security, quality and UX
+
+| Requirement | Status | Evidence / remaining work |
+|---|---|---|
+| Fresh collection and source reliability | Production-verified for latest run | Verified collection: 37/37 sources successful; 221 threat items, 11 recent KEV additions, 4 IOC candidates and 202 business developments. Australian ACSC is excluded and absent from active health. Recheck on scheduled runs. |
+| Empty / failed / partial / excluded source states | Partially implemented | Success-with-records, success-empty and failed states are represented; last-success timestamps and consecutive failures are retained. A complete partial-success and disabled/excluded state taxonomy is not yet represented as a first-class source-health state. |
+| SSRF and outbound collector security | Implemented with automated regression checks | Public HTTPS validation, DNS/IP pinning, redirect revalidation, bounded retries and mocked security tests are present. |
+| Frontend XSS and unsafe URL safeguards | Implemented with regression checks; broader audit pending | HTML escaping, HTTPS-only URL helper, escaped Markdown rendering and hostile-input tests are present. CSP is meta-based and permits inline scripts/styles for compatibility; a strict nonce/hash CSP and browser-based security audit remain outstanding. |
+| CSS consolidation and responsive layout | Partially implemented | Responsive breakpoints and overflow handling exist. Four root blocks remain on the current main revision; safe consolidation is implemented in PR #31 and awaits CI/merge. Broader unused-style cleanup remains outstanding. |
+| Accessibility | Partially implemented | Semantic header/nav/main/aside, visible focus styles, reduced-motion support and several ARIA labels/live regions exist. Full keyboard-only, screen-reader, colour-contrast and dialog/menu review has not been completed. |
+| Functional regression | Static validation passed; browser validation pending | Validators check date navigation/archive discovery, search/filter hooks, KEV and remediation rendering, watchlist, asset matcher, IOC correlation, detection display and executive digest. No browser automation or manual cross-device run was available in this execution. |
+| Critical Vulnerability Watch placement | Implemented and statically checked | Single Critical Vulnerability Watch container is inside Overview; it is not repeated in other page views. |
+| Daily report KQL formatting | Implemented and statically checked | Custom Markdown renderer preserves fenced code blocks; daily KQL sections are checked for the expected rendering hooks. |
+| Historical report correctness | Partially verified | Archive discovery and date-navigation logic are statically checked. Browser-driven selection of multiple historical dates remains pending. |
+| Phase 1 documentation | Partially implemented | README, intelligence-quality policy, reporting standard and architecture documentation are maintained. Manual browser audit and CSS cleanup remain open. |
+
+## Phase 2 — Advanced threat intelligence and detection maturity
+
+| Requirement | Status | Evidence / remaining work |
+|---|---|---|
+| Threat actor profiles | Starter implementation | One evidence-linked profile: APT29 / MITRE ATT&CK G0016. One source is used; no broader catalogue is fabricated. Independent corroboration and additional actors remain pending. |
+| Campaign tracking | Starter implementation | One historical campaign: Operation Ghost / C0023, source-linked to the MITRE profile. CVEs, IOCs and campaign-specific targets remain empty where the source does not support them. More campaigns require evidence. |
+| Intelligence relationship engine | Partially implemented | Six evidence-linked relationships exist. Actor, campaign and technique navigation, confidence, rationale and evidence links are rendered. A general dynamic graph across every requested entity type is not complete. |
+| Detection engineering library | Partially implemented | Current library contains 21 KQL, 3 SPL and 2 YARA-L files. Metadata and lightweight structural checks run in CI. No official vendor parser or tenant execution is claimed. |
+| Positive/negative detection fixtures | Pending | IOC extraction has synthetic fixtures, but the detection queries themselves do not yet have representative positive/negative execution fixtures for each language. |
+| ATT&CK coverage and telemetry readiness | Partially implemented | The UI uses explicit ATT&CK query-header mappings, language, maturity and declared data-source/field prerequisites. Declared prerequisites are not proof that a tenant has the telemetry. |
+| IOC extraction and correlation | Partially implemented | Latest run extracted 4 candidate indicators. Candidate extraction, normalization/deduplication and defanged display are present. Reputation, expiry and analyst verification are not universally available for each IOC. |
+| Vulnerability intelligence | Partially implemented | CISA KEV catalogue (1,792 records), recent KEV additions, CVSS/EPSS enrichment and source-backed remediation evidence are present. Manual fixed-release verification and organisation-specific exposure/patch state remain incomplete. |
+| Asset risk correlation | Local utility only | The browser has a user-supplied asset-to-KEV matcher. No authenticated asset inventory, exposure, criticality or patch-management connector is present. |
+| Phase 2 schema and provenance checks | Implemented / CI passed in PR #29 | Full JSON Schema enforcement, source-reference and relationship endpoint checks, and negative schema fixtures are merged in PR #29 (commit fe7be18) and passed CI. Schema validation does not independently corroborate source claims. |
+| Phase 2 documentation | Partially implemented | Actor/campaign data policy, intelligence schema, detection documentation and architecture documentation are maintained. Broader source corroboration and query test procedures remain open. |
+
+## Actual validation evidence
+
+| Check | Result |
+|---|---|
+| Daily collection run 45353816316 | Collection, snapshot validation, static query checks and artifact commit succeeded. The Pages action succeeded after PR #28 changed the deployment checkout to main, made automatic deployment single-path and added an artifact settling delay. The action's pages_build_version still reports the triggering workflow SHA; PR #31 adds an explicit checkout-SHA-to-remote-main assertion for future runs. |
+| Latest verified source health in run 45353816316 | 37/37 successful; ACSC absent |
+| Dashboard validator | Passed — 1,792 KEV records, 0 duplicate CVE IDs, 221 threat items, 210 business developments |
+| Phase 2 provenance validator | Passed — 1 actor, 1 campaign, 6 evidence-linked relationships, 1 source |
+| Phase 2 JSON Schema (PR #29) | Passed — required fields, types, enums, patterns, formats, local references and negative fixtures |
+| Frontend security regression | Passed — CSP directives, HTTPS-only URLs, hostile HTML, Markdown and code-fence escaping |
+| KQL structural checks | Passed — 21 KQL files; not an official Kusto parser |
+| SPL/YARA-L metadata and lightweight structure | Passed — 3 SPL and 2 YARA-L files; not official vendor compilers |
+| Browser end-to-end / screen-reader tests | Not performed — browser automation was not available in this execution |
+| Real SIEM tenant query execution | Not performed — no tenant connection or test environment was supplied |
+
+## External validation and genuine blockers
+
+1. Browser-driven cross-device testing, manual accessibility review and screen-reader validation.
+2. Official KQL, SPL and YARA-L parser/tenant validation, with positive and negative test events.
+3. Authenticated telemetry and asset/patch inventory integration for actual readiness and organisational exposure.
+4. Analyst corroboration of actor attribution, campaign links, IOC reputation and exact vendor fixed-version applicability.
+5. Broader evidence-backed actor/campaign catalogue; do not pad it with unsupported profiles.
+
+## Completion decision
+
+- Phase 1: Implemented in substantial part; operational collection and CI are production-verified, but browser, accessibility and CSS cleanup remain pending.
+- Phase 2: Partially implemented; sourced starter actor/campaign data, relationships, IOC/CVE enrichment and query metadata checks exist, but broad correlation, query execution fixtures and tenant validation remain pending.
+- Overall: Partially complete, not complete and not production-approved for automated detection or remediation.

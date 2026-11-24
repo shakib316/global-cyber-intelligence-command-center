@@ -70,6 +70,11 @@ A successful workflow confirms only the steps in that workflow. Feed-level failu
 - No automated containment, blocking, ticket creation, or production remediation is performed.
 - No private asset inventory or authenticated SIEM data is connected.
 
+## Architecture and completion status
+
+- Architecture and trust boundaries: ARCHITECTURE.md
+- Phase 1 and Phase 2 completion matrix: PHASE1_PHASE2_STATUS.md
+
 ## Repository layout
 
 - index.html — dashboard UI.
