@@ -485,9 +485,10 @@ def enrich_epss(records):
         ids=sorted({str(c).upper() for c in ids if CVE.fullmatch(str(c).upper())})
         record["epss_scores"]=[lookup[c] for c in ids if c in lookup]
         if not ids:record["epss_status"]="not_applicable_no_cve"
+        elif record["epss_scores"] and any(c not in lookup for c in ids):record["epss_status"]="partially_available"
         elif errors and not record["epss_scores"]:record["epss_status"]="lookup_failed"
-        elif errors and any(c not in lookup for c in ids):record["epss_status"]="partially_available"
         elif record["epss_scores"]:record["epss_status"]="available"
+        elif errors:record["epss_status"]="lookup_failed"
         else:record["epss_status"]="no_score_returned"
         record["epss_retrieved_at"]=STAMP
     return {"provider":EPSS_ATTRIBUTION,"source_url":EPSS_API,"retrieved_at":STAMP,
@@ -665,6 +666,7 @@ def main():
         for v in recentkev[:40]:
             lines.append(f"- **{v.get('cveID','CVE unavailable')} — {v.get('vulnerabilityName','Name unavailable')}** | {v.get('vendorProject','unknown')} / {v.get('product','unknown')} | added {v.get('dateAdded','unknown')} | due {v.get('dueDate','not stated')} | [CISA record]({v.get('notes','https://www.cisa.gov/known-exploited-vulnerabilities-catalog')})")
             lines.append("  - Fix / remediation: "+kev_remediation_text(v))
+            lines.append("  - EPSS context: "+format_epss_context(v)+" — FIRST.org; not an asset-specific risk score")
             for ref in v.get("vendor_remediation",[]):
                 lines.append("  - Vendor evidence: ["+str(ref.get("source_label") or "Vendor advisory")+"]("+str(ref.get("source_url") or "")+") — analyst review required")
     else:lines.append("- No additions returned, or the feed failed; check source health.")
@@ -674,7 +676,8 @@ def main():
             f"- CVEs: {', '.join(x['cves']) or 'none extracted'} | Topic signals: {', '.join(x['topics']) or 'analyst review required'}",
             f"- Summary: {x.get('summary','')[:900]}",
             f"- Technical details: {x.get('details') or x.get('summary','')[:900]}",
-            f"- Fix / remediation: {x.get('remediation_guidance') or x.get('remediation_status') or 'Fix status unknown; check the linked vendor advisory for updates.'}",
+            f"- Fix / remediation: {x.get('remediation_guidance') or x.get('remediation_status') or 'Fix status unknown; check the linked vendor advisory for updates.'}",,
+            f"- EPSS context: {format_epss_context(x)} — FIRST.org; not an asset-specific risk score"
             f"- [Open source item]({x['url']})",""]
     else:lines.append("No dated items returned. This does not mean no threats occurred; inspect source health.")
     business_health=[x for x in health if x.get("stream")=="business"]
