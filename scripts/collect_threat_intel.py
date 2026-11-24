@@ -20,7 +20,7 @@ FEEDS=[
 ("splunk","Splunk Security Advisories","https://advisory.splunk.com/feed.xml","vendor","high"),
 ("uk_ncsc","UK NCSC","https://www.ncsc.gov.uk/api/1/services/v1/all-rss-feed.xml","government","high"),
 ("canada_cccs","Canadian CCCS","https://www.cyber.gc.ca/api/cccs/atom/v1/get?feed=alerts_advisories&lang=en","government","medium"),
-("australia_acsc","Australian ACSC","https://www.cyber.gov.au/acsc/view-all-content/alerts/rss","government","medium"),
+("australia_acsc","Australian ACSC","https://www.cyber.gov.au/rss/alerts","government","medium"),
 ("cert_eu","CERT-EU","https://cert.europa.eu/publications/security-advisories-rss","government","medium"),
 ("sans_isc","SANS Internet Storm Center","https://isc.sans.edu/rssfeed.xml","research","high"),
 ("bleepingcomputer","BleepingComputer","https://www.bleepingcomputer.com/feed/","news","medium"),
