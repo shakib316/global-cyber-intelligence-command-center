@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Multi-source public cyber-intelligence collector. No automated response actions."""
-import datetime as dt, email.utils, html, ipaddress, json, re, sys, urllib.request, difflib, time, socket
+import datetime as dt, email.utils, html, ipaddress, json, re, sys, urllib.request, difflib, time, socket, http.client
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
@@ -93,6 +93,28 @@ IP=re.compile(r"(?<![\w.])(?:\d{1,3}\.){3}\d{1,3}(?![\w.])")
 DOMAIN=re.compile(r"(?i)(?<![@\w.-])(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:com|net|org|info|biz|xyz|top|ru|cn|uk|in|io|dev|app|cloud|site|online|live|me|co|gov|edu|eu|de|fr|br|au|ca|jp|tech|pro|work|shop|store|click|link|pw|cc|to|ws)(?![\w.-])")
 HASH=re.compile(r"\b(?:[a-fA-F0-9]{64}|[a-fA-F0-9]{40}|[a-fA-F0-9]{32})\b")
 
+def resolve_public_addresses(host,port=443):
+    """Resolve a host once and return only globally routable addresses."""
+    try:
+        literal=ipaddress.ip_address(host)
+        addresses=[literal]
+    except ValueError:
+        try:
+            answers=socket.getaddrinfo(host,port,type=socket.SOCK_STREAM)
+        except OSError as exc:
+            raise ValueError("Destination DNS resolution failed") from exc
+        addresses=[]
+        for answer in answers:
+            try:
+                addresses.append(ipaddress.ip_address(answer[4][0].split("%",1)[0]))
+            except ValueError as exc:
+                raise ValueError("Destination DNS returned an invalid address") from exc
+    if not addresses:
+        raise ValueError("Destination did not resolve to an IP address")
+    if any(not address.is_global for address in addresses):
+        raise ValueError("Destination resolves to a non-public IP address")
+    return addresses
+
 def validate_public_https_url(url):
     """Reject non-HTTPS, credentialed, nonstandard-port and non-public destinations."""
     if not isinstance(url,str) or len(url)>4096:
@@ -108,26 +130,35 @@ def validate_public_https_url(url):
         raise ValueError("Invalid URL port") from exc
     if port not in (None,443):
         raise ValueError("Only HTTPS port 443 is permitted")
-    host=parsed.hostname.rstrip(".")
-    try:
-        literal=ipaddress.ip_address(host)
-        addresses=[literal]
-    except ValueError:
-        try:
-            answers=socket.getaddrinfo(host,443,type=socket.SOCK_STREAM)
-        except OSError as exc:
-            raise ValueError("Destination DNS resolution failed") from exc
-        addresses=[]
-        for answer in answers:
-            try:
-                addresses.append(ipaddress.ip_address(answer[4][0].split("%",1)[0]))
-            except ValueError as exc:
-                raise ValueError("Destination DNS returned an invalid address") from exc
-    if not addresses:
-        raise ValueError("Destination did not resolve to an IP address")
-    if any(not address.is_global for address in addresses):
-        raise ValueError("Destination resolves to a non-public IP address")
+    resolve_public_addresses(parsed.hostname.rstrip("."),port or 443)
     return url
+
+class PinnedHTTPSConnection(http.client.HTTPSConnection):
+    """Connect to the exact public IP that was validated; retain hostname TLS checks."""
+    def connect(self):
+        addresses=resolve_public_addresses(self.host,self.port)
+        last_error=None
+        for address in addresses:
+            raw=None
+            try:
+                raw=socket.create_connection((str(address),self.port),self.timeout,self.source_address)
+                if self._tunnel_host:
+                    self.sock=raw
+                    self._tunnel()
+                    raw=self.sock
+                self.sock=self._context.wrap_socket(raw,server_hostname=self.host)
+                return
+            except OSError as exc:
+                last_error=exc
+                if raw is not None:
+                    try: raw.close()
+                    except OSError: pass
+        if last_error: raise last_error
+        raise OSError("No usable public destination address")
+
+class PinnedHTTPSHandler(urllib.request.HTTPSHandler):
+    def https_open(self,req):
+        return self.do_open(PinnedHTTPSConnection,req,context=self._context,check_hostname=self._check_hostname)
 
 class PublicHTTPSRedirectHandler(urllib.request.HTTPRedirectHandler):
     """Revalidate every redirect target before urllib follows it."""
@@ -138,9 +169,9 @@ class PublicHTTPSRedirectHandler(urllib.request.HTTPRedirectHandler):
 def safe_https_open(request,timeout):
     target=request.full_url if isinstance(request,urllib.request.Request) else str(request)
     validate_public_https_url(target)
-    opener=urllib.request.build_opener(PublicHTTPSRedirectHandler())
+    # Disable environment proxies so the validated destination is the actual peer.
+    opener=urllib.request.build_opener(urllib.request.ProxyHandler({}),PublicHTTPSRedirectHandler(),PinnedHTTPSHandler())
     response=opener.open(request,timeout=timeout)
-    # Defensive postcondition: the final URL must still be an allowed public HTTPS URL.
     validate_public_https_url(response.geturl())
     return response
 
