@@ -345,7 +345,7 @@ if candidate_state["fixed_version"] is not None or candidate_state["analyst_veri
 feed_urls = {feed[0]: feed[2] for feed in collector.FEEDS}
 if feed_urls.get("google_security") != "https://blog.google/security/rss/":
     raise SystemExit("Google Security Blog feed is not using the refreshed HTTPS RSS endpoint")
-if feed_urls.get("australia_acsc") != "https://www.cyber.gov.au/acsc/view-all-content/alerts/rss":
+if feed_urls.get("australia_acsc") != "https://www.cyber.gov.au/rss/alerts":
     raise SystemExit("ACSC feed is not using the current alerts RSS endpoint")
 if 'timeout=12,max_attempts=2' not in collector_source:
     raise SystemExit("ACSC collection does not use a bounded timeout/retry budget")
