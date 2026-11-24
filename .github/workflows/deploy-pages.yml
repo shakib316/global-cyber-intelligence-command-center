@@ -34,6 +34,22 @@ jobs:
         with:
           name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
           path: .
+      - name: Wait for Pages artifact visibility
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_NAME: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          for attempt in $(seq 1 12); do
+            count=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts?name=${ARTIFACT_NAME}" --jq '.total_count')
+            if [ "${count}" -ge 1 ]; then
+              echo "Pages artifact is visible to the deployment token."
+              exit 0
+            fi
+            echo "Artifact not visible yet (attempt ${attempt}/12); retrying in 5 seconds."
+            sleep 5
+          done
+          echo "::error::Pages artifact did not become visible to the deployment token."
+          exit 1
       - name: Deploy dashboard
         id: deployment
         uses: actions/deploy-pages@v4
