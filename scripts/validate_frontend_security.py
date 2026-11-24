@@ -35,6 +35,11 @@ if ":focus-visible" not in HTML:
     fail("Visible keyboard focus styles are missing")
 if "prefers-reduced-motion" not in HTML:
     fail("Reduced-motion support is missing")
+controls = re.findall(r'<(?:input|select|textarea)[^>]*>', HTML, re.I)
+for control in controls:
+    if "aria-label=" not in control and "aria-labelledby=" not in control:
+        fail("A form control is missing an accessible name: " + control[:140])
+
 
 def extract(start, end):
     try:
