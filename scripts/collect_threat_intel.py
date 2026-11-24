@@ -87,9 +87,13 @@ def extract_cves(*values):
     """Extract CVE IDs from every available evidence field; CVE ID length is variable."""
     return sorted({m.upper() for value in values if value for m in CVE.findall(str(value))})
 
-IOCCTX=re.compile(r"(?i)\b(iocs?|indicators? of compromise|c2|command[- ]and[- ]control|callback|malicious (?:ip|domain|url|hash)|payload hash|sha(?:256|1|512)|ip address|domain names?)\b")
+IOCCTX=re.compile(r"(?i)\b(iocs?|indicators? of compromise|c2|command[- ]and[- ]control|callback|malicious (?:ip|domain|url|hash)|payload hash|sha(?:256|1|512)|ip address|domain names?|email address|file name|filename)\b")
 IP=re.compile(r"(?<![\w.])(?:\d{1,3}\.){3}\d{1,3}(?![\w.])")
+IPV6=re.compile(r"(?<![0-9A-Fa-f:])(?:[0-9A-Fa-f]{1,4}:){2,7}[0-9A-Fa-f]{0,4}(?![0-9A-Fa-f:])")
 DOMAIN=re.compile(r"(?i)(?<![@\w.-])(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:com|net|org|info|biz|xyz|top|ru|cn|uk|in|io|dev|app|cloud|site|online|live|me|co|gov|edu|eu|de|fr|br|au|ca|jp|tech|pro|work|shop|store|click|link|pw|cc|to|ws)(?![\w.-])")
+URLIOC=re.compile(r"https?://[^\s<>\"']+",re.I)
+EMAILIOC=re.compile(r"(?i)\b[A-Z0-9._%+-]+@(?:[A-Z0-9-]+\.)+[A-Z]{2,}\b")
+FILENAMEIOC=re.compile(r"(?i)\b[A-Z0-9_.-]{1,120}\.(?:exe|dll|sys|ps1|psm1|bat|cmd|vbs|js|jse|hta|scr|iso|lnk|jar|elf|so|dylib|docm|xlsm|zip|7z)\b")
 HASH=re.compile(r"\b(?:[a-fA-F0-9]{64}|[a-fA-F0-9]{40}|[a-fA-F0-9]{32})\b")
 
 def resolve_public_addresses(host,port=443):
@@ -670,18 +674,65 @@ def attach_kev_remediation_evidence(records):
         )
 
 def extract_iocs(s,source,url):
+    """Extract normalized IOC candidates only near explicit IOC context."""
     found={}
-    for m in IOCCTX.finditer(s):
-        w=s[max(0,m.start()-100):min(len(s),m.end()+350)]
-        for v in IP.findall(w):
+    def add(value,kind,display=None):
+        key=(kind,value)
+        found[key]={"value":value,"type":kind,"defanged_value":display or value}
+    for match in IOCCTX.finditer(s):
+        window=s[max(0,match.start()-100):min(len(s),match.end()+450)]
+        for candidate in IP.findall(window):
             try:
-                ip=ipaddress.ip_address(v)
-                if ip.is_global:found[str(ip)]="ip"
-            except ValueError:pass
-        for v in DOMAIN.findall(w):
-            if not v.lower().endswith((".example",".test",".invalid",".localhost")):found[v.lower()]="domain"
-        for v in HASH.findall(w):found[v.lower()]="hash"
-    return [{"value":v,"type":t,"source":source,"source_url":url,"confidence":"candidate near explicit IOC wording; verify against primary source"} for v,t in found.items()]
+                address=ipaddress.ip_address(candidate)
+                if address.version==4 and address.is_global:
+                    add(str(address),"ipv4",str(address).replace(".","[.]"))
+            except ValueError:
+                pass
+        for candidate in IPV6.findall(window):
+            try:
+                address=ipaddress.ip_address(candidate)
+                if address.version==6 and address.is_global:
+                    add(address.compressed,"ipv6")
+            except ValueError:
+                pass
+        for candidate in DOMAIN.findall(window):
+            domain=candidate.rstrip(".").lower()
+            if not domain.endswith((".example",".test",".invalid",".localhost")):
+                add(domain,"domain",domain.replace(".","[.]"))
+        for candidate in HASH.findall(window):
+            add(candidate.lower(),"hash")
+        for candidate in URLIOC.findall(window):
+            raw=candidate.rstrip(".,;)]}")
+            parsed=urlparse(raw)
+            if parsed.scheme.lower() not in {"http","https"} or not parsed.hostname or parsed.username or parsed.password:
+                continue
+            host=parsed.hostname.rstrip(".").lower()
+            try:
+                host_ip=ipaddress.ip_address(host)
+                if not host_ip.is_global:
+                    continue
+            except ValueError:
+                if "." not in host or host.endswith((".example",".test",".invalid",".localhost")):
+                    continue
+            netloc=host
+            if parsed.port:
+                netloc+=":"+str(parsed.port)
+            normalized=parsed._replace(scheme=parsed.scheme.lower(),netloc=netloc).geturl()
+            display_scheme="hxxps" if parsed.scheme.lower()=="https" else "hxxp"
+            display=display_scheme+"://"+host.replace(".","[.]")+((":"+str(parsed.port)) if parsed.port else "")+(parsed.path or "")+(("?"+parsed.query) if parsed.query else "")
+            add(normalized,"url",display)
+        for candidate in EMAILIOC.findall(window):
+            local,domain=candidate.rsplit("@",1)
+            domain=domain.lower().rstrip(".")
+            if domain.endswith((".example",".test",".invalid",".localhost")):
+                continue
+            normalized=local+"@"+domain
+            add(normalized,"email",local+"[@]"+domain.replace(".","[.]"))
+        for candidate in FILENAMEIOC.findall(window):
+            add(candidate.lower(),"filename")
+    return [{**record,"source":source,"source_url":url,
+             "confidence":"candidate near explicit IOC wording; verify against primary source"}
+            for record in found.values()]
 
 def main():
     health=[];errors=[];entries=[];business_entries=[];kev={};success=0;health_state=load_source_health_state()
