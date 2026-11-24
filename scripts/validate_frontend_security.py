@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Regression checks for the dashboard's safe HTML/URL rendering boundary."""
 from pathlib import Path
+import re
 import subprocess
 import sys
 
