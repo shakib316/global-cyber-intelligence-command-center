@@ -1,0 +1,554 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shakib316.github.io/global-cyber-intelligence-command-center/intel/schemas/phase2-intelligence.schema.json",
+  "title": "GCI Phase 2 Intelligence Dataset",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "generated_at",
+    "provenance_policy",
+    "sources",
+    "actors",
+    "campaigns",
+    "relationships"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "provenance_policy": {
+      "type": "string",
+      "minLength": 20
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/source"
+      }
+    },
+    "actors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/actor"
+      }
+    },
+    "campaigns": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/campaign"
+      }
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/relationship"
+      }
+    }
+  },
+  "$defs": {
+    "evidence": {
+      "type": "object",
+      "required": [
+        "source_ids"
+      ],
+      "properties": {
+        "source_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "url",
+        "publisher",
+        "retrieved_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^src-"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 3
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://"
+        },
+        "publisher": {
+          "type": "string"
+        },
+        "source_last_modified": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "retrieved_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": false
+    },
+    "actor": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "aliases",
+        "category",
+        "attribution",
+        "motivation",
+        "targeted_industries",
+        "targeted_regions",
+        "targeted_countries",
+        "first_observed",
+        "last_observed",
+        "malware_and_tools",
+        "techniques",
+        "campaign_ids",
+        "cve_ids",
+        "ioc_ids",
+        "confidence",
+        "confidence_rationale",
+        "source_ids",
+        "record_updated_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "aliases": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "category": {
+          "type": "string"
+        },
+        "attribution": {
+          "type": "object",
+          "required": [
+            "status",
+            "confidence",
+            "rationale",
+            "source_ids"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "confirmed",
+                "attributed",
+                "suspected",
+                "unknown"
+              ]
+            },
+            "origin": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "organization": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "confidence": {
+              "enum": [
+                "High",
+                "Medium",
+                "Low",
+                "Unknown"
+              ]
+            },
+            "rationale": {
+              "type": "string"
+            },
+            "source_ids": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "motivation": {
+          "type": "object",
+          "required": [
+            "value",
+            "confidence",
+            "rationale",
+            "source_ids"
+          ],
+          "properties": {
+            "value": {
+              "type": "string"
+            },
+            "confidence": {
+              "enum": [
+                "High",
+                "Medium",
+                "Low",
+                "Unknown"
+              ]
+            },
+            "rationale": {
+              "type": "string"
+            },
+            "source_ids": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "targeted_industries": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "targeted_regions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "targeted_countries": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "first_observed": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "last_observed": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "recent_activity": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "malware_and_tools": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "techniques": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^T[0-9]{4}(\\.[0-9]{3})?$"
+          }
+        },
+        "campaign_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cve_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+          }
+        },
+        "ioc_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "confidence": {
+          "enum": [
+            "High",
+            "Medium",
+            "Low",
+            "Unknown"
+          ]
+        },
+        "confidence_rationale": {
+          "type": "string",
+          "minLength": 20
+        },
+        "source_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "source_last_modified": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "record_updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": true
+    },
+    "campaign": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "summary",
+        "first_observed",
+        "last_observed",
+        "status",
+        "actor_ids",
+        "techniques",
+        "cve_ids",
+        "ioc_ids",
+        "confidence",
+        "confidence_rationale",
+        "source_ids",
+        "record_updated_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 30
+        },
+        "first_observed": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "last_observed": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": "string"
+        },
+        "targeted_industries": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "targeted_regions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "targeted_countries": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "actor_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "objectives": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "initial_access_methods": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "malware_and_tools": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "techniques": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^T[0-9]{4}(\\.[0-9]{3})?$"
+          }
+        },
+        "cve_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+          }
+        },
+        "ioc_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "detection_opportunities": {
+          "type": "array"
+        },
+        "mitigations": {
+          "type": "array"
+        },
+        "confidence": {
+          "enum": [
+            "High",
+            "Medium",
+            "Low",
+            "Unknown"
+          ]
+        },
+        "confidence_rationale": {
+          "type": "string",
+          "minLength": 20
+        },
+        "evidence_quality": {
+          "type": "string"
+        },
+        "source_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "record_updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": true
+    },
+    "relationship": {
+      "type": "object",
+      "required": [
+        "id",
+        "from_type",
+        "from_id",
+        "to_type",
+        "to_id",
+        "type",
+        "confidence",
+        "source_ids",
+        "rationale"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from_type": {
+          "enum": [
+            "actor",
+            "campaign",
+            "cve",
+            "ioc",
+            "malware",
+            "technique",
+            "detection",
+            "report",
+            "industry"
+          ]
+        },
+        "from_id": {
+          "type": "string"
+        },
+        "to_type": {
+          "enum": [
+            "actor",
+            "campaign",
+            "cve",
+            "ioc",
+            "malware",
+            "technique",
+            "detection",
+            "report",
+            "industry"
+          ]
+        },
+        "to_id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "confidence": {
+          "enum": [
+            "High",
+            "Medium",
+            "Low",
+            "Unknown"
+          ]
+        },
+        "observed_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 10
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
