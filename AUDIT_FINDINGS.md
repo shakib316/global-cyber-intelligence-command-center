@@ -43,15 +43,15 @@ The available GitHub integration did not expose a complete repository-tree listi
 ## Verification status
 
 - Source inspection: completed for the files listed in the audit boundary.
-- Source-health telemetry: merged through PR #4; subsequent Pages deployment succeeded.
+- Source-health telemetry: merged through PR #4; the subsequent Pages deployment succeeded.
 - SSRF hardening and DNS pinning: merged through PR #5.
-- Collector bounded retry and Python 3.12 compatibility: merged through PR #6; the 24-Nov-2026 main-branch collection, snapshot validation, static detection checks, artifact commit and Pages deployment all completed successfully in workflow run 45334952911.
-- Dashboard API retry/rate-limit handling: merged through PR #7; PR CI passed. A Pages deployment and fresh main-branch collection were triggered for merge commit 9b59b061e9ff7e9df06ae058714df0621762fdab and were still running at the last recorded check.
-- SPL/YARA-L foundation: implemented on branch detections/spl-yaral-foundation-2026-11-24; PR/CI pending. Five new draft queries and a lightweight metadata/structure validator are included. No target-platform parser, tenant schema or lab validation is claimed.
-- Live browser content verification: not yet recorded; the available browser inspection path returned a fetch-disabled error.
+- Collector bounded retry and Python 3.12 compatibility: merged through PR #6; main-branch collection, snapshot validation, static detection checks, artifact commit and Pages deployment all succeeded in workflow run 45334952911.
+- Dashboard API retry/rate-limit handling: merged through PR #7. PR CI passed; Dashboard Quality Watch passed and Pages deployment succeeded for merge commit 9b59b061e9ff7e9df06ae058714df0621762fdab. The separate post-merge daily collection run 45335470393 remained in progress at the last check.
+- SPL/YARA-L foundation: merged through PR #8. CI passed for KQL, SPL and YARA-L metadata/structural checks. Three SPL hunts and two YARA-L rules are included, all explicitly marked Draft. No vendor parser/compiler, tenant schema, lab or production validation is claimed.
+- Live browser content verification: not completed; the available browser inspection path returned a fetch-disabled error. Pages deployment success is confirmed, but rendered UI smoke testing is not.
 - Lighthouse/accessibility test: not performed.
 - SIEM query execution: not performed.
-- Production release validation: pending completion of PR #7 deployment and live smoke test, plus vendor-platform validation for detection rules.
+- Production release validation: collector reliability and Pages deployment have passed at least once after the collector fix; dashboard browser/accessibility and vendor-platform detection validation remain open.
 ## Release gate
 
 Do not describe the command center as enterprise-certified or production-validated until the P1 items are addressed, automated checks pass, the production Pages deployment is confirmed, and live browser/accessibility/security testing has been recorded.
