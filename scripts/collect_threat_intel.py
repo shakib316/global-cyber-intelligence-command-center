@@ -228,7 +228,7 @@ def classify_source_health(status,records,error=None):
         return "successful" if count else "empty_but_healthy"
     detail=str(error or "").lower()
     transient=("timeout","timed out","urlerror","connection reset","connection refused",
-               "temporarily","http 408","http 425","http 429","http 500","http 502",
+               "temporarily","temporary","http 408","http 425","http 429","http 500","http 502",
                "http 503","http 504","rate limit","service unavailable","gateway timeout")
     if any(marker in detail for marker in transient):
         return "temporarily_unavailable"
