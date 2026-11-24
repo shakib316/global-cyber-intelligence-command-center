@@ -7,6 +7,8 @@ on:
       - "scripts/validate_dashboard.py"
       - "scripts/validate_detection_queries.py"
       - "index.html"
+      - "intel/**"
+      - "reports/**"
       - ".github/workflows/daily-threat-intel.yml"
   schedule:
     - cron: "30 3 * * *" # 09:00 Asia/Kolkata
@@ -140,6 +142,8 @@ jobs:
           done
           echo "::error::Pages artifact did not become visible to the deployment token."
           exit 1
+      - name: Allow Pages artifact metadata to settle
+        run: sleep 20
       - name: Deploy updated dashboard
         id: deployment
         uses: actions/deploy-pages@v4
