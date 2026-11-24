@@ -218,7 +218,7 @@ nvd_payload = {"vulnerabilities": [
         "metrics": {"cvssMetricV40": [nvd_metric]}}},
     {"cve": {"id": "CVE-2026-54321", "lastModified": "2026-11-24T00:00:00.000", "metrics": {}}}
 ]}
-with patch.object(collector, "request_url", return_value=(json.dumps(nvd_payload).encode(), "utf-8", collector.NVD_API)), patch.object(collector.time, "sleep"):
+with patch.object(collector, "request_url", return_value=(json.dumps(nvd_payload).encode(), "utf-8", collector.NVD_API)) as mock_request, patch.object(collector.time, "sleep"):
     cvss_records = [{"cveID": "CVE-2026-12345"}, {"cveID": "CVE-2026-54321"}]
     cvss_meta = collector.enrich_nvd_cvss(cvss_records)
     if any(call.kwargs.get("timeout") != 12 or call.kwargs.get("max_attempts") != 2 for call in mock_request.call_args_list):
