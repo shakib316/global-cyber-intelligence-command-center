@@ -10,11 +10,11 @@ Overall: Phase 1 and Phase 2 are partially complete. This report intentionally d
 | Requirement | Status | Evidence / remaining work |
 |---|---|---|
 | Fresh collection and source reliability | Production-verified for latest run | Verified collection: 37/37 sources successful; 221 threat items, 11 recent KEV additions, 4 IOC candidates and 202 business developments. Australian ACSC is excluded and absent from active health. Recheck on scheduled runs. |
-| Empty / failed / partial / excluded source states | Partially implemented | Success-with-records, success-empty and failed states are represented; last-success timestamps and consecutive failures are retained. A complete partial-success and disabled/excluded state taxonomy is not yet represented as a first-class source-health state. |
+| Empty / failed / partial / excluded source states | Implemented and production-verified | The collector now emits successful, empty-but-healthy, partially-successful, temporarily-unavailable, failed and disabled/excluded health states. CI tests all states. Latest production snapshot: 37/37 successful; no active failures, empty feeds, partial feeds or excluded entries. ACSC remains absent from active health. |
 | SSRF and outbound collector security | Implemented with automated regression checks | Public HTTPS validation, DNS/IP pinning, redirect revalidation, bounded retries and mocked security tests are present. |
 | Frontend XSS and unsafe URL safeguards | Implemented with regression checks; broader audit pending | HTML escaping, HTTPS-only URL helper, escaped Markdown rendering and hostile-input tests are present. CSP is meta-based and permits inline scripts/styles for compatibility; a strict nonce/hash CSP and browser-based security audit remain outstanding. |
-| CSS consolidation and responsive layout | Partially implemented | Responsive breakpoints and overflow handling exist. Four root blocks remain on the current main revision; safe consolidation is implemented in PR #31 and awaits CI/merge. Broader unused-style cleanup remains outstanding. |
-| Accessibility | Partially implemented | Semantic header/nav/main/aside, visible focus styles, reduced-motion support and several ARIA labels/live regions exist. Full keyboard-only, screen-reader, colour-contrast and dialog/menu review has not been completed. |
+| CSS consolidation and responsive layout | Partially implemented | Four root theme blocks were consolidated to one, preserving the effective light-theme values. Responsive breakpoints and overflow handling remain. Broader duplicate overrides and unused-style cleanup remain outstanding. |
+| Accessibility | Partially implemented | All 17 input/select/textarea controls now have explicit accessible names, with CI enforcement. Semantic landmarks, visible focus styles and reduced-motion support exist. Full keyboard-only, screen-reader, colour-contrast and dialog/menu review has not been completed. |
 | Functional regression | Static validation passed; browser validation pending | Validators check date navigation/archive discovery, search/filter hooks, KEV and remediation rendering, watchlist, asset matcher, IOC correlation, detection display and executive digest. No browser automation or manual cross-device run was available in this execution. |
 | Critical Vulnerability Watch placement | Implemented and statically checked | Single Critical Vulnerability Watch container is inside Overview; it is not repeated in other page views. |
 | Daily report KQL formatting | Implemented and statically checked | Custom Markdown renderer preserves fenced code blocks; daily KQL sections are checked for the expected rendering hooks. |
@@ -41,12 +41,12 @@ Overall: Phase 1 and Phase 2 are partially complete. This report intentionally d
 
 | Check | Result |
 |---|---|
-| Daily collection run 45353816316 | Collection, snapshot validation, static query checks and artifact commit succeeded. The Pages action succeeded after PR #28 changed the deployment checkout to main, made automatic deployment single-path and added an artifact settling delay. The action's pages_build_version still reports the triggering workflow SHA; PR #31 adds an explicit checkout-SHA-to-remote-main assertion for future runs. |
-| Latest verified source health in run 45353816316 | 37/37 successful; ACSC absent |
-| Dashboard validator | Passed — 1,792 KEV records, 0 duplicate CVE IDs, 221 threat items, 210 business developments |
+| Daily collection run 45355479898 | Passed — collection, snapshot validation, static query checks, artifact commit and Pages deployment all succeeded. The deployment job verified that the artifact source SHA exactly matched remote main: 1f46f02778f74aa082a8ef98b1b1584abb175f0d. |
+| Latest verified source health in run 45355479898 | 37/37 successful; every active entry has health_state=successful; ACSC absent |
+| Dashboard validator | Passed — 1,792 KEV records, 0 duplicate CVE IDs, 221 threat items, 205 business developments |
 | Phase 2 provenance validator | Passed — 1 actor, 1 campaign, 6 evidence-linked relationships, 1 source |
 | Phase 2 JSON Schema (PR #29) | Passed — required fields, types, enums, patterns, formats, local references and negative fixtures |
-| Frontend security regression | Passed — CSP directives, HTTPS-only URLs, hostile HTML, Markdown and code-fence escaping |
+| Frontend security/accessibility regression | Passed — CSP directives, HTTPS-only URLs, hostile HTML, Markdown/code-fence escaping, per-link noopener, one CSS root block, reduced-motion/focus styles and accessible names on all form controls |
 | KQL structural checks | Passed — 21 KQL files; not an official Kusto parser |
 | SPL/YARA-L metadata and lightweight structure | Passed — 3 SPL and 2 YARA-L files; not official vendor compilers |
 | Browser end-to-end / screen-reader tests | Not performed — browser automation was not available in this execution |

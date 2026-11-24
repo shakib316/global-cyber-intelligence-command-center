@@ -38,7 +38,7 @@ The browser loads the latest snapshot through intel/latest.json. Historical repo
 
 ## Security boundaries
 
-- The collector validates public HTTPS destinations, resolves and pins public IPs, revalidates redirects and applies bounded retry/timeout behaviour.
+- The collector validates public HTTPS destinations, resolves and pins public IPs, revalidates redirects and applies bounded retry/timeout behaviour. Source health explicitly distinguishes successful, empty-but-healthy, partially-successful, temporarily-unavailable, failed and disabled/excluded states.
 - The dashboard escapes dynamic text before HTML insertion and routes external links through an HTTPS-only URL helper.
 - A GitHub Pages-compatible Content Security Policy is set in a meta tag. The current single-file UI retains inline JavaScript and CSS, so unsafe-inline is an explicit compatibility trade-off; this is not a nonce/hash-based strict CSP.
 - The repository and published site are public. Never commit credentials, customer data, private incident details, internal asset inventories or confidential indicators.
