@@ -81,6 +81,11 @@ if empty.get("collection_result") != "success_empty":
 failed = collector.record_source_health(health_state, "Test feed", "https://example.com/feed", "failed", 0, time.perf_counter(), "HTTP 503")
 if failed.get("collection_result") != "failed" or failed.get("last_success_at") != first.get("last_success_at") or failed.get("consecutive_failures") != 1:
     raise SystemExit("Source health failure history does not preserve last success and increment failure count")
+malformed_state = {"Malformed feed": {"last_success_at": "2026-11-20T00:00:00Z", "consecutive_failures": "not-a-number"}}
+recovered = collector.record_source_health(malformed_state, "Malformed feed", "https://example.com/feed", "failed", 0, time.perf_counter(), "HTTP 503")
+if recovered.get("consecutive_failures") != 1 or recovered.get("last_success_at") != "2026-11-20T00:00:00Z":
+    raise SystemExit("Malformed prior source-health state is not handled safely")
+
 generic_fix = "Apply mitigations in accordance with vendor instructions for affected systems."
 if collector.extract_specific_remediation(generic_fix):
     raise SystemExit("Generic vendor boilerplate was incorrectly accepted as a fix")
