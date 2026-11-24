@@ -69,6 +69,57 @@ spec = importlib.util.spec_from_file_location("gci_collector", collector_path)
 collector = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(collector)
 
+# SSRF guard: all DNS answers must be globally routable and every redirect target
+# is revalidated before urllib follows it. Tests use mocked DNS and no network.
+from unittest.mock import patch
+public_dns = [(2, 1, 6, "", ("93.184.216.34", 443))]
+with patch.object(collector.socket, "getaddrinfo", return_value=public_dns):
+    if collector.validate_public_https_url("https://example.test/advisory") != "https://example.test/advisory":
+        raise SystemExit("A public HTTPS destination was incorrectly rejected")
+
+# The TCP peer must be the validated IP, while TLS still verifies the DNS hostname.
+class FakeRawSocket:
+    def close(self):
+        pass
+class FakeTLSContext:
+    def wrap_socket(self, raw, server_hostname):
+        self.server_hostname = server_hostname
+        return raw
+fake_tls = FakeTLSContext()
+with patch.object(collector, "resolve_public_addresses", return_value=[collector.ipaddress.ip_address("93.184.216.34")]), patch.object(collector.socket, "create_connection", return_value=FakeRawSocket()) as connect:
+    pinned = collector.PinnedHTTPSConnection("example.test", context=fake_tls, timeout=3)
+    pinned.connect()
+    if connect.call_args.args[0] != ("93.184.216.34", 443) or fake_tls.server_hostname != "example.test":
+        raise SystemExit("HTTPS connection did not pin the validated IP while preserving TLS hostname verification")
+with patch.object(collector.socket, "getaddrinfo", return_value=public_dns + [(2, 1, 6, "", ("10.0.0.8", 443))]):
+    try:
+        collector.validate_public_https_url("https://mixed-dns.example/advisory")
+    except ValueError:
+        pass
+    else:
+        raise SystemExit("A hostname with a private DNS answer was incorrectly allowed")
+for unsafe_url in (
+    "http://example.test/feed",
+    "https://127.0.0.1/admin",
+    "https://[::1]/admin",
+    "https://user:pass@example.test/feed",
+    "https://example.test:8443/feed",
+):
+    try:
+        collector.validate_public_https_url(unsafe_url)
+    except ValueError:
+        pass
+    else:
+        raise SystemExit("Unsafe destination was not rejected: " + unsafe_url)
+try:
+    collector.PublicHTTPSRedirectHandler().redirect_request(None, None, 302, "Found", {}, "https://169.254.169.254/latest/meta-data/")
+except ValueError:
+    pass
+else:
+    raise SystemExit("Redirect to link-local cloud metadata was not rejected")
+if "with safe_https_open(req,timeout=8)" not in collector_source or "with safe_https_open(req,timeout=25)" not in collector_source or "PinnedHTTPSConnection" not in collector_source:
+    raise SystemExit("External collector fetch paths are not using the SSRF-safe opener")
+
 # Source health must distinguish an empty successful feed from a failed feed,
 # retain the previous success timestamp after failure, and increment failures.
 health_state = {}
