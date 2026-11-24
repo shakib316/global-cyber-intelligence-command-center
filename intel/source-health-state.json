@@ -1,339 +1,340 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-11-24T07:42:50Z",
+  "updated_at": "2026-11-24T07:50:03Z",
   "sources": {
     "CISA KEV": {
-      "last_success_at": "2026-11-24T07:42:50Z",
+      "last_success_at": "2026-11-24T07:50:03Z",
       "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:42:50Z",
-      "duration_ms": 93,
+      "last_attempt_at": "2026-11-24T07:50:03Z",
+      "duration_ms": 160,
       "status": "success",
       "collection_result": "success_with_records",
       "records": 1792
     },
     "CISA All Advisories": {
-      "last_success_at": "2026-11-24T07:42:50Z",
+      "last_success_at": "2026-11-24T07:50:03Z",
       "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:42:50Z",
-      "duration_ms": 41,
+      "last_attempt_at": "2026-11-24T07:50:03Z",
+      "duration_ms": 60,
       "status": "success",
       "collection_result": "success_with_records",
       "records": 30
     },
     "CISA ICS Advisories": {
-      "last_success_at": "2026-11-24T07:42:50Z",
+      "last_success_at": "2026-11-24T07:50:03Z",
       "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:42:50Z",
-      "duration_ms": 66,
+      "last_attempt_at": "2026-11-24T07:50:03Z",
+      "duration_ms": 99,
       "status": "success",
       "collection_result": "success_with_records",
       "records": 30
     },
     "Microsoft MSRC": {
-      "last_success_at": "2026-11-24T07:42:51Z",
+      "last_success_at": "2026-11-24T07:50:04Z",
       "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:42:51Z",
-      "duration_ms": 684,
+      "last_attempt_at": "2026-11-24T07:50:04Z",
+      "duration_ms": 1149,
       "status": "success",
       "collection_result": "success_with_records",
       "records": 5788
     },
     "AWS Security Bulletins": {
-      "last_success_at": "2026-11-24T07:42:51Z",
+      "last_success_at": "2026-11-24T07:50:04Z",
       "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:42:51Z",
-      "duration_ms": 77,
+      "last_attempt_at": "2026-11-24T07:50:04Z",
+      "duration_ms": 175,
       "status": "success",
       "collection_result": "success_with_records",
       "records": 37
     },
     "Splunk Security Advisories": {
-      "last_success_at": "2026-11-24T07:42:51Z",
+      "last_success_at": "2026-11-24T07:50:04Z",
       "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:42:51Z",
-      "duration_ms": 128,
+      "last_attempt_at": "2026-11-24T07:50:04Z",
+      "duration_ms": 28,
       "status": "success",
       "collection_result": "success_with_records",
       "records": 30
     },
     "UK NCSC": {
-      "last_success_at": "2026-11-24T07:42:51Z",
+      "last_success_at": "2026-11-24T07:50:04Z",
       "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:42:51Z",
-      "duration_ms": 120,
-      "status": "success",
-      "collection_result": "success_with_records",
-      "records": 20
-    },
-    "Canadian CCCS": {
-      "last_success_at": "2026-11-24T07:42:52Z",
-      "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:42:52Z",
-      "duration_ms": 516,
-      "status": "success",
-      "collection_result": "success_with_records",
-      "records": 50
-    },
-    "CERT-EU": {
-      "last_success_at": "2026-11-24T07:42:53Z",
-      "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:42:53Z",
-      "duration_ms": 942,
-      "status": "success",
-      "collection_result": "success_with_records",
-      "records": 10
-    },
-    "SANS Internet Storm Center": {
-      "last_success_at": "2026-11-24T07:42:53Z",
-      "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:42:53Z",
-      "duration_ms": 248,
-      "status": "success",
-      "collection_result": "success_with_records",
-      "records": 10
-    },
-    "BleepingComputer": {
-      "last_success_at": "2026-11-24T07:42:53Z",
-      "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:42:53Z",
-      "duration_ms": 149,
-      "status": "success",
-      "collection_result": "success_with_records",
-      "records": 15
-    },
-    "The Hacker News": {
-      "last_success_at": "2026-11-24T07:42:54Z",
-      "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:42:54Z",
-      "duration_ms": 547,
-      "status": "success",
-      "collection_result": "success_with_records",
-      "records": 50
-    },
-    "Cisco Talos": {
-      "last_success_at": "2026-11-24T07:42:54Z",
-      "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:42:54Z",
-      "duration_ms": 141,
-      "status": "success",
-      "collection_result": "success_with_records",
-      "records": 15
-    },
-    "Palo Alto Unit 42": {
-      "last_success_at": "2026-11-24T07:42:54Z",
-      "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:42:54Z",
-      "duration_ms": 99,
-      "status": "success",
-      "collection_result": "success_with_records",
-      "records": 15
-    },
-    "Google Threat Intelligence / Mandiant": {
-      "last_success_at": "2026-11-24T07:42:54Z",
-      "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:42:54Z",
-      "duration_ms": 429,
-      "status": "success",
-      "collection_result": "success_with_records",
-      "records": 20
-    },
-    "Cisco PSIRT": {
-      "last_success_at": "2026-11-24T07:42:55Z",
-      "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:42:55Z",
-      "duration_ms": 810,
-      "status": "success",
-      "collection_result": "success_with_records",
-      "records": 50
-    },
-    "Fortinet PSIRT": {
-      "last_success_at": "2026-11-24T07:42:57Z",
-      "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:42:57Z",
-      "duration_ms": 1481,
-      "status": "success",
-      "collection_result": "success_with_records",
-      "records": 50
-    },
-    "Google Security Blog": {
-      "last_success_at": "2026-11-24T07:42:57Z",
-      "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:42:57Z",
-      "duration_ms": 156,
-      "status": "success",
-      "collection_result": "success_with_records",
-      "records": 20
-    },
-    "Red Hat Security Advisories": {
-      "last_success_at": "2026-11-24T07:42:57Z",
-      "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:42:57Z",
-      "duration_ms": 163,
-      "status": "success",
-      "collection_result": "success_with_records",
-      "records": 138
-    },
-    "Rapid7 Research": {
-      "last_success_at": "2026-11-24T07:42:57Z",
-      "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:42:57Z",
+      "last_attempt_at": "2026-11-24T07:50:04Z",
       "duration_ms": 152,
       "status": "success",
       "collection_result": "success_with_records",
       "records": 20
     },
-    "Sophos X-Ops": {
-      "last_success_at": "2026-11-24T07:42:57Z",
+    "Canadian CCCS": {
+      "last_success_at": "2026-11-24T07:50:05Z",
       "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:42:57Z",
-      "duration_ms": 110,
+      "last_attempt_at": "2026-11-24T07:50:05Z",
+      "duration_ms": 123,
+      "status": "success",
+      "collection_result": "success_with_records",
+      "records": 50
+    },
+    "CERT-EU": {
+      "last_success_at": "2026-11-24T07:50:06Z",
+      "consecutive_failures": 0,
+      "last_attempt_at": "2026-11-24T07:50:06Z",
+      "duration_ms": 1389,
+      "status": "success",
+      "collection_result": "success_with_records",
+      "records": 10
+    },
+    "SANS Internet Storm Center": {
+      "last_success_at": "2026-11-24T07:50:06Z",
+      "consecutive_failures": 0,
+      "last_attempt_at": "2026-11-24T07:50:06Z",
+      "duration_ms": 311,
+      "status": "success",
+      "collection_result": "success_with_records",
+      "records": 10
+    },
+    "BleepingComputer": {
+      "last_success_at": "2026-11-24T07:50:06Z",
+      "consecutive_failures": 0,
+      "last_attempt_at": "2026-11-24T07:50:06Z",
+      "duration_ms": 102,
+      "status": "success",
+      "collection_result": "success_with_records",
+      "records": 15
+    },
+    "The Hacker News": {
+      "last_success_at": "2026-11-24T07:50:07Z",
+      "consecutive_failures": 0,
+      "last_attempt_at": "2026-11-24T07:50:07Z",
+      "duration_ms": 601,
+      "status": "success",
+      "collection_result": "success_with_records",
+      "records": 50
+    },
+    "Cisco Talos": {
+      "last_success_at": "2026-11-24T07:50:07Z",
+      "consecutive_failures": 0,
+      "last_attempt_at": "2026-11-24T07:50:07Z",
+      "duration_ms": 119,
+      "status": "success",
+      "collection_result": "success_with_records",
+      "records": 15
+    },
+    "Palo Alto Unit 42": {
+      "last_success_at": "2026-11-24T07:50:07Z",
+      "consecutive_failures": 0,
+      "last_attempt_at": "2026-11-24T07:50:07Z",
+      "duration_ms": 182,
+      "status": "success",
+      "collection_result": "success_with_records",
+      "records": 15
+    },
+    "Google Threat Intelligence / Mandiant": {
+      "last_success_at": "2026-11-24T07:50:08Z",
+      "consecutive_failures": 0,
+      "last_attempt_at": "2026-11-24T07:50:08Z",
+      "duration_ms": 331,
+      "status": "success",
+      "collection_result": "success_with_records",
+      "records": 20
+    },
+    "Cisco PSIRT": {
+      "last_success_at": "2026-11-24T07:50:08Z",
+      "consecutive_failures": 0,
+      "last_attempt_at": "2026-11-24T07:50:08Z",
+      "duration_ms": 620,
+      "status": "success",
+      "collection_result": "success_with_records",
+      "records": 50
+    },
+    "Fortinet PSIRT": {
+      "last_success_at": "2026-11-24T07:50:09Z",
+      "consecutive_failures": 0,
+      "last_attempt_at": "2026-11-24T07:50:09Z",
+      "duration_ms": 1137,
+      "status": "success",
+      "collection_result": "success_with_records",
+      "records": 50
+    },
+    "Google Security Blog": {
+      "last_success_at": "2026-11-24T07:50:09Z",
+      "consecutive_failures": 0,
+      "last_attempt_at": "2026-11-24T07:50:09Z",
+      "duration_ms": 114,
+      "status": "success",
+      "collection_result": "success_with_records",
+      "records": 20
+    },
+    "Red Hat Security Advisories": {
+      "last_success_at": "2026-11-24T07:50:10Z",
+      "consecutive_failures": 0,
+      "last_attempt_at": "2026-11-24T07:50:10Z",
+      "duration_ms": 362,
+      "status": "success",
+      "collection_result": "success_with_records",
+      "records": 138
+    },
+    "Rapid7 Research": {
+      "last_success_at": "2026-11-24T07:50:10Z",
+      "consecutive_failures": 0,
+      "last_attempt_at": "2026-11-24T07:50:10Z",
+      "duration_ms": 466,
+      "status": "success",
+      "collection_result": "success_with_records",
+      "records": 20
+    },
+    "Sophos X-Ops": {
+      "last_success_at": "2026-11-24T07:50:11Z",
+      "consecutive_failures": 0,
+      "last_attempt_at": "2026-11-24T07:50:11Z",
+      "duration_ms": 283,
       "status": "success",
       "collection_result": "success_with_records",
       "records": 15
     },
     "CrowdStrike Blog": {
-      "last_success_at": "2026-11-24T07:42:57Z",
+      "last_success_at": "2026-11-24T07:50:11Z",
       "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:42:57Z",
-      "duration_ms": 239,
+      "last_attempt_at": "2026-11-24T07:50:11Z",
+      "duration_ms": 388,
       "status": "success",
       "collection_result": "success_with_records",
       "records": 10
     },
     "Ubuntu Security Notices": {
-      "last_success_at": "2026-11-24T07:43:23Z",
+      "last_success_at": "2026-11-24T07:50:12Z",
       "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:43:23Z",
-      "duration_ms": 26045,
+      "last_attempt_at": "2026-11-24T07:50:12Z",
+      "duration_ms": 622,
       "status": "success",
       "collection_result": "success_with_records",
       "records": 10
     },
     "Cloudflare Security Blog": {
-      "last_success_at": "2026-11-24T07:43:24Z",
+      "last_success_at": "2026-11-24T07:50:12Z",
       "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:43:24Z",
-      "duration_ms": 161,
+      "last_attempt_at": "2026-11-24T07:50:12Z",
+      "duration_ms": 149,
       "status": "success",
       "collection_result": "success_with_records",
       "records": 20
     },
     "Google News · Cybersecurity M&A": {
-      "last_success_at": "2026-11-24T07:43:24Z",
+      "last_success_at": "2026-11-24T07:50:12Z",
       "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:43:24Z",
-      "duration_ms": 609,
+      "last_attempt_at": "2026-11-24T07:50:12Z",
+      "duration_ms": 488,
       "status": "success",
       "collection_result": "success_with_records",
       "records": 100
     },
     "Google News · Cybersecurity funding": {
-      "last_success_at": "2026-11-24T07:43:25Z",
+      "last_success_at": "2026-11-24T07:50:13Z",
       "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:43:25Z",
-      "duration_ms": 371,
+      "last_attempt_at": "2026-11-24T07:50:13Z",
+      "duration_ms": 383,
       "status": "success",
       "collection_result": "success_with_records",
       "records": 52
     },
     "Google News · Cybersecurity market moves": {
-      "last_success_at": "2026-11-24T07:43:25Z",
+      "last_success_at": "2026-11-24T07:50:13Z",
       "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:43:25Z",
-      "duration_ms": 441,
+      "last_attempt_at": "2026-11-24T07:50:13Z",
+      "duration_ms": 618,
       "status": "success",
       "collection_result": "success_with_records",
-      "records": 63
+      "records": 100
     },
     "Google News · Security company deals": {
-      "last_success_at": "2026-11-24T07:43:26Z",
+      "last_success_at": "2026-11-24T07:50:14Z",
       "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:43:26Z",
-      "duration_ms": 460,
+      "last_attempt_at": "2026-11-24T07:50:14Z",
+      "duration_ms": 300,
       "status": "success",
       "collection_result": "success_with_records",
       "records": 38
     },
     "Google News · Cybersecurity company updates": {
-      "last_success_at": "2026-11-24T07:43:26Z",
+      "last_success_at": "2026-11-24T07:50:14Z",
       "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:43:26Z",
-      "duration_ms": 473,
+      "last_attempt_at": "2026-11-24T07:50:14Z",
+      "duration_ms": 581,
       "status": "success",
       "collection_result": "success_with_records",
       "records": 100
     },
     "Google News · India cybersecurity business": {
-      "last_success_at": "2026-11-24T07:43:26Z",
+      "last_success_at": "2026-11-24T07:50:15Z",
       "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:43:26Z",
-      "duration_ms": 421,
+      "last_attempt_at": "2026-11-24T07:50:15Z",
+      "duration_ms": 453,
       "status": "success",
       "collection_result": "success_with_records",
-      "records": 36
+      "records": 100
     },
     "Google News · Security workforce and market": {
-      "last_success_at": "2026-11-24T07:43:27Z",
+      "last_success_at": "2026-11-24T07:50:15Z",
       "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:43:27Z",
-      "duration_ms": 362,
+      "last_attempt_at": "2026-11-24T07:50:15Z",
+      "duration_ms": 516,
       "status": "success",
       "collection_result": "success_with_records",
-      "records": 52
+      "records": 100
     },
     "CyberScoop": {
-      "last_success_at": "2026-11-24T07:43:27Z",
+      "last_success_at": "2026-11-24T07:50:15Z",
       "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:43:27Z",
-      "duration_ms": 91,
+      "last_attempt_at": "2026-11-24T07:50:15Z",
+      "duration_ms": 278,
       "status": "success",
       "collection_result": "success_with_records",
       "records": 10
     },
     "SecurityWeek": {
-      "last_success_at": "2026-11-24T07:43:27Z",
+      "last_success_at": "2026-11-24T07:50:16Z",
       "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:43:27Z",
-      "duration_ms": 143,
+      "last_attempt_at": "2026-11-24T07:50:16Z",
+      "duration_ms": 115,
       "status": "success",
       "collection_result": "success_with_records",
       "records": 10
     },
     "Dark Reading": {
-      "last_success_at": "2026-11-24T07:43:27Z",
+      "last_success_at": "2026-11-24T07:50:16Z",
       "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:43:27Z",
-      "duration_ms": 448,
+      "last_attempt_at": "2026-11-24T07:50:16Z",
+      "duration_ms": 424,
       "status": "success",
       "collection_result": "success_with_records",
       "records": 50
     },
     "The Record": {
-      "last_success_at": "2026-11-24T07:43:28Z",
+      "last_success_at": "2026-11-24T07:50:16Z",
       "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:43:28Z",
-      "duration_ms": 166,
+      "last_attempt_at": "2026-11-24T07:50:16Z",
+      "duration_ms": 128,
       "status": "success",
       "collection_result": "success_with_records",
       "records": 5
     },
     "TechCrunch Security": {
-      "last_success_at": "2026-11-24T07:43:28Z",
+      "last_success_at": "2026-11-24T07:50:16Z",
       "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:43:28Z",
-      "duration_ms": 138,
+      "last_attempt_at": "2026-11-24T07:50:16Z",
+      "duration_ms": 109,
       "status": "success",
       "collection_result": "success_with_records",
       "records": 20
     },
     "CERT-In India advisory index": {
       "last_success_at": "2026-11-24T07:43:30Z",
-      "consecutive_failures": 0,
-      "last_attempt_at": "2026-11-24T07:43:30Z",
-      "duration_ms": 2338,
-      "status": "success",
-      "collection_result": "success_with_records",
-      "records": 15
+      "consecutive_failures": 1,
+      "last_attempt_at": "2026-11-24T07:52:56Z",
+      "duration_ms": 159861,
+      "status": "failed",
+      "collection_result": "failed",
+      "records": 0,
+      "error": "The read operation timed out"
     }
   }
 }
