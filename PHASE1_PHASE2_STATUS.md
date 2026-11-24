@@ -13,7 +13,7 @@ Overall: Phase 1 and Phase 2 are partially complete. This report intentionally d
 | Empty / failed / partial / excluded source states | Partially implemented | Success-with-records, success-empty and failed states are represented; last-success timestamps and consecutive failures are retained. A complete partial-success and disabled/excluded state taxonomy is not yet represented as a first-class source-health state. |
 | SSRF and outbound collector security | Implemented with automated regression checks | Public HTTPS validation, DNS/IP pinning, redirect revalidation, bounded retries and mocked security tests are present. |
 | Frontend XSS and unsafe URL safeguards | Implemented with regression checks; broader audit pending | HTML escaping, HTTPS-only URL helper, escaped Markdown rendering and hostile-input tests are present. CSP is meta-based and permits inline scripts/styles for compatibility; a strict nonce/hash CSP and browser-based security audit remain outstanding. |
-| CSS consolidation and responsive layout | Partially implemented | Responsive breakpoints and overflow handling exist. Four root blocks and multiple accumulated overrides remain; safe consolidation and unused-style cleanup are outstanding. |
+| CSS consolidation and responsive layout | Partially implemented | Responsive breakpoints and overflow handling exist. Four root blocks remain on the current main revision; safe consolidation is implemented in PR #31 and awaits CI/merge. Broader unused-style cleanup remains outstanding. |
 | Accessibility | Partially implemented | Semantic header/nav/main/aside, visible focus styles, reduced-motion support and several ARIA labels/live regions exist. Full keyboard-only, screen-reader, colour-contrast and dialog/menu review has not been completed. |
 | Functional regression | Static validation passed; browser validation pending | Validators check date navigation/archive discovery, search/filter hooks, KEV and remediation rendering, watchlist, asset matcher, IOC correlation, detection display and executive digest. No browser automation or manual cross-device run was available in this execution. |
 | Critical Vulnerability Watch placement | Implemented and statically checked | Single Critical Vulnerability Watch container is inside Overview; it is not repeated in other page views. |
@@ -34,15 +34,15 @@ Overall: Phase 1 and Phase 2 are partially complete. This report intentionally d
 | IOC extraction and correlation | Partially implemented | Latest run extracted 4 candidate indicators. Candidate extraction, normalization/deduplication and defanged display are present. Reputation, expiry and analyst verification are not universally available for each IOC. |
 | Vulnerability intelligence | Partially implemented | CISA KEV catalogue (1,792 records), recent KEV additions, CVSS/EPSS enrichment and source-backed remediation evidence are present. Manual fixed-release verification and organisation-specific exposure/patch state remain incomplete. |
 | Asset risk correlation | Local utility only | The browser has a user-supplied asset-to-KEV matcher. No authenticated asset inventory, exposure, criticality or patch-management connector is present. |
-| Phase 2 schema and provenance checks | Existing provenance checks; full schema enforcement pending PR #29 | Source-reference and relationship endpoint checks are active. Full JSON Schema enforcement with negative fixtures is proposed in PR #29 and is not yet merged/production-verified. Schema validation does not independently corroborate source claims. |
+| Phase 2 schema and provenance checks | Existing provenance checks; full schema enforcement pending PR #29 | Full JSON Schema enforcement, source-reference and relationship endpoint checks, and negative schema fixtures are merged in PR #29 (commit fe7be18) and passed CI. Schema validation does not independently corroborate source claims. |
 | Phase 2 documentation | Partially implemented | Actor/campaign data policy, intelligence schema, detection documentation and architecture documentation are maintained. Broader source corroboration and query test procedures remain open. |
 
 ## Actual validation evidence
 
 | Check | Result |
 |---|---|
-| Daily collection run 45353150960 | Collection, snapshot validation, static query checks and artifact commit succeeded. The Pages action reported success but deployed trigger commit d31cc0c rather than the latest main state; PR #28 corrects checkout to main and serializes automatic deployment. Post-fix deployment is pending. |
-| Latest verified source health in that run | 37/37 successful; ACSC absent |
+| Daily collection run 45353150960 | Collection, snapshot validation, static query checks and artifact commit succeeded. The Pages action succeeded after PR #28 changed the deployment checkout to main, made automatic deployment single-path and added an artifact settling delay. The action's pages_build_version still reports the triggering workflow SHA; PR #31 adds an explicit checkout-SHA-to-remote-main assertion for future runs. |
+| Latest verified source health in run 45353816316 | 37/37 successful; ACSC absent |
 | Dashboard validator | Passed — 1,792 KEV records, 0 duplicate CVE IDs, 221 threat items, 210 business developments |
 | Phase 2 provenance validator | Passed — 1 actor, 1 campaign, 6 evidence-linked relationships, 1 source |
 | Frontend security regression | Passed — CSP directives, HTTPS-only URLs, hostile HTML, Markdown and code-fence escaping |
