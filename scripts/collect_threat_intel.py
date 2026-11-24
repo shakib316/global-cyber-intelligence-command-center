@@ -676,7 +676,7 @@ def main():
             f"- CVEs: {', '.join(x['cves']) or 'none extracted'} | Topic signals: {', '.join(x['topics']) or 'analyst review required'}",
             f"- Summary: {x.get('summary','')[:900]}",
             f"- Technical details: {x.get('details') or x.get('summary','')[:900]}",
-            f"- Fix / remediation: {x.get('remediation_guidance') or x.get('remediation_status') or 'Fix status unknown; check the linked vendor advisory for updates.'}",,
+            f"- Fix / remediation: {x.get('remediation_guidance') or x.get('remediation_status') or 'Fix status unknown; check the linked vendor advisory for updates.'}",
             f"- EPSS context: {format_epss_context(x)} — FIRST.org; not an asset-specific risk score"
             f"- [Open source item]({x['url']})",""]
     else:lines.append("No dated items returned. This does not mean no threats occurred; inspect source health.")
