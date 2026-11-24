@@ -210,10 +210,14 @@ if "def enrich_epss(records)" not in collector_source or "EPSS_API" not in colle
     raise SystemExit("Snapshot does not expose source-attributed EPSS enrichment metadata")
 
 # NVD CVSS enrichment: preserve metric provenance and validate numeric bounds.
-nvd_payload = {"vulnerabilities": [{"cve": {"id": "CVE-2026-12345", "lastModified": "2026-11-24T00:00:00.000",
-    "metrics": {"cvssMetricV40": [{"source": "nvd@nist.gov", "type": "Primary",
-    "cvssData": {"version": "4.0", "baseScore": 9.3, "baseSeverity": "CRITICAL", "vectorString": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"}}]}},
-    {"cve": {"id": "CVE-2026-54321", "lastModified": "2026-11-24T00:00:00.000", "metrics": {}}}]}
+nvd_metric = {"source": "nvd@nist.gov", "type": "Primary",
+    "cvssData": {"version": "4.0", "baseScore": 9.3, "baseSeverity": "CRITICAL",
+    "vectorString": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"}}
+nvd_payload = {"vulnerabilities": [
+    {"cve": {"id": "CVE-2026-12345", "lastModified": "2026-11-24T00:00:00.000",
+        "metrics": {"cvssMetricV40": [nvd_metric]}}},
+    {"cve": {"id": "CVE-2026-54321", "lastModified": "2026-11-24T00:00:00.000", "metrics": {}}}
+]}
 with patch.object(collector, "request_url", return_value=(json.dumps(nvd_payload).encode(), "utf-8", collector.NVD_API)), patch.object(collector.time, "sleep"):
     cvss_records = [{"cveID": "CVE-2026-12345"}, {"cveID": "CVE-2026-54321"}]
     cvss_meta = collector.enrich_nvd_cvss(cvss_records)
