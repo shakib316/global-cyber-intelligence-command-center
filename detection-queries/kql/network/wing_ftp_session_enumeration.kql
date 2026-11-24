@@ -1,0 +1,24 @@
+// ID: GCI-KQL-NET-001
+// Title: Wing FTP Server administrator session enumeration hunt
+// Platform: Microsoft Sentinel
+// Type: Triage hunt
+// Data source: WingFTP_CL (custom web/admin access log table)
+// Required fields: TimeGenerated, RequestPath_s, ClientIP_s, StatusCode_d
+// Prerequisites: Ingest Wing FTP web/admin access logs into a custom table; confirm path field.
+// Maturity: Draft — custom schema assumed; endpoint repetition is a hunt heuristic, not an exploit signature
+// Source: CVE-2026-135171 and Wing FTP Server 8.2.8 release notes, 2026-11-23; https://www.wftpserver.com/serverhistory.htm
+// ATT&CK: No direct mapping; session enumeration is a vulnerability-specific investigation pivot.
+// False positives: Normal license checks and admin UI activity.
+// Tuning: Correlate repeated endpoint requests with session reuse across IPs and subsequent admin/Lua-console actions.
+// Owner: Security Engineering
+// Last reviewed: 2026-11-24
+// Review by: 2026-12-01
+
+WingFTP_CL
+| where TimeGenerated >= ago(7d)
+| where RequestPath_s contains "/service_get_license.html"
+| summarize Requests=count(),
+            StatusCodes=make_set(StatusCode_d)
+    by ClientIP_s, bin(TimeGenerated, 5m)
+| where Requests >= 3
+| order by TimeGenerated desc

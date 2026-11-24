@@ -1,0 +1,27 @@
+// ID: GCI-KQL-LNX-002
+// Title: GL.iNet router/KVM Linux persistence and malware-string hunt
+// Platform: Microsoft Sentinel
+// Type: Triage hunt
+// Data source: Syslog (router/Linux syslog forwarding)
+// Required fields: TimeGenerated, Computer, HostName, HostIP, ProcessName, SyslogMessage
+// Prerequisites: Router syslog forwarding and adequate retention; strings are firmware/campaign-specific.
+// Maturity: Draft — validate process/file strings against affected GL.iNet models and firmware
+// Source: GL.iNet security notice and BleepingComputer investigation, 2026-11-20/23; https://www.gl-inet.com/en-eu/blogs/blog/glinet-security-notice-2026-11-20
+// ATT&CK: T1053.003 — Cron; T1059.004 — Unix Shell (only where process evidence supports the mapping).
+// False positives: Legitimate cron jobs, admin scripts, firmware updates and SSH key maintenance.
+// Tuning: Correlate with file-integrity monitoring, source IP, process parent, outbound network and approved maintenance.
+// Owner: Security Engineering
+// Last reviewed: 2026-11-24
+// Review by: 2026-12-01
+
+Syslog
+| where TimeGenerated >= ago(14d)
+| extend Msg = tolower(SyslogMessage)
+| where Msg contains "crond -i /tmp/.log"
+    or Msg contains "ni.sh"
+    or Msg contains "gl-helper"
+    or Msg contains "urandom_seed"
+    or Msg contains "authorized_keys"
+| project TimeGenerated, Computer, HostName, HostIP,
+          ProcessName, SyslogMessage
+| order by TimeGenerated desc

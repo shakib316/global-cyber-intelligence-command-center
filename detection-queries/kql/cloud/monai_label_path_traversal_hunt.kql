@@ -1,0 +1,31 @@
+// ID: GCI-KQL-CLD-003
+// Title: MONAI Label datastore path-traversal upload hunt
+// Platform: Microsoft Sentinel
+// Type: Detection hunt
+// Data source: AzureDiagnostics (Application Gateway access logs)
+// Required fields: TimeGenerated, Category, requestUri_s, requestQuery_s, httpMethod_s, clientIP_s, httpStatus_d, userAgent_s
+// Prerequisites: Application Gateway access logging; confirm legacy AzureDiagnostics schema and URL normalization.
+// Maturity: Draft — assumed Application Gateway fields; not executed in a tenant
+// Source: Project MONAI Label 0.8.6 release, 2026-11-22; https://github.com/Project-MONAI/MONAILabel/releases/tag/0.8.6
+// ATT&CK: T1190 — Exploit Public-Facing Application.
+// False positives: Legitimate datastore/session PUT requests; encoded path segments in benign clients.
+// Tuning: Correlate WAF requests with application/file events; tune encoded traversal patterns to the deployed gateway parser.
+// Owner: Security Engineering
+// Last reviewed: 2026-11-24
+// Review by: 2026-12-01
+
+AzureDiagnostics
+| where TimeGenerated >= ago(30d)
+| where Category == "ApplicationGatewayAccessLog"
+| extend Request = tolower(strcat(tostring(requestUri_s), "?", tostring(requestQuery_s)))
+| where httpMethod_s =~ "PUT"
+| where Request contains "/datastore/image"
+    or Request contains "/datastore/label"
+    or Request contains "/session/"
+| where Request contains "../"
+    or Request contains "%2e%2e"
+    or Request contains "%252e%252e"
+    or Request contains "..%2f"
+| project TimeGenerated, clientIP_s, httpMethod_s, requestUri_s,
+          requestQuery_s, httpStatus_d, userAgent_s
+| order by TimeGenerated desc

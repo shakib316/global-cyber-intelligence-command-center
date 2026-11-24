@@ -1,0 +1,39 @@
+// ID: GCI-KQL-VIRT-002
+// Title: Xen Orchestra empty-object authentication token and campaign IOC hunt
+// Platform: Microsoft Sentinel
+// Type: Detection / investigation pivot
+// Data source: XenOrchestraProxy_CL (custom reverse-proxy table) and CommonSecurityLog
+// Required fields: TimeGenerated, Cookie_s, RequestUri_s, ClientIP_s, StatusCode_d; CommonSecurityLog SourceIP, DestinationIP
+// Prerequisites: Reverse proxy/WAF must capture the Cookie header; XO itself may not log unauthenticated access.
+// Maturity: Draft — custom proxy schema assumed; IOC list is vendor-published campaign infrastructure
+// Source: Vates VSA-2026-062, 2026-11-10; https://docs.vates.tech/security-advisories/advisories/2026/vates-sa-2026-062/
+// ATT&CK: T1190 — Exploit Public-Facing Application.
+// False positives: Malformed test cookies, security scanner traffic and approved proxy validation.
+// Tuning: Normalize cookie encoding at the proxy; investigate VM pivot2, hvm_serial: file and zz-ustar/.ustar artefacts on XCP-ng hosts.
+// Owner: Security Engineering
+// Last reviewed: 2026-11-24
+// Review by: 2026-12-01
+
+XenOrchestraProxy_CL
+| where TimeGenerated >= ago(30d)
+| extend Cookie = tolower(tostring(Cookie_s)),
+         Uri = tolower(tostring(RequestUri_s))
+| where Cookie contains "authenticationtoken=j:{}"
+    or Cookie contains "authenticationtoken=j:%7b%7d"
+    or Uri contains "/rest/v0/users/me/authentication_tokens"
+| project TimeGenerated, ClientIP_s, RequestMethod_s,
+          RequestUri_s, StatusCode_d
+| order by TimeGenerated desc
+
+// Separate network IOC hunt using CommonSecurityLog:
+let XenIOCs = dynamic([
+    "91.211.251.112", "193.148.56.72", "37.221.208.216",
+    "45.66.35.11", "64.65.0.120", "64.65.62.160",
+    "89.47.51.90", "92.60.37.247"
+]);
+CommonSecurityLog
+| where TimeGenerated >= ago(30d)
+| where SourceIP in (XenIOCs) or DestinationIP in (XenIOCs)
+| project TimeGenerated, DeviceVendor, DeviceProduct,
+          SourceIP, DestinationIP, DestinationPort, Activity
+| order by TimeGenerated desc

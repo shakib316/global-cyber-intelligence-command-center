@@ -1,0 +1,45 @@
+// ID: GCI-KQL-BIZ-002
+// Title: Beneficiary or approval change followed by payment release
+// Platform: Microsoft Sentinel
+// Type: Business-process audit detection
+// Data source: PaymentAudit_CL (custom ERP/payment audit table)
+// Required fields: TimeGenerated, EventType_s, BeneficiaryId_s, Actor_s, ChangedFields_s, SourceIp_s, Amount_d, TransactionId_s
+// Prerequisites: Ingest beneficiary, bank-detail, approval-rule and payment-release audit events; event names below are illustrative.
+// Maturity: Draft — replace custom table/field/event names with the actual payment platform schema
+// Source: CERT-In CIAD-2026-0062, original issue 2026-11-20; https://www.cert-in.org.in/s2cMainServlet?VLCODE=CIAD-2026-0062&pageid=PUBVLNOTES02
+// ATT&CK: No direct mapping; fraud-control monitoring, not inherently an intrusion detection.
+// False positives: Approved vendor onboarding, bank-detail corrections and legitimate payment releases.
+// Tuning: Add maker/checker identity, independent verification, beneficiary cooling-off and authoritative reconciliation status.
+// Owner: Security Engineering / Fraud Operations
+// Last reviewed: 2026-11-24
+// Review by: 2026-12-01
+
+let Changes =
+    PaymentAudit_CL
+    | where TimeGenerated >= ago(7d)
+    | where EventType_s in (
+        "BeneficiaryChanged",
+        "BankDetailsChanged",
+        "ApprovalRuleChanged"
+    )
+    | project BeneficiaryId_s,
+              ChangeTime=TimeGenerated,
+              ChangeActor=Actor_s,
+              ChangedFields_s,
+              ChangeIP=SourceIp_s;
+let Payments =
+    PaymentAudit_CL
+    | where TimeGenerated >= ago(7d)
+    | where EventType_s == "PaymentReleased"
+    | project BeneficiaryId_s,
+              PaymentTime=TimeGenerated,
+              PaymentActor=Actor_s,
+              Amount_d,
+              TransactionId_s;
+Changes
+| join kind=inner Payments on BeneficiaryId_s
+| where PaymentTime >= ChangeTime and PaymentTime <= ChangeTime + 1h
+| project BeneficiaryId_s, ChangeTime, ChangeActor,
+          ChangedFields_s, ChangeIP, PaymentTime,
+          PaymentActor, Amount_d, TransactionId_s
+| order by PaymentTime desc

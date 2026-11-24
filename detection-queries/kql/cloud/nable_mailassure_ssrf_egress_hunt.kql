@@ -1,0 +1,29 @@
+// ID: GCI-KQL-CLD-002
+// Title: N-able Mail Assure Local Cloud unusual private-network egress
+// Platform: Microsoft Sentinel
+// Type: Triage hunt
+// Data source: CommonSecurityLog (firewall/network flow)
+// Required fields: TimeGenerated, SourceIP, DestinationIP, DestinationPort, Activity
+// Prerequisites: Firewall telemetry; populate the Mail Assure Local Cloud server IP list; Hosted Cloud customers cannot see provider-side egress.
+// Maturity: Draft — illustrative network hunt; not a detector for the Hosted Cloud service
+// Source: N-able advisory CVE-2026-134624, 2026-11-23; https://me.n-able.com/s/security-advisory/aArVy0000002mrlKAA
+// ATT&CK: No direct mapping; vulnerability-level SSRF/egress hunt.
+// False positives: Expected LDAP, DNS, mail, monitoring and internal service traffic.
+// Tuning: Establish expected destinations/ports; a single SSRF probe may not meet the multi-destination threshold.
+// Owner: Security Engineering
+// Last reviewed: 2026-11-24
+// Review by: 2026-12-01
+
+let MailAssureServers = dynamic([]);
+CommonSecurityLog
+| where TimeGenerated >= ago(7d)
+| where SourceIP in (MailAssureServers)
+| where ipv4_is_in_range(DestinationIP, "10.0.0.0/8")
+    or ipv4_is_in_range(DestinationIP, "172.16.0.0/12")
+    or ipv4_is_in_range(DestinationIP, "192.168.0.0/16")
+| summarize InternalDestinations=dcount(DestinationIP),
+            DestinationPorts=make_set(DestinationPort, 50),
+            Activities=make_set(Activity, 10)
+    by SourceIP, bin(TimeGenerated, 15m)
+| where InternalDestinations >= 5
+| order by TimeGenerated desc

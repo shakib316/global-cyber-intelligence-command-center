@@ -12,6 +12,7 @@ A versioned, technology-categorized library of threat-hunting and detection quer
 | Identity | [kql/identity](kql/identity/) | Entra ID privileged activity and application consent |
 | Linux | [kql/linux](kql/linux/) | SSH authentication failures and brute-force hunting |
 | Firewall / Network | [kql/firewall](kql/firewall/) | Rare or unusual destination hunting from firewall telemetry |
+| Network / Infrastructure | [kql/network](kql/network/) | Xen Orchestra, Wing FTP and OT/engineering egress hunts |
 | Cloud / Containers | [kql/cloud](kql/cloud/) | Kubernetes audit activity, secrets and pod creation |
 | Virtualization | [kql/virtualization](kql/virtualization/) | VMware vCenter syslog hunting |
 | Asset inventory | [kql/asset-inventory](kql/asset-inventory/) | Software inventory review for vulnerability exposure |
@@ -32,6 +33,13 @@ A versioned, technology-categorized library of threat-hunting and detection quer
 | GCI-KQL-VIRT-001 | [vCenter management-plane activity](kql/virtualization/vcenter_syslog_hunt.kql) | Syslog | Draft |
 | GCI-KQL-AST-001 | [Software inventory review](kql/asset-inventory/software_inventory_review.kql) | DeviceTvmSoftwareInventory | Draft |
 | GCI-KQL-BIZ-001 | [Payment workflow sensitive changes](kql/business-applications/payment_workflow_changes.kql) | PaymentAudit_CL (custom) | Draft |
+| GCI-KQL-CLD-002 | [N-able Mail Assure Local Cloud SSRF egress](kql/cloud/nable_mailassure_ssrf_egress_hunt.kql) | CommonSecurityLog | Draft |
+| GCI-KQL-CLD-003 | [MONAI Label path traversal](kql/cloud/monai_label_path_traversal_hunt.kql) | AzureDiagnostics | Draft |
+| GCI-KQL-VIRT-002 | [Xen Orchestra empty-token authentication bypass](kql/virtualization/xen_orchestra_empty_token_auth_bypass.kql) | XenOrchestraProxy_CL / CommonSecurityLog | Draft |
+| GCI-KQL-LNX-002 | [GL.iNet router/KVM persistence hunt](kql/linux/glinet_router_persistence_hunt.kql) | Syslog | Draft |
+| GCI-KQL-NET-001 | [Wing FTP session enumeration](kql/network/wing_ftp_session_enumeration.kql) | WingFTP_CL (custom) | Draft |
+| GCI-KQL-WIN-003 | [Idunno.AntiCsrf IIS and DLL hunt](kql/windows/idunno_anticsrf_iis_hunt.kql) | W3CIISLog / DeviceFileEvents | Draft |
+| GCI-KQL-BIZ-002 | [Beneficiary/approval change followed by payment](kql/business-applications/payment_workflow_change_to_payment.kql) | PaymentAudit_CL (custom) | Draft |
 
 ## Required metadata for every query
 
