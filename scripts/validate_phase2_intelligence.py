@@ -49,7 +49,7 @@ campaign_ids = {x["id"] for x in campaigns}
 for source in sources:
     if not str(source.get("url", "")).startswith("https://"):
         fail("source URL must use HTTPS: " + str(source.get("id")))
-    parse_date(source.get("retrieved_at"), "source retrieved_at")
+    parse_date(source.get("retrieved_on"), "source retrieved_on")
 for actor in actors:
     if actor.get("confidence") not in {"High", "Medium", "Low", "Unknown"}:
         fail("actor confidence is invalid: " + actor["id"])
