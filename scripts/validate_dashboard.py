@@ -355,6 +355,8 @@ report_date = pointer.get("date_ist", pointer["date_utc"])
 report_path = root / "reports" / report_date[:4] / report_date[5:7] / (report_date[8:10] + ".md")
 if report_path.exists():
     report = report_path.read_text(encoding="utf-8")
+    if "EPSS context:" in report and any("EPSS context:" in line and "Open source item" in line for line in report.splitlines()):
+        raise SystemExit("EPSS context and source link must render as separate report lines")
     if "Sentinel KQL" in report and "prepareBriefing" not in html:
         raise SystemExit("Report contains query section but dashboard lacks inline-query renderer")
 print("Dashboard checks passed: unique DOM IDs, latest/newer/older/oldest date navigation, historical report discovery, global search, filters, detailed threat/business cards, adjacent remediation, full KEV actions, watchlist, asset matcher, IOC correlation, ATT&CK/readiness, executive digest, JavaScript and collector syntax.")
