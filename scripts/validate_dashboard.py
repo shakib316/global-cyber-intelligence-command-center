@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Static dashboard and latest-intelligence integrity checks."""
-import ast, importlib.util, json, re, subprocess, tempfile, time
+import ast, importlib.util, json, re, subprocess, tempfile, time, sys
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
