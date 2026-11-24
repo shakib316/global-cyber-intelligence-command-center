@@ -53,7 +53,7 @@ Use concise threat cards/sections, not long narrative essays. Include relevant r
 - Never invent table/field names as if tenant-confirmed. Clearly label assumed schemas and use illustrative queries when no tenant schema is available.
 - If no meaningful query is possible, state why and do not create a misleading placeholder.
 - Query maturity must be honest: **Draft**, **Schema-checked**, **Syntax-validated**, **Lab-tested**, **Production-approved** or **Retired**. Static lint is not Kusto parser validation, tenant validation, lab testing or production approval.
-- Keep query text readable, correctly fenced as KQL, and free of Markdown table-pipe corruption. Do not put full queries inside table cells.
+- Every full Sentinel query MUST be rendered as a fenced code block using the exact opening language tag ` ```kql ` and a closing ` ``` ` on its own line. Do not use plain text, inline backticks, indented code, `~~~kusto`, or unlabeled fences for full KQL. Put each query in its own clearly titled/expandable block directly within the Today's Threats section. The table may contain only a short Q# reference and purpose. Keep query text readable and free of Markdown table-pipe corruption.
 
 ### 3) CYBERSECURITY BUSINESS & INDUSTRY NEWS — mandatory daily section
 This section must appear every day, even when no qualifying item is found.
