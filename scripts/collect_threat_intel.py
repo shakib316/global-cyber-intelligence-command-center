@@ -660,6 +660,16 @@ def enrich_kev_records(records,max_workers=8):
                     "confidence":"Concrete remediation wording extracted from a CISA-linked vendor reference; analyst review required"
                 })
 
+
+def attach_kev_remediation_evidence(records):
+    """Build the KEV remediation evidence object after linked vendor pages are enriched."""
+    for record in records:
+        vendor_fixes=record.get("vendor_remediation",[])
+        source_action=extract_specific_remediation(str(record.get("requiredAction") or ""))
+        record["remediation_evidence"]=build_remediation_evidence(
+            record,"",source_action,vendor_fixes,False,False
+        )
+
 def extract_iocs(s,source,url):
     found={}
     for m in IOCCTX.finditer(s):
@@ -761,6 +771,7 @@ def main():
     vulns=kev.get("vulnerabilities",[]) if kev else []
     recentkev=sorted([v for v in vulns if v.get("dateAdded","")>=(NOW_IST.date()-dt.timedelta(days=7)).isoformat()],key=lambda x:x.get("dateAdded",""),reverse=True)
     enrich_kev_records(recentkev[:40])
+    attach_kev_remediation_evidence(recentkev[:40])
     epss_enrichment=enrich_epss(recentkev[:40]+items)
     cvss_enrichment=enrich_nvd_cvss(recentkev[:20])
     iocmap={}
