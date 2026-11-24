@@ -542,3 +542,9 @@ print("Business developments:", len(data["business_items"]))
 print("Business feeds:", len(business_sources))
 print("Threat items:", len(data.get("items", [])))
 print("Source health:", data.get("successful_sources", 0), "/", data.get("total_sources", 0))
+
+# Keep frontend escaping, URL and Markdown injection regression tests in the main quality gate.
+frontend_security = subprocess.run([sys.executable, str(root / "scripts/validate_frontend_security.py")], capture_output=True, text=True)
+if frontend_security.returncode:
+    raise SystemExit(frontend_security.stdout + frontend_security.stderr)
+print(frontend_security.stdout.strip())
