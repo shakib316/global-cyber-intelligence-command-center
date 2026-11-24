@@ -508,7 +508,7 @@ def format_epss_context(record):
     if record.get("epss_status")=="partially_available":return "EPSS partially available"
     return "EPSS unavailable / not applicable"
 
-def enrich_nvd_cvss(records,max_records=20):
+def enrich_nvd_cvss(records,max_records=15):
     """Retrieve NVD CVSS metrics for recent KEV entries, respecting unauthenticated rate limits."""
     cves=sorted({str(r.get("cveID","")).upper() for r in records if CVE.fullmatch(str(r.get("cveID","")).upper())})[:max_records]
     api_key=os.environ.get("NVD_API_KEY","").strip()
@@ -519,7 +519,7 @@ def enrich_nvd_cvss(records,max_records=20):
         if index:time.sleep(0.7 if api_key else 6.1)
         try:
             url=NVD_API+"?"+urlencode({"cveId":cve})
-            raw,_,_=request_url(url,headers,timeout=25,max_bytes=2_000_000)
+            raw,_,_=request_url(url,headers,timeout=12,max_bytes=2_000_000,max_attempts=2)
             payload=json.loads(raw.decode("utf-8"))
             rows=payload.get("vulnerabilities")
             if not isinstance(rows,list):raise ValueError("Unexpected NVD CVE API response schema")
@@ -544,7 +544,7 @@ def enrich_nvd_cvss(records,max_records=20):
                     chosen={"version":str(data.get("version") or key.replace("cvssMetricV","")),
                         "base_score":score,"severity":severity or None,"vector":str(data.get("vectorString") or ""),
                         "source":str(metric.get("source") or "NVD"),"source_type":str(metric.get("type") or "Unknown"),
-                        "nvd_last_modified":match.get("lastModified"),
+                        "nvd_last_modified":match.get("lastModified"),"nvd_status":match.get("vulnStatus"),
                         "source_url":"https://nvd.nist.gov/vuln/detail/"+cve}
                     break
                 if chosen:break
@@ -570,11 +570,12 @@ def enrich_nvd_cvss(records,max_records=20):
 def format_cvss_context(record):
     metric=record.get("cvss")
     if metric:
-        return "CVSS %s %.1f %s; vector %s; NVD record updated %s" % (
+        return "CVSS %s %.1f %s; vector %s; metric source %s (%s); NVD status %s; record updated %s" % (
             metric.get("version","unknown"),metric.get("base_score",0),metric.get("severity") or "severity not stated",
-            metric.get("vector") or "vector not supplied",metric.get("nvd_last_modified") or "date not stated")
+            metric.get("vector") or "vector not supplied",metric.get("source") or "source not stated",metric.get("source_type") or "type not stated",metric.get("nvd_status") or "status not stated",metric.get("nvd_last_modified") or "date not stated")
     states={"not_scored_in_nvd":"NVD has no CVSS metric","lookup_failed":"NVD lookup failed",
-        "invalid_metric":"NVD metric was present but did not pass validation","not_found":"CVE not found in NVD"}
+        "invalid_metric":"NVD metric was present but did not pass validation","not_found":"CVE not found in NVD",
+        "not_requested":"NVD lookup not requested due to the bounded daily cap"}
     return states.get(record.get("cvss_status"),"CVSS not available / not applicable")
 
 def enrich_kev_records(records,max_workers=8):
