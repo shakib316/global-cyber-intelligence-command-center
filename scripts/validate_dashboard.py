@@ -5,6 +5,41 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
 html = (root / "index.html").read_text(encoding="utf-8")
+
+# Frontend security and accessibility regression guards. Dynamic content must be
+# escaped before HTML insertion; Markdown links must pass the HTTPS URL guard.
+for marker in ('const esc=s=>String(s??"").replace(/[&<>"\']/g',
+               'const safeUrl=u=>{try{const x=new URL(u);return x.protocol==="https:"?x.href:"#"}catch{return "#"}};',
+               'function inlineMd(s){let x=esc(s);',
+               "const raw=code.join",
+               "esc(raw)",
+               'rel="noopener"',
+               '<nav class="side-nav" aria-label="Primary navigation">',
+               '<button type="button" class="nav',
+               ':focus-visible',
+               '@media(prefers-reduced-motion:reduce)'):
+    if marker not in html:
+        raise SystemExit("Dashboard security/accessibility regression: missing " + marker)
+if 'function showView(name){' not in html or 'setAttribute("aria-current","page")' not in html:
+    raise SystemExit("Navigation does not expose the active page to assistive technology")
+if re.search(r'<(?:div|span)[^>]*class="nav[^"]*"[^>]*data-view=', html):
+    raise SystemExit("Navigation contains non-keyboard-operable div controls")
+if re.search(r'\son(?:error|load|click)\s*=', html, re.I):
+    raise SystemExit("Inline event-handler attributes are not permitted in dashboard markup")
+
+health_state_path = root / "intel/source-health-state.json"
+if health_state_path.exists():
+    health_state = json.loads(health_state_path.read_text(encoding="utf-8"))
+    health_sources = health_state.get("sources", {})
+    if any("acsc" in str(name).lower() for name in health_sources):
+        raise SystemExit("Excluded ACSC source remains in persisted source-health state")
+    allowed_source_status = {"success", "failed", "partial", "temporarily_unavailable", "disabled"}
+    for name, record in health_sources.items():
+        if record.get("status") not in allowed_source_status:
+            raise SystemExit("Unknown source-health status for " + str(name))
+        failures = record.get("consecutive_failures", 0)
+        if not isinstance(failures, int) or failures < 0:
+            raise SystemExit("Invalid consecutive failure counter for " + str(name))
 required = ["criticalVulnList", "prepareBriefing", "businessList", "queryGrid", "loadQueries", "reportPicker", "loadReportPath", "threatPrev", "businessPrev", "kevPrev", "cisa_kev_catalog", "CVERecord?id=", "kevStatus", "queriesLoaded", "const groups={}", "globalSearchPanel", "globalSearch", "globalScope", "kevSearch", "kevVendor", "kevDueFilter", "priorityFilter", "v.vulnerabilityName", "function globalSearch", "function filteredKev", "const remediationBlock=", "function relatedFor", "function renderWatchlist", "function matchAssets", "function renderIOC", "function compareSnapshots", "function copyExecutiveDigest", "function renderReadiness", "oldestReport", "intel\\/daily", "remediation_guidance", "No specific fix identified in retrieved source text", "function kevHtml", "function kevAction", "function itemHtml", "function businessCard", "function businessSignificance", "vendor_remediation", "LINKED VENDOR ADVISORY", "Article text retrieved", "What to verify next", "businessDetail", "businessClear", "knownRansomwareCampaignUse", "Evidence ", "last_success_at", "last_attempt_at", "duration_ms", "consecutive_failures", "collection_result"]
 required.extend(["async function fetchWithRetry", "X-RateLimit-Remaining", "Retry-After", "fetchWithRetry(API+", "fetchWithRetry(\"https://raw.githubusercontent.com/"])
 if "CANDIDATE FIXED RELEASE · NOT VERIFIED" not in html or "candidate_fixed_releases" not in html:
