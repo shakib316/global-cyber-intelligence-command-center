@@ -89,7 +89,7 @@ def extract_cves(*values):
 
 IOCCTX=re.compile(r"(?i)\b(iocs?|indicators? of compromise|c2|command[- ]and[- ]control|callback|malicious (?:ip|domain|url|hash)|payload hash|sha(?:256|1|512)|ip address|domain names?|email address|file name|filename)\b")
 IP=re.compile(r"(?<![\w.])(?:\d{1,3}\.){3}\d{1,3}(?![\w.])")
-IPV6=re.compile(r"(?<![0-9A-Fa-f:])(?:[0-9A-Fa-f]{1,4}:){2,7}[0-9A-Fa-f]{0,4}(?![0-9A-Fa-f:])")
+IPV6=re.compile(r"(?<![0-9A-Fa-f:])(?:[0-9A-Fa-f]{0,4}:){2,7}[0-9A-Fa-f]{0,4}(?![0-9A-Fa-f:])")
 DOMAIN=re.compile(r"(?i)(?<![@\w.-])(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:com|net|org|info|biz|xyz|top|ru|cn|uk|in|io|dev|app|cloud|site|online|live|me|co|gov|edu|eu|de|fr|br|au|ca|jp|tech|pro|work|shop|store|click|link|pw|cc|to|ws)(?![\w.-])")
 URLIOC=re.compile(r"https?://[^\s<>\"']+",re.I)
 EMAILIOC=re.compile(r"(?i)\b[A-Z0-9._%+-]+@(?:[A-Z0-9-]+\.)+[A-Z]{2,}\b")
@@ -714,12 +714,16 @@ def extract_iocs(s,source,url):
             except ValueError:
                 if "." not in host or host.endswith((".example",".test",".invalid",".localhost")):
                     continue
+            try:
+                port=parsed.port
+            except ValueError:
+                continue
             netloc=host
-            if parsed.port:
-                netloc+=":"+str(parsed.port)
+            if port:
+                netloc+=":"+str(port)
             normalized=parsed._replace(scheme=parsed.scheme.lower(),netloc=netloc).geturl()
             display_scheme="hxxps" if parsed.scheme.lower()=="https" else "hxxp"
-            display=display_scheme+"://"+host.replace(".","[.]")+((":"+str(parsed.port)) if parsed.port else "")+(parsed.path or "")+(("?"+parsed.query) if parsed.query else "")
+            display=display_scheme+"://"+host.replace(".","[.]")+((":"+str(port)) if port else "")+(parsed.path or "")+(("?"+parsed.query) if parsed.query else "")
             add(normalized,"url",display)
         for candidate in EMAILIOC.findall(window):
             local,domain=candidate.rsplit("@",1)
