@@ -117,6 +117,8 @@ jobs:
     steps:
       - name: Check out latest published repository state
         uses: actions/checkout@v4
+        with:
+          ref: main
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
