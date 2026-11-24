@@ -1,12 +1,5 @@
 name: Deploy GCI dashboard to GitHub Pages
 on:
-  push:
-    branches: [main]
-    paths:
-      - "index.html"
-      - ".nojekyll"
-      - "intel/**"
-      - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
 permissions:
   actions: read
@@ -50,6 +43,8 @@ jobs:
           done
           echo "::error::Pages artifact did not become visible to the deployment token."
           exit 1
+      - name: Allow Pages artifact metadata to settle
+        run: sleep 20
       - name: Deploy dashboard
         id: deployment
         uses: actions/deploy-pages@v4
