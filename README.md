@@ -87,6 +87,10 @@ Run:
 
 A green static check is not a substitute for browser-based testing, KQL execution, tenant-schema validation, or analyst review.
 
+## Master daily briefing standard
+
+All subsequent daily threat briefings and business-news updates follow [REPORTING_STANDARD.md](REPORTING_STANDARD.md). This is the controlling format and quality checklist for the daily automation.
+
 ## Data quality and evidence policy
 
 See [INTELLIGENCE_QUALITY.md](INTELLIGENCE_QUALITY.md) for CVE extraction, vendor remediation evidence, business-event classification, detection-query maturity, and validation limitations.
