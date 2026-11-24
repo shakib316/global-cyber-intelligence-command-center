@@ -48,3 +48,14 @@ Each returned score is stored with its CVE, probability (0–1), percentile (0�
 EPSS estimates the probability that a CVE will be exploited in the next 30 days. It is not evidence that exploitation has occurred, does not measure impact, and is not an organisation-specific risk score. CISA KEV membership remains a separate known-exploitation catalogue signal. CVSS, asset applicability, exposure, criticality, compensating controls and patch state remain separate evidence dimensions and are not inferred from EPSS.
 
 Provider: [FIRST EPSS API](https://api.first.org/epss) · [EPSS methodology and interpretation](https://www.first.org/epss/).
+
+
+## CVSS technical-severity enrichment
+
+The collector queries the NVD CVE API for up to 20 recent CISA KEV additions per daily run. It selects the highest available metric version in this order: CVSS 4.0, 3.1, 3.0, then 2.0, preferring NVD Primary metrics when available. Each metric retains version, base score, severity, vector, source/type, NVD record modification time and a direct NVD record URL.
+
+The collector observes NVD's unauthenticated request pacing (6.1 seconds between requests); if an optional `NVD_API_KEY` environment variable is configured, it uses the higher-rate authenticated pacing. It never logs the key. Missing metrics, invalid metrics, missing CVEs and provider failures remain distinct; no zero score is fabricated.
+
+CVSS is technical severity, not exploitation probability, proof of exploitation, or an organisation-specific risk score. EPSS remains a separate 30-day exploitation-likelihood signal, and CISA KEV remains a separate known-exploitation catalogue signal. Asset applicability, exposure, business criticality, compensating controls and patch state remain local/contextual evidence.
+
+Provider: [NVD CVE API 2.0](https://nvd.nist.gov/developers/vulnerabilities).

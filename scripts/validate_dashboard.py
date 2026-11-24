@@ -27,6 +27,8 @@ if "function cleanCopy(value)" not in html or "Compact reading layout" not in ht
     raise SystemExit("Dashboard description cleanup or compact reading styles are missing")
 if "function epssOverview(v)" not in html or html.count("epssOverview(v)") != 2:
     raise SystemExit("EPSS evidence must be rendered only in the overview critical vulnerability watch")
+if "function cvssOverview(v)" not in html or html.count("cvssOverview(v)") != 2:
+    raise SystemExit("CVSS evidence must be rendered only in the overview critical vulnerability watch")
 if 'function kevHtml(v)' not in html or 'v.requiredAction' not in html:
     raise SystemExit("KEV remediation column is missing")
 if 'function kevAction(v)' not in html or 'const a=kevAction(v)' not in html or 'kevStatus(v),a.specific?"green":"amber"' not in html:
@@ -206,6 +208,31 @@ with patch.object(collector, "request_url", side_effect=RuntimeError("provider u
         raise SystemExit("EPSS provider failure must remain distinct from a score of zero")
 if "def enrich_epss(records)" not in collector_source or "EPSS_API" not in collector_source or '"epss_enrichment":epss_enrichment' not in collector_source:
     raise SystemExit("Snapshot does not expose source-attributed EPSS enrichment metadata")
+
+# NVD CVSS enrichment: preserve metric provenance and validate numeric bounds.
+nvd_metric = {"source": "nvd@nist.gov", "type": "Primary",
+    "cvssData": {"version": "4.0", "baseScore": 9.3, "baseSeverity": "CRITICAL",
+    "vectorString": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"}}
+nvd_payload = {"vulnerabilities": [
+    {"cve": {"id": "CVE-2026-12345", "lastModified": "2026-11-24T00:00:00.000",
+        "metrics": {"cvssMetricV40": [nvd_metric]}}},
+    {"cve": {"id": "CVE-2026-54321", "lastModified": "2026-11-24T00:00:00.000", "metrics": {}}}
+]}
+with patch.object(collector, "request_url", return_value=(json.dumps(nvd_payload).encode(), "utf-8", collector.NVD_API)), patch.object(collector.time, "sleep"):
+    cvss_records = [{"cveID": "CVE-2026-12345"}, {"cveID": "CVE-2026-54321"}]
+    cvss_meta = collector.enrich_nvd_cvss(cvss_records)
+    metric = cvss_records[0].get("cvss") or {}
+    if cvss_meta["status"] != "success" or metric.get("version") != "4.0" or metric.get("base_score") != 9.3 or metric.get("severity") != "CRITICAL" or not metric.get("source_url", "").startswith("https://"):
+        raise SystemExit("NVD CVSS metric lost its version, score, severity or source provenance")
+    if cvss_records[1].get("cvss_status") != "not_scored_in_nvd" or cvss_records[1].get("cvss") is not None:
+        raise SystemExit("NVD missing CVSS metrics must not be represented as a zero score")
+with patch.object(collector, "request_url", side_effect=RuntimeError("NVD unavailable")), patch.object(collector.time, "sleep"):
+    failed_cvss = [{"cveID": "CVE-2026-12345"}]
+    failed_meta = collector.enrich_nvd_cvss(failed_cvss)
+    if failed_meta["status"] != "failed" or failed_cvss[0].get("cvss_status") != "lookup_failed" or failed_cvss[0].get("cvss") is not None:
+        raise SystemExit("NVD provider failure must remain distinct from an unscored CVE")
+if "def enrich_nvd_cvss(records,max_records=20)" not in collector_source or '"cvss_enrichment":cvss_enrichment' not in collector_source:
+    raise SystemExit("Snapshot does not expose NVD CVSS enrichment metadata")
 
 generic_fix = "Apply mitigations in accordance with vendor instructions for affected systems."
 if collector.extract_specific_remediation(generic_fix):
