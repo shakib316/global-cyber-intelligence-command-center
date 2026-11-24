@@ -322,6 +322,22 @@ state = collector.build_remediation_evidence(sample, "fix guidance", [], vendor,
 if state["state"] != "vendor_guidance_unverified" or state["evidence_sources"] != ["https://vendor.example/advisory","https://vendor.example/fix"]:
     raise SystemExit("Vendor guidance must retain source provenance and unverified status")
 
+# Candidate release extraction is deliberately narrow, source-linked and never a verification.
+candidate_text = "Example Server is fixed in version 4.2.1. Upgrade to version 5.0.2 for the patched release."
+candidates = collector.extract_candidate_fixed_releases(candidate_text, "https://vendor.example/security/advisory")
+if [x["version"] for x in candidates] != ["4.2.1", "5.0.2"]:
+    raise SystemExit("Explicit fixed/upgrade release candidates were not extracted")
+if any(x["verification_status"] != "NOT_VERIFIED" or x["analyst_verified"] for x in candidates):
+    raise SystemExit("Candidate fixed releases must never be auto-verified")
+if any(x["source_url"] != "https://vendor.example/security/advisory" for x in candidates):
+    raise SystemExit("Candidate release must retain exact source URL")
+if collector.extract_candidate_fixed_releases("Update to the latest version. Fixed soon.", "https://vendor.example/security/advisory"):
+    raise SystemExit("Vague latest-version/future wording must not create a fixed-release candidate")
+candidate_vendor = [{"source_url":"https://vendor.example/fix","candidate_fixed_releases":candidates}]
+candidate_state = collector.build_remediation_evidence(sample, "fix guidance", [], candidate_vendor, False, False)
+if candidate_state["fixed_version"] is not None or candidate_state["analyst_verified"] or len(candidate_state["candidate_fixed_releases"]) != 2:
+    raise SystemExit("Candidate release evidence must remain separate from verified fixed_version")
+
 for promo in (
     "Discover why SHA pinning alone isn't enough and learn how to close hidden security gaps.",
     "Learn what 6,000 real-world attacks reveal about MFA weaknesses.",
