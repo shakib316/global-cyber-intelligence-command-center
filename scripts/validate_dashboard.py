@@ -349,7 +349,7 @@ if "australia_acsc" in feed_urls or "Australian ACSC" in collector_source:
     raise SystemExit("ACSC feed must remain intentionally excluded until its upstream availability is restored")
 if 'health_state.pop("Australian ACSC",None)' not in collector_source:
     raise SystemExit("Excluded ACSC source must not leave stale failure telemetry")
-if "actions: read" not in daily_workflow or "Wait for Pages artifact visibility" not in daily_workflow_source or "artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}" not in daily_workflow_source:
+if "actions: read" not in daily_workflow or "Wait for Pages artifact visibility" not in daily_workflow or "artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}" not in daily_workflow:
     raise SystemExit("Daily deployment must wait for its uniquely named Pages artifact before deploy")
 article = {
     "url": "https://research.example/story",
