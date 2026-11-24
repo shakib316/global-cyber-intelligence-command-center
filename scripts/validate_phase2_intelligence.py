@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Evidence and referential-integrity checks for actor/campaign intelligence."""
 import json, re, sys
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -79,7 +79,7 @@ def schema_errors(value, rule, root_schema=None, path="$"):
         fmt = rule.get("format")
         if fmt == "date":
             try:
-                dt.date.fromisoformat(value)
+                date.fromisoformat(value)
             except ValueError:
                 errors.append(path + ": invalid ISO date")
         elif fmt == "date-time":
