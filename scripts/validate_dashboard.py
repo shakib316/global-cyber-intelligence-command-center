@@ -233,7 +233,7 @@ with patch.object(collector, "request_url", side_effect=RuntimeError("NVD unavai
     failed_meta = collector.enrich_nvd_cvss(failed_cvss)
     if failed_meta["status"] != "failed" or failed_cvss[0].get("cvss_status") != "lookup_failed" or failed_cvss[0].get("cvss") is not None:
         raise SystemExit("NVD provider failure must remain distinct from an unscored CVE")
-if "def enrich_nvd_cvss(records,max_records=20)" not in collector_source or '"cvss_enrichment":cvss_enrichment' not in collector_source:
+if "def enrich_nvd_cvss(records,max_records=15)" not in collector_source or '"cvss_enrichment":cvss_enrichment' not in collector_source:
     raise SystemExit("Snapshot does not expose NVD CVSS enrichment metadata")
 
 generic_fix = "Apply mitigations in accordance with vendor instructions for affected systems."
