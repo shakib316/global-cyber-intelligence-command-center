@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-11-24T00:00:00Z",
+  "generated_at": "2026-11-24T07:40:47Z",
   "provenance_policy": "Only explicit source-supported actor/campaign facts are asserted. Null, empty arrays, and not_stated fields are valid outcomes; absence of evidence is not evidence of absence.",
   "sources": [
     {
@@ -9,7 +9,7 @@
       "url": "https://attack.mitre.org/groups/G0016/",
       "publisher": "MITRE ATT&CK",
       "source_last_modified": "2026-07-31",
-      "retrieved_at": "2026-11-24T00:00:00Z"
+      "retrieved_on": "2026-11-24"
     }
   ],
   "actors": [
@@ -98,7 +98,7 @@
         "src-mitre-g0016"
       ],
       "source_last_modified": "2026-07-31",
-      "record_updated_at": "2026-11-24T00:00:00Z"
+      "record_updated_at": "2026-11-24T07:40:47Z"
     }
   ],
   "campaigns": [
@@ -156,7 +156,7 @@
       "source_ids": [
         "src-mitre-g0016"
       ],
-      "record_updated_at": "2026-11-24T00:00:00Z"
+      "record_updated_at": "2026-11-24T07:40:47Z"
     }
   ],
   "relationships": [
