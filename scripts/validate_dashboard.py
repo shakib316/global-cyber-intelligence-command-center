@@ -7,6 +7,8 @@ root = Path(__file__).resolve().parents[1]
 html = (root / "index.html").read_text(encoding="utf-8")
 required = ["criticalVulnList", "prepareBriefing", "businessList", "queryGrid", "loadQueries", "reportPicker", "loadReportPath", "threatPrev", "businessPrev", "kevPrev", "cisa_kev_catalog", "CVERecord?id=", "kevStatus", "queriesLoaded", "const groups={}", "globalSearchPanel", "globalSearch", "globalScope", "kevSearch", "kevVendor", "kevDueFilter", "priorityFilter", "v.vulnerabilityName", "function globalSearch", "function filteredKev", "const remediationBlock=", "function relatedFor", "function renderWatchlist", "function matchAssets", "function renderIOC", "function compareSnapshots", "function copyExecutiveDigest", "function renderReadiness", "oldestReport", "intel\\/daily", "remediation_guidance", "No specific fix identified in retrieved source text", "function kevHtml", "function kevAction", "function itemHtml", "function businessCard", "function businessSignificance", "vendor_remediation", "LINKED VENDOR ADVISORY", "Article text retrieved", "What to verify next", "businessDetail", "businessClear", "knownRansomwareCampaignUse", "Evidence ", "last_success_at", "last_attempt_at", "duration_ms", "consecutive_failures", "collection_result"]
 required.extend(["async function fetchWithRetry", "X-RateLimit-Remaining", "Retry-After", "fetchWithRetry(API+", "fetchWithRetry(\"https://raw.githubusercontent.com/"])
+if "CANDIDATE FIXED RELEASE · NOT VERIFIED" not in html or "candidate_fixed_releases" not in html:
+    raise SystemExit("KEV remediation panel does not display unverified fixed-release candidates")
 missing = [x for x in required if x not in html]
 if missing:
     raise SystemExit("Dashboard missing required UI features: " + ", ".join(missing))
@@ -321,6 +323,22 @@ vendor = [{"source_url":"https://vendor.example/fix","guidance":["Upgrade to ver
 state = collector.build_remediation_evidence(sample, "fix guidance", [], vendor, False, False)
 if state["state"] != "vendor_guidance_unverified" or state["evidence_sources"] != ["https://vendor.example/advisory","https://vendor.example/fix"]:
     raise SystemExit("Vendor guidance must retain source provenance and unverified status")
+
+# Candidate release extraction is deliberately narrow, source-linked and never a verification.
+candidate_text = "Example Server is fixed in version 4.2.1. Upgrade to version 5.0.2 for the patched release."
+candidates = collector.extract_candidate_fixed_releases(candidate_text, "https://vendor.example/security/advisory")
+if [x["version"] for x in candidates] != ["4.2.1", "5.0.2"]:
+    raise SystemExit("Explicit fixed/upgrade release candidates were not extracted")
+if any(x["verification_status"] != "NOT_VERIFIED" or x["analyst_verified"] for x in candidates):
+    raise SystemExit("Candidate fixed releases must never be auto-verified")
+if any(x["source_url"] != "https://vendor.example/security/advisory" for x in candidates):
+    raise SystemExit("Candidate release must retain exact source URL")
+if collector.extract_candidate_fixed_releases("Update to the latest version. Fixed soon.", "https://vendor.example/security/advisory"):
+    raise SystemExit("Vague latest-version/future wording must not create a fixed-release candidate")
+candidate_vendor = [{"source_url":"https://vendor.example/fix","candidate_fixed_releases":candidates}]
+candidate_state = collector.build_remediation_evidence(sample, "fix guidance", [], candidate_vendor, False, False)
+if candidate_state["fixed_version"] is not None or candidate_state["analyst_verified"] or len(candidate_state["candidate_fixed_releases"]) != 2:
+    raise SystemExit("Candidate release evidence must remain separate from verified fixed_version")
 
 for promo in (
     "Discover why SHA pinning alone isn't enough and learn how to close hidden security gaps.",

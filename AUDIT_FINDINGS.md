@@ -70,3 +70,8 @@ The remediation pipeline now records an explicit state, UTC evidence-check times
 ## Asset-aware triage boundary
 
 The dashboard's local asset matcher accepts one asset per line with a CVE and optional `exposure`, `criticality`, and `patch` attributes. It labels the resulting action as review triage, not a calculated risk score. User-entered context is not independently verified. CVSS remains technical severity, EPSS remains a 30-day exploitation estimate, and KEV remains known-exploitation catalogue evidence. Exact product/build applicability, scanner/SBOM confirmation, ownership and deployed patch state remain external validation requirements.
+
+
+## Candidate fixed-release extraction — 24 November 2026
+
+The collector now extracts narrowly scoped release strings only when a CISA-linked vendor advisory explicitly says a product is fixed/patched in a version or to upgrade/update to version X. Each candidate retains the exact sentence, HTTPS source URL and source label, and is displayed as **Candidate fixed release — NOT VERIFIED**. The candidate list is separate from `fixed_version`; automated extraction always leaves `fixed_version=null` and `analyst_verified=false`. It does not establish product identity, affected branch/build, release applicability, or deployment. Human/vendor confirmation remains mandatory. Regression coverage includes explicit fixed/upgrade wording, source provenance, rejection of vague latest-version statements, and the no-auto-verification invariant.
