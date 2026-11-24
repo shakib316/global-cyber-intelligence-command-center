@@ -175,11 +175,34 @@ def safe_https_open(request,timeout):
     validate_public_https_url(response.geturl())
     return response
 
+RETRYABLE_HTTP_STATUS={408,425,429,500,502,503,504}
+
+def request_url(url,headers,timeout,max_bytes=None,max_attempts=4):
+    """Fetch a complete response with bounded retries for transient network/service errors."""
+    req=urllib.request.Request(url,headers=headers)
+    for attempt in range(max_attempts):
+        try:
+            with safe_https_open(req,timeout=timeout) as response:
+                if response.status!=200: raise RuntimeError("HTTP "+str(response.status))
+                raw=response.read(max_bytes) if max_bytes else response.read()
+                charset=response.headers.get_content_charset() or "utf-8"
+                resolved=response.geturl()
+                return raw,charset,resolved
+        except urllib.error.HTTPError as exc:
+            if exc.code not in RETRYABLE_HTTP_STATUS or attempt>=max_attempts-1:
+                raise
+            retry_after=exc.headers.get("Retry-After","") if exc.headers else ""
+            delay=min(30,max(0,int(retry_after))) if str(retry_after).isdigit() else min(2**attempt,8)
+        except (urllib.error.URLError,socket.timeout,TimeoutError,http.client.IncompleteRead,ConnectionError) as exc:
+            if attempt>=max_attempts-1:
+                raise
+            delay=min(2**attempt,8)
+        time.sleep(delay)
+    raise RuntimeError("Request exhausted retry attempts")
+
 def fetch(url):
-    req=urllib.request.Request(url,headers={"User-Agent":UA,"Accept":"application/rss+xml, application/atom+xml, application/xml, text/xml, text/html, application/json, */*"})
-    with safe_https_open(req,timeout=25) as r:
-        if r.status!=200: raise RuntimeError("HTTP "+str(r.status))
-        return r.read()
+    raw,_,_=request_url(url,{"User-Agent":UA,"Accept":"application/rss+xml, application/atom+xml, application/xml, text/xml, text/html, application/json, */*"},timeout=25)
+    return raw
 
 def load_source_health_state():
     path=ROOT/"intel/source-health-state.json"
@@ -321,10 +344,7 @@ def enrich_page(url,title=""):
     """Fetch readable article text plus candidate security/advisory links."""
     try:
         if not isinstance(url,str) or not url.startswith("https://"):return {"status":"not_attempted","details":"","references":[]}
-        req=urllib.request.Request(url,headers={"User-Agent":UA,"Accept":"text/html,application/xhtml+xml"})
-        with safe_https_open(req,timeout=8) as response:
-            if response.status!=200:return {"status":"http_error","details":"","references":[]}
-            raw=response.read(1_500_000);charset=response.headers.get_content_charset() or "utf-8";resolved=response.geturl()
+        raw,charset,resolved=request_url(url,{"User-Agent":UA,"Accept":"text/html,application/xhtml+xml"},timeout=8,max_bytes=1_500_000)
         parser=ArticleText();parser.feed(raw.decode(charset,errors="replace"))
         title_norm=normalize_story_text(title);parts=parser.meta[:1]+parser.paragraphs[:18];cleaned=[]
         for part in parts:
