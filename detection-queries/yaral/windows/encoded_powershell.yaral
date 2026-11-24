@@ -1,0 +1,25 @@
+// ID: GCI-YARAL-WIN-001
+// Title: Encoded or obfuscated PowerShell process execution
+// Platform: Google SecOps YARA-L 2.0
+// Type: Endpoint threat-hunting rule
+// Data source: UDM PROCESS_LAUNCH events
+// Required fields: metadata.event_type, principal.process.command_line
+// Maturity: Draft
+// Assumptions: Endpoint parser maps process creation to PROCESS_LAUNCH and populates principal.process.command_line.
+// False positives: Approved administrative scripts, endpoint management and incident response tooling.
+// Tuning: Add trusted signer, host and automation-account exclusions only after validating the event source and business ownership.
+// ATT&CK: T1059.001 PowerShell; T1027 only after confirming obfuscation behaviour.
+// Validation: Not compiled or run in a Google SecOps tenant; confirm UDM mapping and YARA-L version.
+
+// Rule detects command-line indicators only; it does not decode payloads or prove malicious execution.
+rule gci_encoded_powershell_process {
+  meta:
+    author = "Global Cyber Intelligence Command Center"
+    description = "Hunt for PowerShell process launches with encoded or common download/evaluation indicators"
+    severity = "HIGH"
+  events:
+    $e.metadata.event_type = "PROCESS_LAUNCH"
+    re.regex($e.principal.process.command_line, `(?i)powershell(\.exe)?\s+.*(-enc(odedcommand)?\s+|frombase64string|downloadstring|invoke-expression|\biex\s*\()`)
+  condition:
+    $e
+}

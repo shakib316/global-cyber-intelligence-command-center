@@ -17,8 +17,8 @@ A versioned, technology-categorized library of threat-hunting and detection quer
 | Virtualization | [kql/virtualization](kql/virtualization/) | VMware vCenter syslog hunting |
 | Asset inventory | [kql/asset-inventory](kql/asset-inventory/) | Software inventory review for vulnerability exposure |
 | Business applications | [kql/business-applications](kql/business-applications/) | Payment beneficiary, approval-chain and payout changes |
-| Splunk | [spl](spl/) | Reserved for SPL equivalents |
-| Google SecOps | [yaral](yaral/) | Reserved for YARA-L equivalents |
+| Splunk | [spl](spl/) | Draft Sysmon and CIM hunts; deployment assumptions documented |
+| Google SecOps | [yaral](yaral/) | Draft UDM process and identity hunts; parser validation required |
 
 ## Query registry
 
@@ -40,6 +40,20 @@ A versioned, technology-categorized library of threat-hunting and detection quer
 | GCI-KQL-NET-001 | [Wing FTP session enumeration](kql/network/wing_ftp_session_enumeration.kql) | WingFTP_CL (custom) | Draft |
 | GCI-KQL-WIN-003 | [Idunno.AntiCsrf IIS and DLL hunt](kql/windows/idunno_anticsrf_iis_hunt.kql) | W3CIISLog / DeviceFileEvents | Draft |
 | GCI-KQL-BIZ-002 | [Beneficiary/approval change followed by payment](kql/business-applications/payment_workflow_change_to_payment.kql) | PaymentAudit_CL (custom) | Draft |
+
+## Initial SPL and YARA-L equivalents
+
+These are initial draft equivalents, not validated deployments. SPL assumes the documented Sysmon fields or Splunk CIM data model. YARA-L assumes the documented UDM event types and fields. Each must be compiled or run in its target platform and tested against representative events before operational use.
+
+| ID | Platform | Detection |
+|---|---|---|
+| GCI-SPL-WIN-001 | Splunk SPL | Encoded / obfuscated PowerShell |
+| GCI-SPL-WIN-002 | Splunk SPL | Registry Run / RunOnce persistence |
+| GCI-SPL-NET-001 | Splunk SPL | Rare network destinations |
+| GCI-YARAL-WIN-001 | Google SecOps YARA-L | Encoded / obfuscated PowerShell |
+| GCI-YARAL-ID-001 | Google SecOps YARA-L | Repeated failed logins |
+
+The SPL/YARA-L checks in CI validate required metadata and basic structure only. They are not the official Splunk parser or Google SecOps compiler. No query is marked schema-checked, lab-tested or production-approved without platform evidence.
 
 ## Required metadata for every query
 
