@@ -59,3 +59,8 @@ The collector observes NVD's unauthenticated request pacing (6.1 seconds between
 CVSS is technical severity, not exploitation probability, proof of exploitation, or an organisation-specific risk score. EPSS remains a separate 30-day exploitation-likelihood signal, and CISA KEV remains a separate known-exploitation catalogue signal. Asset applicability, exposure, business criticality, compensating controls and patch state remain local/contextual evidence.
 
 Provider: [NVD CVE API 2.0](https://nvd.nist.gov/developers/vulnerabilities).
+
+ 
+## Remediation evidence states
+
+Each enriched threat record carries a dated `remediation_evidence` object. States distinguish vendor guidance extracted but unverified, source-reported no-fix statements, portal-gated workarounds, specific actions extracted but unverified, no fix found in reviewed source text, and source pages not fully reviewed. Automated extraction never sets `analyst_verified` or a fixed version. A verified fixed release or mitigation requires explicit analyst verification; absence of extracted guidance is not evidence that no vendor fix exists. Evidence URLs and the UTC check timestamp are retained.
