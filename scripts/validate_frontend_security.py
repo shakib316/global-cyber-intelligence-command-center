@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Regression checks for the dashboard's safe HTML/URL rendering boundary."""
 from pathlib import Path
+import re
 import subprocess
 import sys
 
@@ -25,8 +26,15 @@ for directive in ("default-src 'self'", "base-uri 'self'", "object-src 'none'",
 # explicit compatibility trade-off, not a nonce-based strict CSP.
 if '<script src="http' in HTML.lower():
     fail("Unexpected remote script dependency")
-if 'target="_blank"' in HTML and 'rel="noopener"' not in HTML:
-    fail("New-tab links must use rel=noopener")
+for anchor in re.findall(r'<a\b[^>]*target="_blank"[^>]*>', HTML, re.I):
+    if not re.search(r'\brel=["\'][^"\']*\bnoopener\b[^"\']*["\']', anchor, re.I):
+        fail("A new-tab link is missing rel=noopener")
+if len(re.findall(r":root\s*\{", HTML)) != 1:
+    fail("Theme variables must be consolidated into one root block")
+if ":focus-visible" not in HTML:
+    fail("Visible keyboard focus styles are missing")
+if "prefers-reduced-motion" not in HTML:
+    fail("Reduced-motion support is missing")
 
 def extract(start, end):
     try:
