@@ -182,6 +182,29 @@ recovered = collector.record_source_health(malformed_state, "Malformed feed", "h
 if recovered.get("consecutive_failures") != 1 or recovered.get("last_success_at") != "2026-11-20T00:00:00Z":
     raise SystemExit("Malformed prior source-health state is not handled safely")
 
+# EPSS evidence validation: bounded values, source/date attribution and explicit missing states.
+epss_rows = {"status": "OK", "data": [
+    {"cve": "CVE-2026-12345", "epss": "0.42", "percentile": "0.91", "date": "2026-11-24"},
+    {"cve": "CVE-2026-54321", "epss": "1.2", "percentile": "0.5", "date": "2026-11-24"},
+]}
+with patch.object(collector, "request_url", return_value=(json.dumps(epss_rows).encode(), "utf-8", collector.EPSS_API)):
+    epss_records = [{"cves": ["CVE-2026-12345", "CVE-2026-54321", "CVE-2026-99999"]}]
+    epss_meta = collector.enrich_epss(epss_records)
+    if epss_meta["status"] != "success" or len(epss_records[0]["epss_scores"]) != 1:
+        raise SystemExit("EPSS enrichment did not reject malformed/out-of-range scores or preserve missing values")
+    epss = epss_records[0]["epss_scores"][0]
+    if epss["score"] != 0.42 or epss["percentile"] != 0.91 or epss["score_date"] != "2026-11-24" or not epss["source_url"].startswith("https://"):
+        raise SystemExit("EPSS score evidence is missing its value, percentile, date or source")
+    if epss_records[0]["epss_status"] != "partially_available":
+        raise SystemExit("EPSS missing-score state is not distinguished from a zero score")
+with patch.object(collector, "request_url", side_effect=RuntimeError("provider unavailable")):
+    epss_failed = [{"cves": ["CVE-2026-12345"]}]
+    epss_meta = collector.enrich_epss(epss_failed)
+    if epss_meta["status"] != "failed" or epss_failed[0]["epss_status"] != "lookup_failed" or epss_failed[0]["epss_scores"]:
+        raise SystemExit("EPSS provider failure must remain distinct from a score of zero")
+if "def enrich_epss(records)" not in collector_source or "EPSS_API" not in collector_source or '"epss_enrichment":epss_enrichment' not in collector_source:
+    raise SystemExit("Snapshot does not expose source-attributed EPSS enrichment metadata")
+
 generic_fix = "Apply mitigations in accordance with vendor instructions for affected systems."
 if collector.extract_specific_remediation(generic_fix):
     raise SystemExit("Generic vendor boilerplate was incorrectly accepted as a fix")

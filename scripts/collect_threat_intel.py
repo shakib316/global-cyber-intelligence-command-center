@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin, urlparse, urlencode
 
 ROOT=Path(__file__).resolve().parents[1]
 NOW=dt.datetime.now(dt.timezone.utc); IST=dt.timezone(dt.timedelta(hours=5,minutes=30)); NOW_IST=NOW.astimezone(IST); DAY=NOW_IST.date().isoformat(); DAY_UTC=NOW.date().isoformat(); STAMP=NOW.strftime("%Y-%m-%dT%H:%M:%SZ"); STAMP_IST=NOW_IST.strftime("%Y-%m-%d %H:%M:%S IST")
@@ -444,6 +444,69 @@ def enrich_records(records,max_workers=10):
             elif source_action:item["remediation_status"]="Specific actionable guidance extracted"
             else:item["remediation_status"]="No specific fix identified in retrieved source text" if item.get("enrichment_status")=="enriched" else "Fix status unknown — source page not fully retrieved"
 
+EPSS_API="https://api.first.org/data/v1/epss"
+EPSS_ATTRIBUTION="EPSS by FIRST.org / Empirical Security"
+
+def enrich_epss(records):
+    """Enrich CVEs in current KEV additions and advisory records using bounded lookups."""
+    cves=sorted({str(c).upper() for record in records
+        for c in (record.get("cves",[]) or ([record.get("cveID")] if record.get("cveID") else []))
+        if CVE.fullmatch(str(c).upper())})
+    lookup={};errors=[];batches=[];batch=[];length=0
+    for cve in cves:
+        extra=len(cve)+(1 if batch else 0)
+        if batch and length+extra>1800:
+            batches.append(batch);batch=[];length=0
+        batch.append(cve);length+=extra
+    if batch:batches.append(batch)
+    for group in batches:
+        url=EPSS_API+"?"+urlencode({"cve":",".join(group)})
+        try:
+            raw,_,_=request_url(url,{"User-Agent":UA,"Accept":"application/json"},timeout=20,max_bytes=2_000_000)
+            payload=json.loads(raw.decode("utf-8"))
+            if payload.get("status")!="OK" or not isinstance(payload.get("data"),list):
+                raise ValueError("Unexpected FIRST EPSS response schema")
+            for row in payload["data"]:
+                if not isinstance(row,dict):continue
+                cve=str(row.get("cve","")).upper()
+                if cve not in group:continue
+                try:
+                    score=float(row.get("epss"));percentile=float(row.get("percentile"))
+                    score_date=dt.date.fromisoformat(str(row.get("date",""))).isoformat()
+                except (TypeError,ValueError):
+                    continue
+                if not (0.0<=score<=1.0 and 0.0<=percentile<=1.0):continue
+                lookup[cve]={"cve":cve,"score":score,"percentile":percentile,"score_date":score_date,
+                    "source":EPSS_ATTRIBUTION,"source_url":EPSS_API}
+        except Exception as exc:
+            errors.append(type(exc).__name__+": "+str(exc)[:240])
+    for record in records:
+        ids=record.get("cves",[]) or ([record.get("cveID")] if record.get("cveID") else [])
+        ids=sorted({str(c).upper() for c in ids if CVE.fullmatch(str(c).upper())})
+        record["epss_scores"]=[lookup[c] for c in ids if c in lookup]
+        if not ids:record["epss_status"]="not_applicable_no_cve"
+        elif record["epss_scores"] and any(c not in lookup for c in ids):record["epss_status"]="partially_available"
+        elif errors and not record["epss_scores"]:record["epss_status"]="lookup_failed"
+        elif record["epss_scores"]:record["epss_status"]="available"
+        elif errors:record["epss_status"]="lookup_failed"
+        else:record["epss_status"]="no_score_returned"
+        record["epss_retrieved_at"]=STAMP
+    return {"provider":EPSS_ATTRIBUTION,"source_url":EPSS_API,"retrieved_at":STAMP,
+        "requested_cves":len(cves),"matched_cves":len(lookup),"batch_count":len(batches),
+        "status":"partial" if errors and lookup else ("failed" if errors else "success"),
+        "errors":errors[:10],
+        "interpretation":"EPSS estimates the probability of exploitation in the next 30 days; it is not proof of exploitation or an organisation-specific risk score."}
+
+def format_epss_context(record):
+    scores=record.get("epss_scores",[])
+    if scores:
+        return "; ".join("%s %.3f (%.1f%% next-30-day estimate), percentile %.3f, dated %s" %
+            (x["cve"],x["score"],x["score"]*100,x["percentile"],x["score_date"]) for x in scores)
+    if record.get("epss_status")=="no_score_returned":return "No EPSS score returned"
+    if record.get("epss_status")=="lookup_failed":return "EPSS lookup failed"
+    if record.get("epss_status")=="partially_available":return "EPSS partially available"
+    return "EPSS unavailable / not applicable"
+
 def enrich_kev_records(records,max_workers=8):
     """Follow vendor URLs supplied by CISA KEV for recent additions only."""
     tasks=[]
@@ -571,6 +634,7 @@ def main():
     vulns=kev.get("vulnerabilities",[]) if kev else []
     recentkev=sorted([v for v in vulns if v.get("dateAdded","")>=(NOW_IST.date()-dt.timedelta(days=7)).isoformat()],key=lambda x:x.get("dateAdded",""),reverse=True)
     enrich_kev_records(recentkev[:40])
+    epss_enrichment=enrich_epss(recentkev[:40]+items)
     iocmap={}
     for x in items:
         for v in extract_iocs(x["title"]+" "+x["summary"]+" "+x.get("details",""),x["source"],x["url"]):
@@ -586,7 +650,7 @@ def main():
     snapshot=Path("intel/snapshots")/DAY[:4]/DAY[5:7]/(DAY[8:10]+".json")
     (ROOT/report).parent.mkdir(parents=True,exist_ok=True);(ROOT/snapshot).parent.mkdir(parents=True,exist_ok=True)
     data={"date_utc":DAY_UTC,"date_ist":DAY,"retrieved_at":STAMP,"retrieved_at_ist":STAMP_IST,"window_hours":72,"source_health":health,"successful_sources":good,"total_sources":len(health),
-        "errors":errors,"business_items":business_items,"business_feed_count":len(business_items),"business_window_hours":168,"cisa_kev_catalog_count":len(vulns),"cisa_kev_catalog":vulns,"cisa_kev_added_last_7_days":recentkev,"items":items,
+        "errors":errors,"business_items":business_items,"business_feed_count":len(business_items),"business_window_hours":168,"cisa_kev_catalog_count":len(vulns),"cisa_kev_catalog":vulns,"cisa_kev_added_last_7_days":recentkev,"items":items,"epss_enrichment":epss_enrichment,
         "ioc_candidates":iocs,"ioc_policy":"Candidate extraction only near explicit IOC wording. Verify against original report and local context.",
         "limitations":["Public feeds are not exhaustive and can fail or change format.","CERT-In is an official index scrape, not an RSS feed; open advisory pages to confirm details.",
         "Authenticated/paid feeds are not configured.","A CVE listing or IOC match is not proof of compromise.","No automatic response actions."]}
@@ -602,6 +666,7 @@ def main():
         for v in recentkev[:40]:
             lines.append(f"- **{v.get('cveID','CVE unavailable')} — {v.get('vulnerabilityName','Name unavailable')}** | {v.get('vendorProject','unknown')} / {v.get('product','unknown')} | added {v.get('dateAdded','unknown')} | due {v.get('dueDate','not stated')} | [CISA record]({v.get('notes','https://www.cisa.gov/known-exploited-vulnerabilities-catalog')})")
             lines.append("  - Fix / remediation: "+kev_remediation_text(v))
+            lines.append("  - EPSS context: "+format_epss_context(v)+" — FIRST.org; not an asset-specific risk score")
             for ref in v.get("vendor_remediation",[]):
                 lines.append("  - Vendor evidence: ["+str(ref.get("source_label") or "Vendor advisory")+"]("+str(ref.get("source_url") or "")+") — analyst review required")
     else:lines.append("- No additions returned, or the feed failed; check source health.")
@@ -612,6 +677,7 @@ def main():
             f"- Summary: {x.get('summary','')[:900]}",
             f"- Technical details: {x.get('details') or x.get('summary','')[:900]}",
             f"- Fix / remediation: {x.get('remediation_guidance') or x.get('remediation_status') or 'Fix status unknown; check the linked vendor advisory for updates.'}",
+            f"- EPSS context: {format_epss_context(x)} — FIRST.org; not an asset-specific risk score"
             f"- [Open source item]({x['url']})",""]
     else:lines.append("No dated items returned. This does not mean no threats occurred; inspect source health.")
     business_health=[x for x in health if x.get("stream")=="business"]
