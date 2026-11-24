@@ -71,7 +71,7 @@ for campaign in campaigns:
         fail("campaign references an unknown evidence source: " + campaign["id"])
     if set(campaign.get("actor_ids", [])) - actor_ids:
         fail("campaign references an unknown actor: " + campaign["id"])
-    if any(not re.fullmatch(r"T[0-9]{4}(?:\\.[0-9]{3})?", t) for t in campaign.get("techniques", [])):
+    if any(not re.fullmatch(r"T[0-9]{4}(?:\.[0-9]{3})?", t) for t in campaign.get("techniques", [])):
         fail("campaign has malformed ATT&CK technique ID: " + campaign["id"])
     if any(not re.fullmatch(r"CVE-[0-9]{4}-[0-9]{4,}", c) for c in campaign.get("cve_ids", [])):
         fail("campaign has malformed CVE ID: " + campaign["id"])
