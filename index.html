@@ -227,16 +227,18 @@ function kevStatus(v){const action=kevAction(v);if((action.sources||[]).length)r
 function kevEvidenceState(v){
  const e=v.remediation_evidence||{};
  const labels={vendor_guidance_unverified:"Vendor guidance extracted · verification pending",source_reports_workaround_portal:"Source reports portal-gated workaround",source_reports_no_fix:"Source explicitly reports no fix",specific_action_unverified:"Specific action extracted · verification pending",not_found_in_reviewed_evidence:"No fix found in reviewed text · not proof no fix exists",not_reviewed:"Not reviewed in available evidence",verified_fixed_version:"Fixed version verified by analyst",verified_vendor_mitigation:"Vendor mitigation verified by analyst"};
- if(e.state)return {label:labels[e.state]||"Evidence state unavailable",checked:e.checked_at||"date not recorded",verified:e.analyst_verified===true,fixed:e.fixed_version||null,sources:e.evidence_sources||[]};
- const vendor=(v.vendor_remediation||[]).filter(x=>Array.isArray(x.guidance)&&x.guidance.length);
- if(vendor.length)return {label:"Vendor guidance extracted · verification pending",checked:"not recorded",verified:false,fixed:null,sources:vendor.map(x=>x.source_url).filter(Boolean)};
+ if(e.state)return {label:labels[e.state]||"Evidence state unavailable",checked:e.checked_at||"date not recorded",verified:e.analyst_verified===true,fixed:e.fixed_version||null,sources:e.evidence_sources||[],candidates:e.candidate_fixed_releases||[]};
+ const vendor=(v.vendor_remediation||[]).filter(x=>(Array.isArray(x.guidance)&&x.guidance.length)||(Array.isArray(x.candidate_fixed_releases)&&x.candidate_fixed_releases.length));
+ if(vendor.length)return {label:"Vendor guidance / release candidate extracted · verification pending",checked:"not recorded",verified:false,fixed:null,sources:vendor.map(x=>x.source_url).filter(Boolean),candidates:vendor.flatMap(x=>x.candidate_fixed_releases||[])};
  if(/no (?:patch|fix|update) (?:is )?available|no vendor patch/i.test(String(v.requiredAction||"")))return {label:"Source explicitly reports no fix",checked:"CISA catalogue record",verified:false,fixed:null,sources:[]};
  if(String(v.requiredAction||"").trim())return {label:"CISA action text present · vendor fix verification pending",checked:"CISA catalogue record",verified:false,fixed:null,sources:kevEvidenceLinks(v)};
  return {label:"Not reviewed in available evidence",checked:"not recorded",verified:false,fixed:null,sources:[]};
 }
 function kevEvidenceHtml(v){
  const e=kevEvidenceState(v),links=(e.sources||[]).filter(u=>typeof u==="string"&&u.startsWith("https://")).slice(0,4);
- return '<div class="description-block"><strong>Remediation evidence state:</strong> '+esc(e.label)+'<p class="cell-description">Checked: '+esc(e.checked)+'. '+(e.verified?'Analyst verified.':'Not analyst verified.')+(e.fixed?' Fixed version: '+esc(e.fixed)+'.':'')+'</p>'+(links.length?'<p class="cell-description">'+links.map((u,i)=>'<a href="'+safeUrl(u)+'" target="_blank" rel="noopener">Evidence '+(i+1)+' ↗</a>').join(" · ")+'</p>':"")+'</div>';
+ const candidates=(e.candidates||[]).filter(x=>x&&typeof x.version==="string"&&typeof x.source_url==="string"&&x.source_url.startsWith("https://"));
+ const candidateHtml=candidates.map(x=>'<div class="description-block"><span class="field-label">CANDIDATE FIXED RELEASE · NOT VERIFIED</span><p><strong>Candidate version '+esc(x.version)+'</strong> — '+esc(x.statement||"Explicit release wording extracted from vendor source.")+'</p><p><a href="'+safeUrl(x.source_url)+'" target="_blank" rel="noopener">'+esc(x.source_label||"Open source advisory")+' ↗</a> · Product/branch/build applicability and deployment require analyst verification.</p></div>').join("");
+ return '<div class="description-block"><strong>Remediation evidence state:</strong> '+esc(e.label)+'<p class="cell-description">Checked: '+esc(e.checked)+'. '+(e.verified?'Analyst verified.':'Not analyst verified.')+(e.fixed?' Fixed version: '+esc(e.fixed)+'.':'')+'</p>'+(links.length?'<p class="cell-description">'+links.map((u,i)=>'<a href="'+safeUrl(u)+'" target="_blank" rel="noopener">Evidence '+(i+1)+' ↗</a>').join(" · ")+'</p>':"")+'</div>'+candidateHtml;
 }
 function kevPublicSignal(v){
  const eps=(v.epss_scores||[]).find(x=>x.cve===v.cveID),cv=v.cvss;
