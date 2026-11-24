@@ -1,0 +1,53 @@
+# Command Center Audit Findings — 24 November 2026
+
+## Audit boundary
+
+This is a repository-source audit of the current `main` implementation, not a completed production certification. Files directly reviewed: `index.html`, `scripts/collect_threat_intel.py`, `scripts/validate_dashboard.py`, `scripts/validate_detection_queries.py`, `.github/workflows/daily-threat-intel.yml`, `.github/workflows/detection-query-ci.yml`, `README.md`, `INTELLIGENCE_QUALITY.md`, `REPORTING_STANDARD.md`, the latest pointer, and the 24 November report/snapshot metadata.
+
+The available GitHub integration did not expose a complete repository-tree listing or workflow-run listing. The public Pages site could not be fetched through the available browser inspection path. Therefore this document deliberately does not claim that every file, page, runtime path, or deployment was tested.
+
+## Findings and disposition
+
+| Priority | Area | Finding / root cause | Impact | Recommended action | Validation |
+|---|---|---|---|---|---|
+| P1 | Source health | Before PR #4, each source exposed status, count, URL and error only; no per-source duration, attempt time, last-success time or persistent failure streak. | Operators could not distinguish stale feeds from recently failed feeds or identify slow sources. | PR #4 adds persistent health metadata and dashboard/report columns. | CI regression tests for successful-with-records, successful-empty and failed-after-success; verify next scheduled collection writes state. |
+| P1 | Application security / collector | `enrich_page` accepts feed-supplied HTTPS URLs and uses the default URL opener, which follows redirects. There is no explicit public-IP/redirect destination validation in this function. | A compromised or malicious feed could attempt server-side requests to unintended destinations from the Actions runner. Runner exposure and practical exploitability have not been demonstrated. | Add a redirect handler that revalidates scheme and resolved destination on every hop; reject loopback, private, link-local, reserved and non-global IPs; add unit tests for redirects and DNS resolution. | Mocked redirect tests plus a controlled integration test; ensure legitimate public advisory redirects still work. |
+| P1 | Detection engineering | The checked-in detection library is primarily KQL. README describes SPL and YARA-L as guidance/placeholders rather than equivalent complete libraries. | The requested three-platform capability is not yet delivered. | Build platform-specific detections only where telemetry, field schema and tests are available; keep unsupported entries explicitly marked as templates. | Per-platform parser/editor validation, schema checks, positive/negative lab events and analyst approval. |
+| P1 | ATT&CK coverage | The current readiness view compares ATT&CK IDs mentioned in intelligence with IDs mentioned in query content. It does not establish behavioural coverage or effectiveness. | A shared technique ID may look like coverage even if the query does not detect the technique. | Separate intelligence references, query mappings, schema-validated, lab-tested and production-approved detections. | Unit tests for mapping metadata and test-event evidence; never infer production coverage from text matches. |
+| P1 | Vulnerability prioritisation | The reviewed README documents that CVSS/EPSS, exploit validation, asset exposure and patch state are not universally available. No authenticated asset inventory is connected. | A KEV list is not an organisation-specific risk ranking. | Add retrieval-dated EPSS/CVSS and exploitation evidence where sourced; keep asset exposure/criticality local and user-controlled. | Reconcile sample CVEs against authoritative feeds and verify score timestamps and asset privacy boundaries. |
+| P1 | Remediation | Source-backed remediation is guarded against generic boilerplate, but fixed-version verification is not automated for every CVE/KEV record. | Some entries will correctly remain unresolved; absence of extracted guidance must not be mistaken for proof that no fix exists. | Keep “not found in reviewed evidence” distinct from “no verified fix available”; add product/branch-specific vendor checks and post-fix verification where supported. | Golden test cases for concrete fixes, workarounds, unsupported claims and vendor source links. |
+| P2 | Threat actors / campaigns | Related intelligence is currently linked by shared CVEs, topics and IOC candidates. No dedicated actor/campaign profile model was established in the reviewed UI. | Relationships are useful leads, not a validated attribution or campaign graph. | Add explicit entity records and evidence-backed relationship types; separate actor confidence from event confidence. | Verify every edge has source evidence, confidence, date and relationship semantics. |
+| P2 | IOC workspace | IOC candidates are extracted only near explicit IOC wording and correctly labelled as candidates. No reputation-provider integrations are configured in the collector. | The workspace is not a complete enrichment or blocklist service. | Add optional, policy-compliant provider connectors and preserve retrieval time, source and analyst verdict. | Validate indicator type, age, source and false-positive cases; never auto-block candidates. |
+| P2 | Asset matching | Current asset matching is a local text-to-KEV comparison, not version-aware exposure analysis. | It can produce possible matches but cannot confirm affected assets or prioritise business risk. | Add version, internet exposure, asset criticality, control state and patch status as local-only inputs. | Test exact, partial, negative and ambiguous matches; verify no inventory is sent to public endpoints. |
+| P2 | Business intelligence | Business feeds are broad discovery feeds; collector labels reports as reported and asks for company/filing verification. | Syndication, duplicate stories and unconfirmed claims remain possible. | Preserve announcement/publication/collection dates and corroboration status; promote confirmed status only with primary evidence. | Daily sample review against company releases and filings; check old stories are not relabelled as new. |
+| P2 | Browser storage | Watchlists use browser localStorage with JSON parse fallback. No explicit schema/version migration or retention/size policy was identified in the inspected code. | Corrupt or stale local data may degrade user experience; it is not a server-side backup. | Add schema versioning, validation and bounded storage; document that browser-local data is device-specific. | Test malformed, old-version, oversized and unavailable storage scenarios. |
+| P2 | GitHub API reliability | Dashboard loads public GitHub tree/raw content. The inspected client path does not establish a comprehensive retry/backoff and rate-limit recovery policy. | Historical reports or query library can fail when API limits or network errors occur. | Add bounded retry/backoff, cache-aware errors and clear partial-data states. | Simulate 403 rate limit, 404, 5xx, timeout and offline cases. |
+| P2 | Executive / analyst modes | The reviewed UI has sections and expandable technical content, but no explicit Executive Mode / Analyst Mode control was identified. | The requested audience-specific presentation is incomplete. | Add a simple presentation toggle without hiding underlying evidence or controls. | Keyboard and mobile interaction tests; verify all evidence remains reachable. |
+| P2 | API / PDF | A public read-only threat-intelligence API and executive PDF export were not established in the reviewed architecture. | Those requested capabilities remain unimplemented. | Treat as separate future capabilities; do not expose private asset data or secrets through a public endpoint. | API authentication/rate-limit/privacy tests; PDF content/date/source integrity checks. |
+| P2 | Accessibility / performance | Responsive CSS breakpoints and semantic HTML elements are present. No Lighthouse, keyboard-only, screen-reader or measured performance result was available. | Responsive styling is not proof of accessibility or performance. | Run Lighthouse and manual keyboard/screen-reader checks; fix measured issues. | Store reproducible Lighthouse and accessibility results for desktop and mobile viewports. |
+| P2 | Deployment reliability | Workflows define daily collection, quality checks and Pages deployment. The available connector did not provide a confirmed latest production workflow run/deployment status. | Repository changes cannot be equated with live deployment. | Verify collection, validation, commit and Pages deployment jobs from GitHub Actions after merge. | Record run IDs, job outcomes, deployed commit and live browser smoke-test results. |
+
+## Positive controls observed
+
+- Threat and business cards use escaped text rendering in the inspected dashboard source.
+- The Markdown renderer escapes source text before applying supported formatting and only creates links from HTTPS URLs.
+- No `eval()` or `document.write()` was found in the inspected dashboard source.
+- Generic remediation boilerplate is explicitly rejected by collector regression checks.
+- The evidence policy distinguishes automated extraction from independent verification.
+- Detection-query maturity documentation explicitly states that structural lint is not parser, tenant-schema, lab or production validation.
+- The daily workflow validates the generated snapshot before committing and deploying it.
+- The dashboard distinguishes CISA KEV catalogue membership from actual asset patch/deployment state.
+
+## Verification status
+
+- Source inspection: completed for the files listed in the audit boundary.
+- Source-health implementation: proposed in PR #4; not merged.
+- PR Actions: no confirmed run/check result was returned by the available connector at the time of writing.
+- Live browser test: not performed; the Pages fetch path was unavailable.
+- Lighthouse/accessibility test: not performed.
+- SIEM query execution: not performed.
+- Production deployment: not confirmed.
+
+## Release gate
+
+Do not describe the command center as enterprise-certified or production-validated until the P1 items are addressed, automated checks pass, the production Pages deployment is confirmed, and live browser/accessibility/security testing has been recorded.

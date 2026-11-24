@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Static dashboard and latest-intelligence integrity checks."""
-import ast, importlib.util, json, re, subprocess, tempfile
+import ast, importlib.util, json, re, subprocess, tempfile, time
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
 html = (root / "index.html").read_text(encoding="utf-8")
-required = ["criticalVulnList", "prepareBriefing", "businessList", "queryGrid", "loadQueries", "reportPicker", "loadReportPath", "threatPrev", "businessPrev", "kevPrev", "cisa_kev_catalog", "CVERecord?id=", "kevStatus", "queriesLoaded", "const groups={}", "globalSearchPanel", "globalSearch", "globalScope", "kevSearch", "kevVendor", "kevDueFilter", "priorityFilter", "v.vulnerabilityName", "function globalSearch", "function filteredKev", "const remediationBlock=", "function relatedFor", "function renderWatchlist", "function matchAssets", "function renderIOC", "function compareSnapshots", "function copyExecutiveDigest", "function renderReadiness", "oldestReport", "intel\\/daily", "remediation_guidance", "No specific fix identified in retrieved source text", "function kevHtml", "function kevAction", "function itemHtml", "function businessCard", "function businessSignificance", "vendor_remediation", "LINKED VENDOR ADVISORY", "Article text retrieved", "What to verify next", "businessDetail", "businessClear", "knownRansomwareCampaignUse", "Evidence "]
+required = ["criticalVulnList", "prepareBriefing", "businessList", "queryGrid", "loadQueries", "reportPicker", "loadReportPath", "threatPrev", "businessPrev", "kevPrev", "cisa_kev_catalog", "CVERecord?id=", "kevStatus", "queriesLoaded", "const groups={}", "globalSearchPanel", "globalSearch", "globalScope", "kevSearch", "kevVendor", "kevDueFilter", "priorityFilter", "v.vulnerabilityName", "function globalSearch", "function filteredKev", "const remediationBlock=", "function relatedFor", "function renderWatchlist", "function matchAssets", "function renderIOC", "function compareSnapshots", "function copyExecutiveDigest", "function renderReadiness", "oldestReport", "intel\\/daily", "remediation_guidance", "No specific fix identified in retrieved source text", "function kevHtml", "function kevAction", "function itemHtml", "function businessCard", "function businessSignificance", "vendor_remediation", "LINKED VENDOR ADVISORY", "Article text retrieved", "What to verify next", "businessDetail", "businessClear", "knownRansomwareCampaignUse", "Evidence ", "last_success_at", "last_attempt_at", "duration_ms", "consecutive_failures", "collection_result"]
 missing = [x for x in required if x not in html]
 if missing:
     raise SystemExit("Dashboard missing required UI features: " + ", ".join(missing))
@@ -68,6 +68,24 @@ for required_step in ("  deploy:", "    needs: collect", "pages: write", "id-tok
 spec = importlib.util.spec_from_file_location("gci_collector", collector_path)
 collector = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(collector)
+
+# Source health must distinguish an empty successful feed from a failed feed,
+# retain the previous success timestamp after failure, and increment failures.
+health_state = {}
+first = collector.record_source_health(health_state, "Test feed", "https://example.com/feed", "success", 2, time.perf_counter())
+if first.get("collection_result") != "success_with_records" or not first.get("last_success_at") or first.get("consecutive_failures") != 0:
+    raise SystemExit("Source health does not correctly record a successful collection")
+empty = collector.record_source_health(health_state, "Empty feed", "https://example.com/empty", "success", 0, time.perf_counter())
+if empty.get("collection_result") != "success_empty":
+    raise SystemExit("A successful zero-record collection is not distinguished from failure")
+failed = collector.record_source_health(health_state, "Test feed", "https://example.com/feed", "failed", 0, time.perf_counter(), "HTTP 503")
+if failed.get("collection_result") != "failed" or failed.get("last_success_at") != first.get("last_success_at") or failed.get("consecutive_failures") != 1:
+    raise SystemExit("Source health failure history does not preserve last success and increment failure count")
+malformed_state = {"Malformed feed": {"last_success_at": "2026-11-20T00:00:00Z", "consecutive_failures": "not-a-number"}}
+recovered = collector.record_source_health(malformed_state, "Malformed feed", "https://example.com/feed", "failed", 0, time.perf_counter(), "HTTP 503")
+if recovered.get("consecutive_failures") != 1 or recovered.get("last_success_at") != "2026-11-20T00:00:00Z":
+    raise SystemExit("Malformed prior source-health state is not handled safely")
+
 generic_fix = "Apply mitigations in accordance with vendor instructions for affected systems."
 if collector.extract_specific_remediation(generic_fix):
     raise SystemExit("Generic vendor boilerplate was incorrectly accepted as a fix")

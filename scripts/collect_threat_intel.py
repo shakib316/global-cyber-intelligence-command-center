@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Multi-source public cyber-intelligence collector. No automated response actions."""
-import datetime as dt, email.utils, html, ipaddress, json, re, sys, urllib.request, difflib
+import datetime as dt, email.utils, html, ipaddress, json, re, sys, urllib.request, difflib, time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
@@ -98,6 +98,40 @@ def fetch(url):
     with urllib.request.urlopen(req,timeout=25) as r:
         if r.status!=200: raise RuntimeError("HTTP "+str(r.status))
         return r.read()
+
+def load_source_health_state():
+    path=ROOT/"intel/source-health-state.json"
+    try:
+        value=json.loads(path.read_text(encoding="utf-8"))
+        sources=value.get("sources",{}) if isinstance(value,dict) else {}
+        return sources if isinstance(sources,dict) else {}
+    except (OSError,ValueError,TypeError):
+        return {}
+
+def record_source_health(state,source,url,status,records,started,error=None,stream=None,note=None):
+    previous=state.get(source,{})
+    attempted=dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds").replace("+00:00","Z")
+    ok=status=="success"
+    try: previous_failures=max(0,int(previous.get("consecutive_failures",0) or 0))
+    except (TypeError,ValueError): previous_failures=0
+    count=max(0,int(records or 0))
+    entry={"source":source,"status":status,
+        "collection_result":("success_with_records" if count else "success_empty") if ok else "failed",
+        "records":count,"url":url,"last_attempt_at":attempted,
+        "last_success_at":attempted if ok else previous.get("last_success_at"),
+        "duration_ms":max(0,int((time.perf_counter()-started)*1000)),
+        "consecutive_failures":0 if ok else previous_failures+1}
+    if error: entry["error"]=str(error)[:600]
+    if stream: entry["stream"]=stream
+    if note: entry["note"]=note
+    state[source]={k:entry[k] for k in ("last_success_at","consecutive_failures","last_attempt_at","duration_ms","status","collection_result","records","error") if k in entry}
+    return entry
+
+def save_source_health_state(state):
+    path=ROOT/"intel/source-health-state.json"
+    path.parent.mkdir(parents=True,exist_ok=True)
+    path.write_text(json.dumps({"schema_version":1,"updated_at":STAMP,"sources":state},indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
+
 def lname(t): return t.rsplit("}",1)[-1].lower()
 def child(n,names):
     for c in list(n):
@@ -349,34 +383,39 @@ def extract_iocs(s,source,url):
     return [{"value":v,"type":t,"source":source,"source_url":url,"confidence":"candidate near explicit IOC wording; verify against primary source"} for v,t in found.items()]
 
 def main():
-    health=[];errors=[];entries=[];business_entries=[];kev={};success=0
+    health=[];errors=[];entries=[];business_entries=[];kev={};success=0;health_state=load_source_health_state()
+    started=time.perf_counter()
     try:
         kev=json.loads(fetch(KEV).decode());success+=1
-        health.append({"source":"CISA KEV","status":"success","records":len(kev.get("vulnerabilities",[])),"url":KEV})
+        health.append(record_source_health(health_state,"CISA KEV",KEV,"success",len(kev.get("vulnerabilities",[])),started))
     except Exception as e:
-        errors.append(f"CISA KEV: {type(e).__name__}: {e}");health.append({"source":"CISA KEV","status":"failed","records":0,"url":KEV,"error":str(e)})
+        errors.append(f"CISA KEV: {type(e).__name__}: {e}");health.append(record_source_health(health_state,"CISA KEV",KEV,"failed",0,started,e))
     for f in FEEDS:
+        started=time.perf_counter()
         try:
             rows=parse_feed(fetch(f[2]),f);entries+=rows;success+=1
-            health.append({"source":f[1],"status":"success","records":len(rows),"url":f[2]})
+            health.append(record_source_health(health_state,f[1],f[2],"success",len(rows),started))
         except Exception as e:
-            errors.append(f"{f[1]}: {type(e).__name__}: {e}");health.append({"source":f[1],"status":"failed","records":0,"url":f[2],"error":str(e)})
+            errors.append(f"{f[1]}: {type(e).__name__}: {e}");health.append(record_source_health(health_state,f[1],f[2],"failed",0,started,e))
     for bid,bname,burl in BUSINESS_FEEDS:
+        started=time.perf_counter()
         try:
             bf=(bid,bname,burl,"business","medium")
             rows=parse_feed(fetch(burl),bf);business_entries+=rows;success+=1
-            health.append({"source":bname,"status":"success","records":len(rows),"url":burl,"stream":"business"})
+            health.append(record_source_health(health_state,bname,burl,"success",len(rows),started,stream="business"))
         except Exception as e:
-            errors.append(f"{bname}: {type(e).__name__}: {e}");health.append({"source":bname,"status":"failed","records":0,"url":burl,"error":str(e),"stream":"business"})
+            errors.append(f"{bname}: {type(e).__name__}: {e}");health.append(record_source_health(health_state,bname,burl,"failed",0,started,e,stream="business"))
     cert_url="https://www.cert-in.org.in/s2cMainServlet?pageid=PUBADVLIST02&year="+str(NOW.year)
+    started=time.perf_counter()
     try:
         p=CertParser();p.feed(fetch(cert_url).decode("utf-8",errors="replace"))
         for x in p.rows:entries.append({"source_id":"cert_in","source":"CERT-In India","source_type":"government","priority":"critical",
             "title":x["title"],"url":x["url"],"summary":"Official CERT-In index entry. Open advisory for technical details and remediation.",
             "published":None,"_date":None,"undated_certin":True})
-        success+=1;health.append({"source":"CERT-In India advisory index","status":"success","records":len(p.rows),"url":cert_url,"note":"Index scrape; open advisory to confirm details"})
+        success+=1;health.append(record_source_health(health_state,"CERT-In India advisory index",cert_url,"success",len(p.rows),started,note="Index scrape; open advisory to confirm details"))
     except Exception as e:
-        errors.append(f"CERT-In index: {type(e).__name__}: {e}");health.append({"source":"CERT-In India advisory index","status":"failed","records":0,"url":cert_url,"error":str(e)})
+        errors.append(f"CERT-In index: {type(e).__name__}: {e}");health.append(record_source_health(health_state,"CERT-In India advisory index",cert_url,"failed",0,started,e))
+    save_source_health_state(health_state)
     cutoff=NOW-dt.timedelta(hours=72);business_cutoff=NOW-dt.timedelta(days=7);selected=[]
     for x in entries:
         body=x["title"]+" "+x["summary"];x["cves"]=extract_cves(body);x["topics"]=topics(body)
@@ -454,8 +493,8 @@ def main():
     (ROOT/"intel/latest.json").write_text(json.dumps(latest,indent=2)+"\n",encoding="utf-8")
     lines=[f"# Global Cyber Threat Radar — Automated Snapshot — {DAY} IST","",f"- Retrieved: {STAMP_IST} (UTC: {STAMP})","- Coverage: last 72 hours + undated CERT-In index entries",
         f"- Feed health: {good}/{len(health)}",f"- Advisory/research items: {len(items)}",f"- CISA KEV catalog: {len(vulns)}",f"- KEV additions last 7 days: {len(recentkev)}",f"- IOC candidates: {len(iocs)}",
-        "","## Feed health","","| Source | Status | Records |","|---|---|---:|"]
-    lines += [f"| {x['source']} | {x['status']} | {x['records']} |" for x in health]
+        "","## Feed health","","| Source | Status | Result | Records | Last successful collection (UTC) | Last attempt (UTC) | Duration (ms) | Consecutive failures |","|---|---|---|---:|---|---|---:|---:|"]
+    lines += [f"| {x['source']} | {x['status']} | {x.get('collection_result','unknown')} | {x['records']} | {x.get('last_success_at') or 'never'} | {x.get('last_attempt_at','unknown')} | {x.get('duration_ms','unknown')} | {x.get('consecutive_failures',0)} |" for x in health]
     lines += ["","## CISA KEV additions — last 7 days",""]
     if recentkev:
         for v in recentkev[:40]:
