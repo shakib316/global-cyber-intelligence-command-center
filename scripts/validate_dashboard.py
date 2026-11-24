@@ -221,6 +221,8 @@ nvd_payload = {"vulnerabilities": [
 with patch.object(collector, "request_url", return_value=(json.dumps(nvd_payload).encode(), "utf-8", collector.NVD_API)), patch.object(collector.time, "sleep"):
     cvss_records = [{"cveID": "CVE-2026-12345"}, {"cveID": "CVE-2026-54321"}]
     cvss_meta = collector.enrich_nvd_cvss(cvss_records)
+    if any(call.kwargs.get("timeout") != 12 or call.kwargs.get("max_attempts") != 2 for call in mock_request.call_args_list):
+        raise SystemExit("NVD CVSS requests must use bounded timeout and retry limits")
     metric = cvss_records[0].get("cvss") or {}
     if cvss_meta["status"] != "success" or metric.get("version") != "4.0" or metric.get("base_score") != 9.3 or metric.get("severity") != "CRITICAL" or not metric.get("source_url", "").startswith("https://"):
         raise SystemExit("NVD CVSS metric lost its version, score, severity or source provenance")
