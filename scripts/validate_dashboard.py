@@ -345,10 +345,12 @@ if candidate_state["fixed_version"] is not None or candidate_state["analyst_veri
 feed_urls = {feed[0]: feed[2] for feed in collector.FEEDS}
 if feed_urls.get("google_security") != "https://blog.google/security/rss/":
     raise SystemExit("Google Security Blog feed is not using the refreshed HTTPS RSS endpoint")
-if feed_urls.get("australia_acsc") != "https://www.cyber.gov.au/rss/alerts":
-    raise SystemExit("ACSC feed is not using the current alerts RSS endpoint")
-if 'timeout=12,max_attempts=2' not in collector_source:
-    raise SystemExit("ACSC collection does not use a bounded timeout/retry budget")
+if "australia_acsc" in feed_urls or "Australian ACSC" in collector_source:
+    raise SystemExit("ACSC feed must remain intentionally excluded until its upstream availability is restored")
+if 'health_state.pop("Australian ACSC",None)' not in collector_source:
+    raise SystemExit("Excluded ACSC source must not leave stale failure telemetry")
+if "actions: read" not in daily_workflow_source or "Wait for Pages artifact visibility" not in daily_workflow_source or "artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}" not in daily_workflow_source:
+    raise SystemExit("Daily deployment must wait for its uniquely named Pages artifact before deploy")
 article = {
     "url": "https://research.example/story",
     "title": "Example vulnerability CVE-2026-12345",
