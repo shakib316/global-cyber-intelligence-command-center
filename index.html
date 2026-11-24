@@ -458,7 +458,7 @@ const failedSources=sources.filter(s=>sourceState(s)==="failed").length;
 const excludedSources=sources.filter(s=>sourceState(s)==="disabled_excluded").length;
 $("sourceCount").textContent=healthySources+"/"+sources.length+" healthy · "+partialSources+" partial · "+(transientSources+failedSources)+" unavailable/failed · "+excludedSources+" excluded";
 $("sourceTable").innerHTML=sources.map(s=>{
- const state=sourceState(s),stateClass=["successful","empty_but_healthy"].includes(state)?"green":state==="disabled_excluded"?"grey":state==="failed"?"red":"amber";
+ const state=sourceState(s);
  const badgeClass=["successful","empty_but_healthy"].includes(state)?"ok":"bad";
  const resultClass=s.collection_result==="success_with_records"||s.collection_result==="success_empty"?"green":s.collection_result==="failed"?"red":s.collection_result==="disabled_excluded"?"grey":"amber";
  return '<tr><td>'+esc(s.source)+'</td><td><span class="status '+badgeClass+'">'+esc(humanize(state))+'</span></td><td>'+tag(humanize(s.collection_result||"legacy status"),resultClass)+'</td><td>'+esc(s.records)+'</td><td>'+esc(fmt(s.last_success_at))+'</td><td>'+esc(fmt(s.last_attempt_at))+'</td><td>'+esc(s.duration_ms==null?"unknown":s.duration_ms+" ms")+'</td><td>'+esc(s.consecutive_failures==null?"unknown":s.consecutive_failures)+'</td><td><a href="'+safeUrl(s.url)+'" target="_blank" rel="noopener">Feed ↗</a>'+(s.error?'<br><span class="muted">'+esc(s.error)+'</span>':"")+'</td></tr>';
