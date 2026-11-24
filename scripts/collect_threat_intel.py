@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Multi-source public cyber-intelligence collector. No automated response actions."""
-import datetime as dt, email.utils, html, ipaddress, json, re, sys, urllib.request, difflib, time, socket, http.client
+import datetime as dt, email.utils, html, ipaddress, json, re, sys, urllib.request, difflib, time, socket, http.client, os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
@@ -445,6 +445,7 @@ def enrich_records(records,max_workers=10):
             else:item["remediation_status"]="No specific fix identified in retrieved source text" if item.get("enrichment_status")=="enriched" else "Fix status unknown — source page not fully retrieved"
 
 EPSS_API="https://api.first.org/data/v1/epss"
+NVD_API="https://services.nvd.nist.gov/rest/json/cves/2.0"
 EPSS_ATTRIBUTION="EPSS by FIRST.org / Empirical Security"
 
 def enrich_epss(records):
@@ -506,6 +507,75 @@ def format_epss_context(record):
     if record.get("epss_status")=="lookup_failed":return "EPSS lookup failed"
     if record.get("epss_status")=="partially_available":return "EPSS partially available"
     return "EPSS unavailable / not applicable"
+
+def enrich_nvd_cvss(records,max_records=20):
+    """Retrieve NVD CVSS metrics for recent KEV entries, respecting unauthenticated rate limits."""
+    cves=sorted({str(r.get("cveID","")).upper() for r in records if CVE.fullmatch(str(r.get("cveID","")).upper())})[:max_records]
+    api_key=os.environ.get("NVD_API_KEY","").strip()
+    headers={"User-Agent":UA,"Accept":"application/json"}
+    if api_key:headers["apiKey"]=api_key
+    lookup={};errors=[];invalid=[]
+    for index,cve in enumerate(cves):
+        if index:time.sleep(0.7 if api_key else 6.1)
+        try:
+            url=NVD_API+"?"+urlencode({"cveId":cve})
+            raw,_,_=request_url(url,headers,timeout=25,max_bytes=2_000_000)
+            payload=json.loads(raw.decode("utf-8"))
+            rows=payload.get("vulnerabilities")
+            if not isinstance(rows,list):raise ValueError("Unexpected NVD CVE API response schema")
+            match=next((x.get("cve",{}) for x in rows if isinstance(x,dict) and x.get("cve",{}).get("id")==cve),None)
+            if not match:
+                lookup[cve]={"status":"not_found","source_url":"https://nvd.nist.gov/vuln/detail/"+cve}
+                continue
+            metrics=match.get("metrics",{}) if isinstance(match.get("metrics"),dict) else {}
+            chosen=None
+            for key in ("cvssMetricV40","cvssMetricV31","cvssMetricV30","cvssMetricV2"):
+                candidates=metrics.get(key,[])
+                if not isinstance(candidates,list):continue
+                candidates=sorted((x for x in candidates if isinstance(x,dict)),key=lambda x:0 if x.get("type")=="Primary" else 1)
+                for metric in candidates:
+                    data=metric.get("cvssData",{})
+                    if not isinstance(data,dict):continue
+                    try:score=float(data.get("baseScore"))
+                    except (TypeError,ValueError):continue
+                    if not 0.0<=score<=10.0:continue
+                    severity=str(data.get("baseSeverity") or metric.get("baseSeverity") or "").upper()
+                    if severity and severity not in ("LOW","MEDIUM","HIGH","CRITICAL"):severity=""
+                    chosen={"version":str(data.get("version") or key.replace("cvssMetricV","")),
+                        "base_score":score,"severity":severity or None,"vector":str(data.get("vectorString") or ""),
+                        "source":str(metric.get("source") or "NVD"),"source_type":str(metric.get("type") or "Unknown"),
+                        "nvd_last_modified":match.get("lastModified"),
+                        "source_url":"https://nvd.nist.gov/vuln/detail/"+cve}
+                    break
+                if chosen:break
+            if chosen:lookup[cve]={"status":"available","metric":chosen}
+            elif metrics:lookup[cve]={"status":"invalid_metric","source_url":"https://nvd.nist.gov/vuln/detail/"+cve}
+            else:lookup[cve]={"status":"not_scored_in_nvd","source_url":"https://nvd.nist.gov/vuln/detail/"+cve}
+        except Exception as exc:
+            errors.append(cve+": "+type(exc).__name__+": "+str(exc)[:180])
+            lookup[cve]={"status":"lookup_failed","source_url":"https://nvd.nist.gov/vuln/detail/"+cve}
+    for record in records:
+        cve=str(record.get("cveID","")).upper()
+        result=lookup.get(cve)
+        record["cvss"]=result.get("metric") if result and result.get("status")=="available" else None
+        record["cvss_status"]=result.get("status","not_applicable_no_cve") if result else "not_requested"
+        record["cvss_retrieved_at"]=STAMP
+    available=sum(x.get("status")=="available" for x in lookup.values())
+    return {"provider":"NIST National Vulnerability Database","source_url":NVD_API,"retrieved_at":STAMP,
+        "requested_cves":len(cves),"scored_cves":available,"api_key_configured":bool(api_key),
+        "status":"partial" if errors and available else ("failed" if errors else "success"),
+        "errors":errors[:10],
+        "interpretation":"CVSS describes technical severity, not exploitation probability or organisation-specific risk. NVD may have no score or may not have completed analysis."}
+
+def format_cvss_context(record):
+    metric=record.get("cvss")
+    if metric:
+        return "CVSS %s %.1f %s; vector %s; NVD record updated %s" % (
+            metric.get("version","unknown"),metric.get("base_score",0),metric.get("severity") or "severity not stated",
+            metric.get("vector") or "vector not supplied",metric.get("nvd_last_modified") or "date not stated")
+    states={"not_scored_in_nvd":"NVD has no CVSS metric","lookup_failed":"NVD lookup failed",
+        "invalid_metric":"NVD metric was present but did not pass validation","not_found":"CVE not found in NVD"}
+    return states.get(record.get("cvss_status"),"CVSS not available / not applicable")
 
 def enrich_kev_records(records,max_workers=8):
     """Follow vendor URLs supplied by CISA KEV for recent additions only."""
@@ -635,6 +705,7 @@ def main():
     recentkev=sorted([v for v in vulns if v.get("dateAdded","")>=(NOW_IST.date()-dt.timedelta(days=7)).isoformat()],key=lambda x:x.get("dateAdded",""),reverse=True)
     enrich_kev_records(recentkev[:40])
     epss_enrichment=enrich_epss(recentkev[:40]+items)
+    cvss_enrichment=enrich_nvd_cvss(recentkev[:20])
     iocmap={}
     for x in items:
         for v in extract_iocs(x["title"]+" "+x["summary"]+" "+x.get("details",""),x["source"],x["url"]):
@@ -650,7 +721,7 @@ def main():
     snapshot=Path("intel/snapshots")/DAY[:4]/DAY[5:7]/(DAY[8:10]+".json")
     (ROOT/report).parent.mkdir(parents=True,exist_ok=True);(ROOT/snapshot).parent.mkdir(parents=True,exist_ok=True)
     data={"date_utc":DAY_UTC,"date_ist":DAY,"retrieved_at":STAMP,"retrieved_at_ist":STAMP_IST,"window_hours":72,"source_health":health,"successful_sources":good,"total_sources":len(health),
-        "errors":errors,"business_items":business_items,"business_feed_count":len(business_items),"business_window_hours":168,"cisa_kev_catalog_count":len(vulns),"cisa_kev_catalog":vulns,"cisa_kev_added_last_7_days":recentkev,"items":items,"epss_enrichment":epss_enrichment,
+        "errors":errors,"business_items":business_items,"business_feed_count":len(business_items),"business_window_hours":168,"cisa_kev_catalog_count":len(vulns),"cisa_kev_catalog":vulns,"cisa_kev_added_last_7_days":recentkev,"items":items,"epss_enrichment":epss_enrichment,"cvss_enrichment":cvss_enrichment,
         "ioc_candidates":iocs,"ioc_policy":"Candidate extraction only near explicit IOC wording. Verify against original report and local context.",
         "limitations":["Public feeds are not exhaustive and can fail or change format.","CERT-In is an official index scrape, not an RSS feed; open advisory pages to confirm details.",
         "Authenticated/paid feeds are not configured.","A CVE listing or IOC match is not proof of compromise.","No automatic response actions."]}
@@ -667,6 +738,7 @@ def main():
             lines.append(f"- **{v.get('cveID','CVE unavailable')} — {v.get('vulnerabilityName','Name unavailable')}** | {v.get('vendorProject','unknown')} / {v.get('product','unknown')} | added {v.get('dateAdded','unknown')} | due {v.get('dueDate','not stated')} | [CISA record]({v.get('notes','https://www.cisa.gov/known-exploited-vulnerabilities-catalog')})")
             lines.append("  - Fix / remediation: "+kev_remediation_text(v))
             lines.append("  - EPSS context: "+format_epss_context(v)+" — FIRST.org; not an asset-specific risk score")
+            lines.append("  - CVSS context: "+format_cvss_context(v)+" — NVD technical severity, not an asset-specific risk score")
             for ref in v.get("vendor_remediation",[]):
                 lines.append("  - Vendor evidence: ["+str(ref.get("source_label") or "Vendor advisory")+"]("+str(ref.get("source_url") or "")+") — analyst review required")
     else:lines.append("- No additions returned, or the feed failed; check source health.")
