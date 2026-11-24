@@ -7,7 +7,7 @@
 // Maturity: Draft
 // False positives: Shared hosting, stale indicators, benign redirects and common software hashes
 // Tuning: Verify each value against the primary report before use
-let Domains = dynamic(["access.redhat.com"]);
+let Domains = dynamic(["golang.org", "access.redhat.com"]);
 let IPs = dynamic([]);
 let Hashes = dynamic([]);
 union
