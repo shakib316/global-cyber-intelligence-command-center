@@ -514,7 +514,7 @@ def enrich_nvd_cvss(records,max_records=20):
     api_key=os.environ.get("NVD_API_KEY","").strip()
     headers={"User-Agent":UA,"Accept":"application/json"}
     if api_key:headers["apiKey"]=api_key
-    lookup={};errors=[];invalid=[]
+    lookup={};errors=[]
     for index,cve in enumerate(cves):
         if index:time.sleep(0.7 if api_key else 6.1)
         try:
@@ -563,6 +563,7 @@ def enrich_nvd_cvss(records,max_records=20):
     available=sum(x.get("status")=="available" for x in lookup.values())
     return {"provider":"NIST National Vulnerability Database","source_url":NVD_API,"retrieved_at":STAMP,
         "requested_cves":len(cves),"scored_cves":available,"api_key_configured":bool(api_key),
+        "unauthenticated_delay_seconds":None if api_key else 6.1,"errors":errors[:10],
         "status":"partial" if errors and available else ("failed" if errors else "success"),
         "errors":errors[:10],
         "interpretation":"CVSS describes technical severity, not exploitation probability or organisation-specific risk. NVD may have no score or may not have completed analysis."}
