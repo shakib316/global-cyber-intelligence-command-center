@@ -52,7 +52,7 @@ Provider: [FIRST EPSS API](https://api.first.org/epss) · [EPSS methodology and 
 
 ## CVSS technical-severity enrichment
 
-The collector queries the NVD CVE API for up to 20 recent CISA KEV additions per daily run. It selects the highest available metric version in this order: CVSS 4.0, 3.1, 3.0, then 2.0, preferring NVD Primary metrics when available. Each metric retains version, base score, severity, vector, source/type, NVD record modification time and a direct NVD record URL.
+The collector queries the NVD CVE API for up to 15 recent CISA KEV additions per daily run, with a 12-second request timeout and two attempts per CVE. It selects the highest available metric version in this order: CVSS 4.0, 3.1, 3.0, then 2.0, preferring NVD Primary metrics when available. Each metric retains version, base score, severity, vector, source/type, NVD record modification time and a direct NVD record URL.
 
 The collector observes NVD's unauthenticated request pacing (6.1 seconds between requests); if an optional `NVD_API_KEY` environment variable is configured, it uses the higher-rate authenticated pacing. It never logs the key. Missing metrics, invalid metrics, missing CVEs and provider failures remain distinct; no zero score is fabricated.
 
