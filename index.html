@@ -98,7 +98,7 @@ async function fetchWithRetry(url,options={},maxAttempts=3){
    const retryAfter=response.headers.get("Retry-After");
    const reset=response.headers.get("X-RateLimit-Reset");
    const resetDelay=reset?Math.max(0,Number(reset)*1000-Date.now()):0;
-   const requestedDelay=retryAfter&&/^\\d+$/.test(retryAfter)?Number(retryAfter)*1000:resetDelay;
+   const requestedDelay=retryAfter&&/^\d+$/.test(retryAfter)?Number(retryAfter)*1000:resetDelay;
    const delay=Math.min(8000,requestedDelay||Math.pow(2,attempt)*1000);
    await new Promise(resolve=>setTimeout(resolve,delay));
   }catch(error){
