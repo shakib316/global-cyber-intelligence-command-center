@@ -25,6 +25,8 @@ if 'descriptionBlock("What to verify next",businessSignificance(x))' not in html
     raise SystemExit("Business cards must show useful verification context without irrelevant vulnerability remediation")
 if "function cleanCopy(value)" not in html or "Compact reading layout" not in html:
     raise SystemExit("Dashboard description cleanup or compact reading styles are missing")
+if "function epssOverview(v)" not in html or html.count("epssOverview(v)") != 2:
+    raise SystemExit("EPSS evidence must be rendered only in the overview critical vulnerability watch")
 if 'function kevHtml(v)' not in html or 'v.requiredAction' not in html:
     raise SystemExit("KEV remediation column is missing")
 if 'function kevAction(v)' not in html or 'const a=kevAction(v)' not in html or 'kevStatus(v),a.specific?"green":"amber"' not in html:
