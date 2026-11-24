@@ -345,7 +345,7 @@ if candidate_state["fixed_version"] is not None or candidate_state["analyst_veri
 feed_urls = {feed[0]: feed[2] for feed in collector.FEEDS}
 if feed_urls.get("google_security") != "https://blog.google/security/rss/":
     raise SystemExit("Google Security Blog feed is not using the refreshed HTTPS RSS endpoint")
-if "australia_acsc" in feed_urls or "Australian ACSC" in collector_source:
+if "australia_acsc" in feed_urls:
     raise SystemExit("ACSC feed must remain intentionally excluded until its upstream availability is restored")
 if 'health_state.pop("Australian ACSC",None)' not in collector_source:
     raise SystemExit("Excluded ACSC source must not leave stale failure telemetry")
