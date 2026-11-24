@@ -294,6 +294,25 @@ kev_vendor = {"vendor_remediation": [{"guidance": ["Upgrade Example Product to v
 if "version 4.2.1" not in collector.kev_remediation_text(kev_vendor):
     raise SystemExit("CISA KEV report did not prioritize linked vendor remediation evidence")
 
+# Remediation evidence states must preserve uncertainty and never auto-verify a fixed release.
+sample = {"url": "https://vendor.example/advisory", "enrichment_status": "enriched"}
+state = collector.build_remediation_evidence(sample, "reviewed text", [], [], False, False)
+if state["state"] != "not_found_in_reviewed_evidence" or state["analyst_verified"] or state["fixed_version"] is not None:
+    raise SystemExit("Missing remediation evidence must not be misreported as no fix or verified fix")
+state = collector.build_remediation_evidence(sample, "no patch available", [], [], True, False)
+if state["state"] != "source_reports_no_fix":
+    raise SystemExit("Explicit no-fix source statement was not classified")
+state = collector.build_remediation_evidence(sample, "temporary workaround in support portal", [], [], True, True)
+if state["state"] != "source_reports_workaround_portal":
+    raise SystemExit("Portal-gated workaround was not classified")
+state = collector.build_remediation_evidence(sample, "upgrade to version 4.2.1", ["upgrade to version 4.2.1"], [], False, False)
+if state["state"] != "specific_action_unverified":
+    raise SystemExit("Extracted action must remain unverified pending analyst review")
+vendor = [{"source_url":"https://vendor.example/fix","guidance":["Upgrade to version 4.2.1"]}]
+state = collector.build_remediation_evidence(sample, "fix guidance", [], vendor, False, False)
+if state["state"] != "vendor_guidance_unverified" or state["evidence_sources"] != ["https://vendor.example/advisory","https://vendor.example/fix"]:
+    raise SystemExit("Vendor guidance must retain source provenance and unverified status")
+
 for promo in (
     "Discover why SHA pinning alone isn't enough and learn how to close hidden security gaps.",
     "Learn what 6,000 real-world attacks reveal about MFA weaknesses.",
