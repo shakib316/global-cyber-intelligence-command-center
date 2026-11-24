@@ -19,7 +19,7 @@ A GitHub-hosted cyber-intelligence dashboard and daily collection pipeline for v
 - Critical vulnerability watch, searchable/filterable KEV catalogue, historical daily reports, and date navigation.
 - IOC candidate extraction for analyst verification; candidates are not blocklists.
 - Browser-local watchlist, local asset-to-KEV text matcher, snapshot comparison, and executive digest.
-- KQL detection-query library with maturity labels and static metadata checks.
+- KQL, SPL and YARA-L detection-query library with maturity labels and static metadata checks.\n- Evidence-linked threat actor profiles, campaign tracking and relationship records (initially one actor and one campaign; coverage is intentionally evidence-limited).
 - GitHub Actions for daily collection, dashboard validation, query-library checks, and GitHub Pages deployment.
 
 ## Collection and reporting model
@@ -36,6 +36,14 @@ Each daily report records collection time and coverage window, per-source health
 - A CISA KEV due date is a compliance deadline for covered entities, not proof that a patch has been installed.
 - Deployment state is unknown without asset or patch-management telemetry.
 - Vendor-specific fixed-version verification is not yet automated for every CVE/KEV entry.
+
+## Threat actor and campaign intelligence
+
+The evidence-linked Phase 2 dataset is stored in `intel/phase2-intelligence.json` and described by `intel/schemas/phase2-intelligence.schema.json`. The dashboard exposes separate Threat actors and Campaigns views. Each material profile or relationship carries source IDs, confidence and a rationale. The initial dataset includes APT29 (MITRE ATT&CK G0016) and its source-listed Operation Ghost campaign (C0023); it deliberately leaves unsupported campaign targets, CVEs and IOCs empty rather than inferring them. A source profile's modification timestamp is not treated as last-observed actor activity.
+
+The relationship list currently records the source-backed APT29-to-Operation-Ghost association and the campaign's explicitly mapped ATT&CK techniques. No actor/campaign-to-CVE, IOC or detection-rule relationship is asserted without evidence. Detection opportunities in campaign profiles are analyst hunt suggestions, not tested rules or tenant coverage.
+
+Run `python scripts/validate_phase2_intelligence.py` to check record IDs, evidence references, confidence labels, timestamps, and relationship integrity. This validator checks structure and provenance links; it does not independently verify intelligence claims.
 
 ## Detection engineering
 
