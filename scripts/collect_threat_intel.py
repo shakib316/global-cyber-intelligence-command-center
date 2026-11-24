@@ -565,7 +565,6 @@ def enrich_nvd_cvss(records,max_records=20):
         "requested_cves":len(cves),"scored_cves":available,"api_key_configured":bool(api_key),
         "unauthenticated_delay_seconds":None if api_key else 6.1,"errors":errors[:10],
         "status":"partial" if errors and available else ("failed" if errors else "success"),
-        "errors":errors[:10],
         "interpretation":"CVSS describes technical severity, not exploitation probability or organisation-specific risk. NVD may have no score or may not have completed analysis."}
 
 def format_cvss_context(record):
