@@ -574,7 +574,8 @@ def format_cvss_context(record):
             metric.get("version","unknown"),metric.get("base_score",0),metric.get("severity") or "severity not stated",
             metric.get("vector") or "vector not supplied",metric.get("nvd_last_modified") or "date not stated")
     states={"not_scored_in_nvd":"NVD has no CVSS metric","lookup_failed":"NVD lookup failed",
-        "invalid_metric":"NVD metric was present but did not pass validation","not_found":"CVE not found in NVD"}
+        "invalid_metric":"NVD metric was present but did not pass validation","not_found":"CVE not found in NVD",
+        "not_requested":"NVD lookup not requested due to the bounded daily cap"}
     return states.get(record.get("cvss_status"),"CVSS not available / not applicable")
 
 def enrich_kev_records(records,max_workers=8):
