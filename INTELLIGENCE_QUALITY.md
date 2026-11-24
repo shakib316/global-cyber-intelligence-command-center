@@ -37,3 +37,14 @@ No query should be promoted based only on static repository checks.
 Pull requests run dashboard/collector tests and detection-query structural checks. Daily collection validates the newly generated snapshot before committing and deploying it. A successful workflow proves that the pipeline and its checks completed; it does not prove that every global source, claim, vulnerability, vendor fix, IOC, or detection is complete and correct.
 
 External sources can be unavailable, rate-limited, paywalled, or incomplete. The dashboard records feed health and preserves uncertainty rather than silently inventing missing information.
+
+ 
+## Exploitation-likelihood enrichment (EPSS)
+
+The collector performs bounded FIRST EPSS API lookups for CVEs in the latest seven-day CISA KEV additions (up to 40 records) and current advisory/research items. Requests are batched within the provider's documented URL-length limit; this is not a bulk synchronization of the full CVE population.
+
+Each returned score is stored with its CVE, probability (0–1), percentile (0–1), provider score date, provider name and source URL. The snapshot also records retrieval time, requested/matched counts, batch count and provider errors. A missing score is not converted to zero: records distinguish no score returned, lookup failure, partial availability and no-CVE applicability.
+
+EPSS estimates the probability that a CVE will be exploited in the next 30 days. It is not evidence that exploitation has occurred, does not measure impact, and is not an organisation-specific risk score. CISA KEV membership remains a separate known-exploitation catalogue signal. CVSS, asset applicability, exposure, criticality, compensating controls and patch state remain separate evidence dimensions and are not inferred from EPSS.
+
+Provider: [FIRST EPSS API](https://api.first.org/epss) · [EPSS methodology and interpretation](https://www.first.org/epss/).
