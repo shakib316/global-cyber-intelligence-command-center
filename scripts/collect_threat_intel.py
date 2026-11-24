@@ -508,7 +508,7 @@ def format_epss_context(record):
     if record.get("epss_status")=="partially_available":return "EPSS partially available"
     return "EPSS unavailable / not applicable"
 
-def enrich_nvd_cvss(records,max_records=20):
+def enrich_nvd_cvss(records,max_records=15):
     """Retrieve NVD CVSS metrics for recent KEV entries, respecting unauthenticated rate limits."""
     cves=sorted({str(r.get("cveID","")).upper() for r in records if CVE.fullmatch(str(r.get("cveID","")).upper())})[:max_records]
     api_key=os.environ.get("NVD_API_KEY","").strip()
@@ -519,7 +519,7 @@ def enrich_nvd_cvss(records,max_records=20):
         if index:time.sleep(0.7 if api_key else 6.1)
         try:
             url=NVD_API+"?"+urlencode({"cveId":cve})
-            raw,_,_=request_url(url,headers,timeout=25,max_bytes=2_000_000)
+            raw,_,_=request_url(url,headers,timeout=12,max_bytes=2_000_000,max_attempts=2)
             payload=json.loads(raw.decode("utf-8"))
             rows=payload.get("vulnerabilities")
             if not isinstance(rows,list):raise ValueError("Unexpected NVD CVE API response schema")
