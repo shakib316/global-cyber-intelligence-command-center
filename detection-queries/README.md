@@ -17,8 +17,8 @@ A versioned, technology-categorized library of threat-hunting and detection quer
 | Virtualization | [kql/virtualization](kql/virtualization/) | VMware vCenter syslog hunting |
 | Asset inventory | [kql/asset-inventory](kql/asset-inventory/) | Software inventory review for vulnerability exposure |
 | Business applications | [kql/business-applications](kql/business-applications/) | Payment beneficiary, approval-chain and payout changes |
-| Splunk | [spl](spl/) | Reserved for SPL equivalents |
-| Google SecOps | [yaral](yaral/) | Reserved for YARA-L equivalents |
+| Splunk | [spl](spl/) | Draft Sysmon and CIM hunts; deployment assumptions documented |
+| Google SecOps | [yaral](yaral/) | Draft UDM process and identity hunts; parser validation required |
 
 ## Query registry
 
