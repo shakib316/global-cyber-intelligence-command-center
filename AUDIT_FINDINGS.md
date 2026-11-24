@@ -41,13 +41,15 @@ The available GitHub integration did not expose a complete repository-tree listi
 ## Verification status
 
 - Source inspection: completed for the files listed in the audit boundary.
-- Source-health implementation: proposed in PR #4; not merged.
-- PR Actions: no confirmed run/check result was returned by the available connector at the time of writing.
-- Live browser test: not performed; the Pages fetch path was unavailable.
+- Source-health telemetry: merged through PR #4; its Pages deployment retry succeeded.
+- SSRF hardening: merged through PR #5 (318401e2ba985e2dfcdef1d86298935b4d77bf6b). Regression and repository quality checks passed, but the first post-merge daily collection failed because the Python 3.12 HTTPS handler used an unavailable private attribute. The compatibility fix and bounded retry logic are included in PR #6 and require a fresh successful collection run.
+- Daily collection after PR #5: failed at the collector request layer; no new snapshot was published by that run. Pages deployment was skipped.
+- Dashboard Quality Watch after PR #5: passed.
+- Detection Query Quality Checks after PR #5: passed.
+- Live browser content verification: not yet recorded.
 - Lighthouse/accessibility test: not performed.
 - SIEM query execution: not performed.
-- Production deployment: not confirmed.
-
+- Production release validation: pending a successful collection and Pages deployment after the collector fix.
 ## Release gate
 
 Do not describe the command center as enterprise-certified or production-validated until the P1 items are addressed, automated checks pass, the production Pages deployment is confirmed, and live browser/accessibility/security testing has been recorded.
