@@ -103,7 +103,8 @@ def load_source_health_state():
     path=ROOT/"intel/source-health-state.json"
     try:
         value=json.loads(path.read_text(encoding="utf-8"))
-        return value.get("sources",{}) if isinstance(value,dict) else {}
+        sources=value.get("sources",{}) if isinstance(value,dict) else {}
+        return sources if isinstance(sources,dict) else {}
     except (OSError,ValueError,TypeError):
         return {}
 
@@ -111,13 +112,15 @@ def record_source_health(state,source,url,status,records,started,error=None,stre
     previous=state.get(source,{})
     attempted=dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds").replace("+00:00","Z")
     ok=status=="success"
+    try: previous_failures=max(0,int(previous.get("consecutive_failures",0) or 0))
+    except (TypeError,ValueError): previous_failures=0
     count=max(0,int(records or 0))
     entry={"source":source,"status":status,
         "collection_result":("success_with_records" if count else "success_empty") if ok else "failed",
         "records":count,"url":url,"last_attempt_at":attempted,
         "last_success_at":attempted if ok else previous.get("last_success_at"),
         "duration_ms":max(0,int((time.perf_counter()-started)*1000)),
-        "consecutive_failures":0 if ok else int(previous.get("consecutive_failures",0) or 0)+1}
+        "consecutive_failures":0 if ok else previous_failures+1}
     if error: entry["error"]=str(error)[:600]
     if stream: entry["stream"]=stream
     if note: entry["note"]=note
