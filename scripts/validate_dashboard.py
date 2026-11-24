@@ -120,6 +120,31 @@ spec = importlib.util.spec_from_file_location("gci_collector", collector_path)
 collector = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(collector)
 
+# Synthetic IOC extraction fixtures: supported types, normalization, defanging,
+# and exclusion of private/documentation placeholders. These are parser tests,
+# not proof that any extracted indicator is malicious.
+ioc_fixture = ("Explicit IOCs: 8.8.8.8 2001:4860:4860::8888 evil-c2.net "
+               + "https://bad-host.net/path threat@bad-host.net "
+               + "payload.exe " + "a" * 64 + " 10.0.0.8 fd00::1 placeholder.example")
+ioc_records = collector.extract_iocs(ioc_fixture, "Synthetic fixture", "https://source.example/report")
+ioc_pairs = {(x["type"], x["value"]) for x in ioc_records}
+expected_iocs = {
+    ("ipv4", "8.8.8.8"), ("ipv6", "2001:4860:4860::8888"),
+    ("domain", "evil-c2.net"), ("url", "https://bad-host.net/path"),
+    ("email", "threat@bad-host.net"), ("filename", "payload.exe"),
+    ("hash", "a" * 64)
+}
+if not expected_iocs.issubset(ioc_pairs):
+    raise SystemExit("IOC extraction missed supported synthetic indicators: " + str(expected_iocs - ioc_pairs))
+if any(value in {"10.0.0.8", "fd00::1", "placeholder.example"} for _, value in ioc_pairs):
+    raise SystemExit("IOC extraction accepted a private or placeholder indicator")
+if not any(x.get("defanged_value") == "hxxps://bad-host[.]net/path" for x in ioc_records if x["type"] == "url"):
+    raise SystemExit("IOC URL display value is not defanged")
+if not any(x.get("defanged_value") == "threat[@]bad-host[.]net" for x in ioc_records if x["type"] == "email"):
+    raise SystemExit("IOC email display value is not defanged")
+if collector.extract_iocs("No indicators or IOC references in this text.", "Fixture", "https://source.example/report"):
+    raise SystemExit("A zero-IOC result must remain valid")
+
 # SSRF guard: all DNS answers must be globally routable and every redirect target
 # is revalidated before urllib follows it. Tests use mocked DNS and no network.
 from unittest.mock import patch
