@@ -227,7 +227,7 @@ function epssOverview(v){
 }
 function cvssOverview(v){
  const m=v.cvss;
- if(!m){const states={not_scored_in_nvd:"not scored by NVD",lookup_failed:"NVD lookup failed",invalid_metric:"invalid NVD metric",not_found:"not found in NVD"};return '<p class="cell-description"><strong>CVSS:</strong> '+esc(states[v.cvss_status]||"not available")+' (no score inferred)</p>'}
+ if(!m){const states={not_scored_in_nvd:"not scored by NVD",lookup_failed:"NVD lookup failed",invalid_metric:"invalid NVD metric",not_found:"not found in NVD",not_requested:"not queried (daily lookup cap)"};return '<p class="cell-description"><strong>CVSS:</strong> '+esc(states[v.cvss_status]||"not available")+' (no score inferred)</p>'}
  const score=Number(m.base_score);
  if(!Number.isFinite(score)||score<0||score>10)return '<p class="cell-description"><strong>CVSS:</strong> invalid evidence value; not displayed</p>';
  return '<p class="cell-description"><strong>CVSS '+esc(m.version||"")+' technical severity:</strong> '+score.toFixed(1)+'/10 · '+esc(m.severity||"severity not stated")+' · '+esc(m.vector||"vector not supplied")+' · NVD updated '+esc(m.nvd_last_modified||"date not stated")+' · <a href="'+safeUrl(m.source_url)+'" target="_blank" rel="noopener">NVD source ↗</a></p>';
