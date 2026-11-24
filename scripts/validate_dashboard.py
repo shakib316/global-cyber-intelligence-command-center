@@ -156,6 +156,14 @@ with patch.object(collector, "safe_https_open", side_effect=permanent) as open_m
     if open_mock.call_count != 1 or sleep_mock.call_count:
         raise SystemExit("A permanent HTTP 404 was retried unnecessarily")
 
+
+# urllib's HTTPSHandler uses its SSL context directly; do not rely on a
+# private _check_hostname attribute that is absent on Python 3.12.
+pinned_handler = collector.PinnedHTTPSHandler()
+with patch.object(pinned_handler, "do_open", return_value="handler-ok") as do_open:
+    if pinned_handler.https_open(object()) != "handler-ok" or do_open.call_args.kwargs.get("context") is not pinned_handler._context:
+        raise SystemExit("Pinned HTTPS handler is incompatible with the runtime HTTPSHandler API")
+
 # Source health must distinguish an empty successful feed from a failed feed,
 # retain the previous success timestamp after failure, and increment failures.
 health_state = {}
