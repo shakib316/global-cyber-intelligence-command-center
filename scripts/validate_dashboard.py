@@ -299,6 +299,8 @@ if not daily_report_path.exists():
 daily_report = daily_report_path.read_text(encoding="utf-8")
 if "Fix / remediation:" not in daily_report or "Business background / implications:" not in daily_report:
     raise SystemExit("Daily report is missing adjacent threat remediation or business context")
+if 'f"- EPSS context: {format_epss_context(x)} — FIRST.org; not an asset-specific risk score",' not in collector_source:
+    raise SystemExit("EPSS context must be emitted as a separate daily-report list item")
 snapshot_path = root / "intel" / pointer["snapshot"]
 if not snapshot_path.exists():
     raise SystemExit("Latest intelligence snapshot is missing: " + str(snapshot_path))
@@ -355,8 +357,6 @@ report_date = pointer.get("date_ist", pointer["date_utc"])
 report_path = root / "reports" / report_date[:4] / report_date[5:7] / (report_date[8:10] + ".md")
 if report_path.exists():
     report = report_path.read_text(encoding="utf-8")
-    if "EPSS context:" in report and any("EPSS context:" in line and "Open source item" in line for line in report.splitlines()):
-        raise SystemExit("EPSS context and source link must render as separate report lines")
     if "Sentinel KQL" in report and "prepareBriefing" not in html:
         raise SystemExit("Report contains query section but dashboard lacks inline-query renderer")
 print("Dashboard checks passed: unique DOM IDs, latest/newer/older/oldest date navigation, historical report discovery, global search, filters, detailed threat/business cards, adjacent remediation, full KEV actions, watchlist, asset matcher, IOC correlation, ATT&CK/readiness, executive digest, JavaScript and collector syntax.")
