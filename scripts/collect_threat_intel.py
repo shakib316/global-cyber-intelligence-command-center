@@ -473,7 +473,13 @@ def main():
             f"- Fix / remediation: {x.get('remediation_guidance') or x.get('remediation_status') or 'Fix status unknown; check the linked vendor advisory for updates.'}",
             f"- [Open source item]({x['url']})",""]
     else:lines.append("No dated items returned. This does not mean no threats occurred; inspect source health.")
-    lines += ["","## Cyber business & market developments — last 72 hours",""]
+    business_health=[x for x in health if x.get("stream")=="business"]
+    business_ok=sum(x.get("status")=="success" for x in business_health)
+    lines += ["","## Cyber business & market developments — last 7 days (newest first)",
+        f"- Updated: {STAMP_IST} | Items collected: {len(business_items)} | Business feeds healthy: {business_ok}/{len(business_health)} | Window: 7 days"]
+    failed_business=[x for x in business_health if x.get("status")!="success"]
+    if failed_business:
+        lines += ["- Feed issues: "+"; ".join(x["source"]+" — "+str(x.get("error") or "unavailable") for x in failed_business)]
     if business_items:
         for x in business_items[:60]:
             lines += ["### "+x["title"],"- Category: "+x["category"]+" | Deal stage: "+x["deal_status"]+" | Publisher: "+x["publisher"]+" | Published: "+(x.get("published") or "unknown")+" | Detail enrichment: "+x.get("enrichment_status","feed summary only"),"- Summary: "+x.get("summary","")[:900],"- Business background / implications: "+(x.get("details") or x.get("summary",""))[:2500],"- Action: Not applicable as a vulnerability fix; verify deal stage and material claims against company announcements or filings.","- Evidence: [Original report]("+x["url"]+")",""]
