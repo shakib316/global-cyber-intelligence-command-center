@@ -69,7 +69,8 @@ A successful workflow confirms only the steps in that workflow. Feed-level failu
 - scripts/validate_dashboard.py — dashboard, latest-data, and remediation regression checks.
 - scripts/validate_detection_queries.py — static query metadata checks.
 - .github/workflows/ — collection, validation, query CI, and Pages deployment.
-- intel/daily/ — daily Markdown intelligence reports.
+- reports/YYYY/MM/DD.md — dated analyst-facing daily Global Cyber Threat Radar briefings (IST timestamp; one report per day).
+- intel/daily/ — collector-generated daily intelligence snapshots and supporting Markdown artifacts.
 - intel/snapshots/ — dated JSON source snapshots.
 - intel/latest.json — pointer to the latest report and snapshot.
 - detection-queries/ — categorized detection query library.
