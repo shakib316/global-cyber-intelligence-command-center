@@ -64,7 +64,7 @@ A successful workflow confirms only the steps in that workflow. Feed-level failu
 
 - Public feeds are incomplete and may be delayed, unavailable, rate-limited, or change format.
 - CERT-In is currently an index-scraping source and may fail; confirm advisories directly on CERT-In.
-- Individual feeds, including Australian ACSC, can fail independently.
+- Australian ACSC is intentionally excluded at the user's request and should not appear as an active or failing source. Other active feeds can fail independently.
 - CVSS/EPSS, exploit validation, actor attribution, and IOC reputation are not universally available or independently verified for every item.
 - Business-news feeds can contain duplicate, syndicated, market/stock, or low-relevance results; corroborate major deal claims with company announcements, filings, or multiple independent reports.
 - No automated containment, blocking, ticket creation, or production remediation is performed.
