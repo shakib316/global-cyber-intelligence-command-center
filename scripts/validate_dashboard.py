@@ -42,6 +42,15 @@ asset_start = html.find("function matchAssets()")
 asset_end = html.find("async function compareSnapshots()", asset_start)
 if asset_start < 0 or asset_end < 0 or "kevAction(v).text" not in html[asset_start:asset_end] or "v.requiredAction" in html[asset_start:asset_end]:
     raise SystemExit("Asset exposure matcher bypasses the shared KEV remediation guard")
+if "exposure=internet/internal/unknown" not in html or "criticality=critical/high/medium/low" not in html or "patch=unpatched/patched/unknown" not in html:
+    raise SystemExit("Asset matcher is missing structured local context inputs")
+if "function kevEvidenceState(v)" not in html or "function kevPublicSignal(v)" not in html:
+    raise SystemExit("KEV evidence states and public-signal context are missing")
+if "no organisation-specific risk score is calculated" not in html:
+    raise SystemExit("KEV triage must explicitly avoid unsupported organisation risk scoring")
+if "Immediate review: KEV-listed + user-reported unpatched + internet-exposed + high/critical asset." not in html:
+    raise SystemExit("Asset triage urgency logic is missing")
+
 digest_start = html.find("async function copyExecutiveDigest()")
 digest_end = html.find("function renderOps()", digest_start)
 if digest_start < 0 or digest_end < 0 or "kevAction(x).text" not in html[digest_start:digest_end] or "x.requiredAction" in html[digest_start:digest_end]:
