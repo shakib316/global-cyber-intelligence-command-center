@@ -377,6 +377,34 @@ def extract_specific_remediation(text_value):
         if action.search(sentence) and concrete.search(sentence) and sentence not in results:results.append(sentence)
     return results[:5]
 
+def extract_candidate_fixed_releases(text_value,source_url,source_label="CISA-linked vendor advisory"):
+    """Extract explicit release statements as candidates only; never assert applicability or verification."""
+    if not text_value or not isinstance(source_url,str) or not source_url.startswith("https://"):
+        return []
+    version=r"([0-9]+(?:\.[0-9A-Za-z-]+){1,4})"
+    patterns=[
+        re.compile(r"\b(?:fixed|patched)\s+in\s+(?:version\s+|v)?"+version+r"\b",re.I),
+        re.compile(r"\b(?:upgrade|update)\s+to\s+(?:version\s+|v)"+version+r"\b",re.I),
+    ]
+    sentences=[re.sub(r"\s+"," ",x).strip(" \t-•") for x in re.split(r"(?<=[.!?])\s+|\n+",str(text_value))]
+    found=[];seen=set()
+    for sentence in sentences:
+        if len(sentence)<20 or len(sentence)>650:
+            continue
+        for pattern in patterns:
+            for match in pattern.finditer(sentence):
+                release=match.group(1)
+                key=(release,sentence.lower(),source_url)
+                if key in seen:continue
+                seen.add(key)
+                found.append({
+                    "version":release,"statement":sentence,"source_url":source_url,
+                    "source_label":source_label,"verification_status":"NOT_VERIFIED",
+                    "analyst_verified":False,
+                    "confidence":"Explicit fixed/upgrade release wording extracted; product, branch and affected-build applicability not verified"
+                })
+    return found[:8]
+
 def kev_remediation_text(vulnerability):
     vendor_fixes=[fix for ref in vulnerability.get("vendor_remediation",[]) for fix in ref.get("guidance",[])]
     if vendor_fixes:return " ".join(vendor_fixes[:6])+" (linked vendor advisory; verify affected/fixed versions and deployment)"
@@ -403,9 +431,14 @@ def build_remediation_evidence(item,evidence,source_action,vendor_fixes,no_patch
         state="not_found_in_reviewed_evidence"
     else:
         state="not_reviewed"
+    candidates=[]
+    for ref in (vendor_fixes or []):
+        for candidate in ref.get("candidate_fixed_releases",[]):
+            if isinstance(candidate,dict) and isinstance(candidate.get("source_url"),str) and candidate["source_url"].startswith("https://"):
+                candidates.append(candidate)
     return {"state":state,"checked_at":STAMP,"evidence_sources":sources[:8],
-        "fixed_version":None,"analyst_verified":False,
-        "verification_note":"Automated extraction only; affected/fixed versions and deployment require vendor/analyst verification."}
+        "fixed_version":None,"candidate_fixed_releases":candidates[:12],"analyst_verified":False,
+        "verification_note":"Automated extraction only. Candidate releases are NOT VERIFIED; confirm exact product, affected branch/build, vendor applicability and deployment before treating any release as fixed."}
 
 def enrich_records(records,max_workers=10):
     """Enrich source pages and follow a small number of explicitly linked security references."""
@@ -617,13 +650,14 @@ def enrich_kev_records(records,max_workers=8):
             record,url=futures[future]
             try:page=future.result()
             except Exception:page={"details":""}
+            source_url=page.get("resolved_url") or url
             guidance=extract_specific_remediation(page.get("details",""))
-            if guidance:
+            candidates=extract_candidate_fixed_releases(page.get("details",""),source_url)
+            if guidance or candidates:
                 record.setdefault("vendor_remediation",[]).append({
-                    "source_url":page.get("resolved_url") or url,
-                    "source_label":"CISA-linked vendor advisory",
-                    "guidance":guidance[:4],
-                    "confidence":"Concrete fix wording extracted from a CISA-linked vendor reference; analyst review required"
+                    "source_url":source_url,"source_label":"CISA-linked vendor advisory",
+                    "guidance":guidance[:4],"candidate_fixed_releases":candidates,
+                    "confidence":"Concrete remediation wording extracted from a CISA-linked vendor reference; analyst review required"
                 })
 
 def extract_iocs(s,source,url):
