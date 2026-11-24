@@ -216,23 +216,59 @@ def load_source_health_state():
     except (OSError,ValueError,TypeError):
         return {}
 
+def classify_source_health(status,records,error=None):
+    """Map a source attempt to an explicit operational state."""
+    value=str(status or "").strip().lower()
+    count=max(0,int(records or 0))
+    if value in {"disabled","excluded","disabled_excluded"}:
+        return "disabled_excluded"
+    if value in {"partial","partial_success","partially_successful"} and count:
+        return "partially_successful"
+    if value=="success":
+        return "successful" if count else "empty_but_healthy"
+    detail=str(error or "").lower()
+    transient=("timeout","timed out","urlerror","connection reset","connection refused",
+               "temporarily","temporary","http 408","http 425","http 429","http 500","http 502",
+               "http 503","http 504","rate limit","service unavailable","gateway timeout")
+    if any(marker in detail for marker in transient):
+        return "temporarily_unavailable"
+    return "failed"
+
 def record_source_health(state,source,url,status,records,started,error=None,stream=None,note=None):
     previous=state.get(source,{})
     attempted=dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds").replace("+00:00","Z")
-    ok=status=="success"
     try: previous_failures=max(0,int(previous.get("consecutive_failures",0) or 0))
     except (TypeError,ValueError): previous_failures=0
     count=max(0,int(records or 0))
-    entry={"source":source,"status":status,
-        "collection_result":("success_with_records" if count else "success_empty") if ok else "failed",
-        "records":count,"url":url,"last_attempt_at":attempted,
-        "last_success_at":attempted if ok else previous.get("last_success_at"),
+    health_state=classify_source_health(status,count,error)
+    collection_result={
+        "successful":"success_with_records",
+        "empty_but_healthy":"success_empty",
+        "partially_successful":"partial_success",
+        "temporarily_unavailable":"temporarily_unavailable",
+        "failed":"failed",
+        "disabled_excluded":"disabled_excluded",
+    }[health_state]
+    status_value={
+        "successful":"success",
+        "empty_but_healthy":"success",
+        "partially_successful":"partial",
+        "temporarily_unavailable":"temporarily_unavailable",
+        "failed":"failed",
+        "disabled_excluded":"disabled",
+    }[health_state]
+    full_success=health_state in {"successful","empty_but_healthy"}
+    partial_success=health_state=="partially_successful"
+    entry={"source":source,"status":status_value,"health_state":health_state,
+        "collection_result":collection_result,"records":count,"url":url,
+        "last_attempt_at":attempted,
+        "last_success_at":attempted if full_success or (partial_success and count) else previous.get("last_success_at"),
         "duration_ms":max(0,int((time.perf_counter()-started)*1000)),
-        "consecutive_failures":0 if ok else previous_failures+1}
+        "consecutive_failures":0 if full_success else previous_failures+1 if health_state in {"temporarily_unavailable","failed"} else previous_failures}
     if error: entry["error"]=str(error)[:600]
     if stream: entry["stream"]=stream
     if note: entry["note"]=note
-    state[source]={k:entry[k] for k in ("last_success_at","consecutive_failures","last_attempt_at","duration_ms","status","collection_result","records","error") if k in entry}
+    state[source]={k:entry[k] for k in ("last_success_at","consecutive_failures","last_attempt_at","duration_ms","status","health_state","collection_result","records","error") if k in entry}
     return entry
 
 def save_source_health_state(state):

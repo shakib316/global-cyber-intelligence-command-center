@@ -40,7 +40,7 @@ if health_state_path.exists():
         failures = record.get("consecutive_failures", 0)
         if not isinstance(failures, int) or failures < 0:
             raise SystemExit("Invalid consecutive failure counter for " + str(name))
-required = ["criticalVulnList", "prepareBriefing", "businessList", "queryGrid", "loadQueries", "reportPicker", "loadReportPath", "threatPrev", "businessPrev", "kevPrev", "cisa_kev_catalog", "CVERecord?id=", "kevStatus", "queriesLoaded", "const groups={}", "globalSearchPanel", "globalSearch", "globalScope", "kevSearch", "kevVendor", "kevDueFilter", "priorityFilter", "v.vulnerabilityName", "function globalSearch", "function filteredKev", "const remediationBlock=", "function relatedFor", "function renderWatchlist", "function matchAssets", "function renderIOC", "function compareSnapshots", "function copyExecutiveDigest", "function renderReadiness", "loadPhase2Intel", "view-actors", "view-campaigns", "phase2-intelligence.json", "oldestReport", "intel\\/daily", "remediation_guidance", "No specific fix identified in retrieved source text", "function kevHtml", "function kevAction", "function itemHtml", "function businessCard", "function businessSignificance", "vendor_remediation", "LINKED VENDOR ADVISORY", "Article text retrieved", "What to verify next", "businessDetail", "businessClear", "knownRansomwareCampaignUse", "Evidence ", "last_success_at", "last_attempt_at", "duration_ms", "consecutive_failures", "collection_result"]
+required = ["criticalVulnList", "prepareBriefing", "businessList", "queryGrid", "loadQueries", "reportPicker", "loadReportPath", "threatPrev", "businessPrev", "kevPrev", "cisa_kev_catalog", "CVERecord?id=", "kevStatus", "queriesLoaded", "const groups={}", "globalSearchPanel", "globalSearch", "globalScope", "kevSearch", "kevVendor", "kevDueFilter", "priorityFilter", "v.vulnerabilityName", "function globalSearch", "function filteredKev", "const remediationBlock=", "function relatedFor", "function renderWatchlist", "function matchAssets", "function renderIOC", "function compareSnapshots", "function copyExecutiveDigest", "function renderReadiness", "loadPhase2Intel", "view-actors", "view-campaigns", "phase2-intelligence.json", "oldestReport", "intel\\/daily", "remediation_guidance", "No specific fix identified in retrieved source text", "function kevHtml", "function kevAction", "function itemHtml", "function businessCard", "function businessSignificance", "vendor_remediation", "LINKED VENDOR ADVISORY", "Article text retrieved", "What to verify next", "businessDetail", "businessClear", "knownRansomwareCampaignUse", "Evidence ", "last_success_at", "last_attempt_at", "duration_ms", "consecutive_failures", "collection_result", "health_state"]
 required.extend(["async function fetchWithRetry", "X-RateLimit-Remaining", "Retry-After", "fetchWithRetry(API+", "fetchWithRetry(\"https://raw.githubusercontent.com/"])
 if "CANDIDATE FIXED RELEASE · NOT VERIFIED" not in html or "candidate_fixed_releases" not in html:
     raise SystemExit("KEV remediation panel does not display unverified fixed-release candidates")
@@ -242,21 +242,29 @@ with patch.object(pinned_handler, "do_open", return_value="handler-ok") as do_op
     if pinned_handler.https_open(object()) != "handler-ok" or do_open.call_args.kwargs.get("context") is not pinned_handler._context:
         raise SystemExit("Pinned HTTPS handler is incompatible with the runtime HTTPSHandler API")
 
-# Source health must distinguish an empty successful feed from a failed feed,
-# retain the previous success timestamp after failure, and increment failures.
+# Source health has explicit successful, empty, partial, transient, permanent and excluded states.
 health_state = {}
 first = collector.record_source_health(health_state, "Test feed", "https://example.com/feed", "success", 2, time.perf_counter())
-if first.get("collection_result") != "success_with_records" or not first.get("last_success_at") or first.get("consecutive_failures") != 0:
+if first.get("health_state") != "successful" or first.get("collection_result") != "success_with_records" or not first.get("last_success_at") or first.get("consecutive_failures") != 0:
     raise SystemExit("Source health does not correctly record a successful collection")
 empty = collector.record_source_health(health_state, "Empty feed", "https://example.com/empty", "success", 0, time.perf_counter())
-if empty.get("collection_result") != "success_empty":
+if empty.get("health_state") != "empty_but_healthy" or empty.get("collection_result") != "success_empty":
     raise SystemExit("A successful zero-record collection is not distinguished from failure")
+partial = collector.record_source_health(health_state, "Partial feed", "https://example.com/partial", "partial", 3, time.perf_counter(), note="One substream unavailable")
+if partial.get("health_state") != "partially_successful" or partial.get("collection_result") != "partial_success":
+    raise SystemExit("Partial source success is not classified correctly")
 failed = collector.record_source_health(health_state, "Test feed", "https://example.com/feed", "failed", 0, time.perf_counter(), "HTTP 503")
-if failed.get("collection_result") != "failed" or failed.get("last_success_at") != first.get("last_success_at") or failed.get("consecutive_failures") != 1:
-    raise SystemExit("Source health failure history does not preserve last success and increment failure count")
+if failed.get("health_state") != "temporarily_unavailable" or failed.get("collection_result") != "temporarily_unavailable" or failed.get("last_success_at") != first.get("last_success_at") or failed.get("consecutive_failures") != 1:
+    raise SystemExit("Transient source failure does not preserve last success and increment failure count")
+permanent = collector.record_source_health(health_state, "Permanent feed", "https://example.com/missing", "failed", 0, time.perf_counter(), "HTTP 404")
+if permanent.get("health_state") != "failed" or permanent.get("collection_result") != "failed":
+    raise SystemExit("Permanent source failures are not distinguished from temporary unavailability")
+excluded = collector.record_source_health(health_state, "Excluded feed", "https://example.com/excluded", "excluded", 0, time.perf_counter())
+if excluded.get("health_state") != "disabled_excluded" or excluded.get("consecutive_failures") != 0:
+    raise SystemExit("Disabled/excluded sources are not represented as excluded")
 malformed_state = {"Malformed feed": {"last_success_at": "2026-11-20T00:00:00Z", "consecutive_failures": "not-a-number"}}
 recovered = collector.record_source_health(malformed_state, "Malformed feed", "https://example.com/feed", "failed", 0, time.perf_counter(), "HTTP 503")
-if recovered.get("consecutive_failures") != 1 or recovered.get("last_success_at") != "2026-11-20T00:00:00Z":
+if recovered.get("health_state") != "temporarily_unavailable" or recovered.get("consecutive_failures") != 1 or recovered.get("last_success_at") != "2026-11-20T00:00:00Z":
     raise SystemExit("Malformed prior source-health state is not handled safely")
 
 # EPSS evidence validation: bounded values, source/date attribution and explicit missing states.
