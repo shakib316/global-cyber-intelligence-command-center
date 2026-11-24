@@ -75,7 +75,7 @@
         "title",
         "url",
         "publisher",
-        "retrieved_at"
+        "retrieved_on"
       ],
       "properties": {
         "id": {
@@ -100,9 +100,9 @@
             "null"
           ]
         },
-        "retrieved_at": {
+        "retrieved_on": {
           "type": "string",
-          "format": "date-time"
+          "format": "date"
         }
       },
       "additionalProperties": false
