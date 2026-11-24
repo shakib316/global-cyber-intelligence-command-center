@@ -78,7 +78,7 @@ ast.parse(collector_source, filename=str(collector_path))
 
 daily_workflow_path = root / ".github/workflows/daily-threat-intel.yml"
 daily_workflow = daily_workflow_path.read_text(encoding="utf-8")
-for required_step in ("  deploy:", "    needs: collect", "pages: write", "id-token: write", "actions/upload-pages-artifact@v3", "actions/deploy-pages@v4"):
+for required_step in ("  deploy:", "    needs: collect", "actions: read", "pages: write", "id-token: write", "actions/upload-pages-artifact@v3", "Wait for Pages artifact visibility", "actions/deploy-pages@v4"):
     if required_step not in daily_workflow:
         raise SystemExit("Daily collection workflow does not publish updated Pages content: " + required_step)
 spec = importlib.util.spec_from_file_location("gci_collector", collector_path)
@@ -345,10 +345,12 @@ if candidate_state["fixed_version"] is not None or candidate_state["analyst_veri
 feed_urls = {feed[0]: feed[2] for feed in collector.FEEDS}
 if feed_urls.get("google_security") != "https://blog.google/security/rss/":
     raise SystemExit("Google Security Blog feed is not using the refreshed HTTPS RSS endpoint")
-if feed_urls.get("australia_acsc") != "https://www.cyber.gov.au/rss/alerts":
-    raise SystemExit("ACSC feed is not using the current alerts RSS endpoint")
-if 'timeout=12,max_attempts=2' not in collector_source:
-    raise SystemExit("ACSC collection does not use a bounded timeout/retry budget")
+if "australia_acsc" in feed_urls:
+    raise SystemExit("ACSC feed must remain intentionally excluded until its upstream availability is restored")
+if 'health_state.pop("Australian ACSC",None)' not in collector_source:
+    raise SystemExit("Excluded ACSC source must not leave stale failure telemetry")
+if "actions: read" not in daily_workflow or "Wait for Pages artifact visibility" not in daily_workflow or "artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}" not in daily_workflow:
+    raise SystemExit("Daily deployment must wait for its uniquely named Pages artifact before deploy")
 article = {
     "url": "https://research.example/story",
     "title": "Example vulnerability CVE-2026-12345",

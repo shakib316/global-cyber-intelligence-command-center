@@ -20,7 +20,6 @@ FEEDS=[
 ("splunk","Splunk Security Advisories","https://advisory.splunk.com/feed.xml","vendor","high"),
 ("uk_ncsc","UK NCSC","https://www.ncsc.gov.uk/api/1/services/v1/all-rss-feed.xml","government","high"),
 ("canada_cccs","Canadian CCCS","https://www.cyber.gc.ca/api/cccs/atom/v1/get?feed=alerts_advisories&lang=en","government","medium"),
-("australia_acsc","Australian ACSC","https://www.cyber.gov.au/rss/alerts","government","medium"),
 ("cert_eu","CERT-EU","https://cert.europa.eu/publications/security-advisories-rss","government","medium"),
 ("sans_isc","SANS Internet Storm Center","https://isc.sans.edu/rssfeed.xml","research","high"),
 ("bleepingcomputer","BleepingComputer","https://www.bleepingcomputer.com/feed/","news","medium"),
@@ -686,6 +685,8 @@ def extract_iocs(s,source,url):
 
 def main():
     health=[];errors=[];entries=[];business_entries=[];kev={};success=0;health_state=load_source_health_state()
+    # ACSC is intentionally excluded after persistent upstream timeouts; remove its stale failure from health.
+    health_state.pop("Australian ACSC",None)
     started=time.perf_counter()
     try:
         kev=json.loads(fetch(KEV).decode());success+=1
@@ -695,7 +696,7 @@ def main():
     for f in FEEDS:
         started=time.perf_counter()
         try:
-            feed_raw=fetch(f[2],timeout=12,max_attempts=2) if f[0]=="australia_acsc" else fetch(f[2])
+            feed_raw=fetch(f[2])
             rows=parse_feed(feed_raw,f);entries+=rows;success+=1
             health.append(record_source_health(health_state,f[1],f[2],"success",len(rows),started))
         except Exception as e:
