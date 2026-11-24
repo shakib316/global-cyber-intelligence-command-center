@@ -9,7 +9,7 @@ Overall: Phase 1 and Phase 2 are partially complete. This report intentionally d
 
 | Requirement | Status | Evidence / remaining work |
 |---|---|---|
-| Fresh collection and source reliability | Production-verified for latest run | Verified collection: 37/37 sources successful; 221 threat items, 11 recent KEV additions, 4 IOC candidates and 210 business developments. Australian ACSC is excluded and absent from active health. Recheck on scheduled runs. |
+| Fresh collection and source reliability | Production-verified for latest run | Verified collection: 37/37 sources successful; 221 threat items, 11 recent KEV additions, 4 IOC candidates and 202 business developments. Australian ACSC is excluded and absent from active health. Recheck on scheduled runs. |
 | Empty / failed / partial / excluded source states | Partially implemented | Success-with-records, success-empty and failed states are represented; last-success timestamps and consecutive failures are retained. A complete partial-success and disabled/excluded state taxonomy is not yet represented as a first-class source-health state. |
 | SSRF and outbound collector security | Implemented with automated regression checks | Public HTTPS validation, DNS/IP pinning, redirect revalidation, bounded retries and mocked security tests are present. |
 | Frontend XSS and unsafe URL safeguards | Implemented with regression checks; broader audit pending | HTML escaping, HTTPS-only URL helper, escaped Markdown rendering and hostile-input tests are present. CSP is meta-based and permits inline scripts/styles for compatibility; a strict nonce/hash CSP and browser-based security audit remain outstanding. |
@@ -34,17 +34,18 @@ Overall: Phase 1 and Phase 2 are partially complete. This report intentionally d
 | IOC extraction and correlation | Partially implemented | Latest run extracted 4 candidate indicators. Candidate extraction, normalization/deduplication and defanged display are present. Reputation, expiry and analyst verification are not universally available for each IOC. |
 | Vulnerability intelligence | Partially implemented | CISA KEV catalogue (1,792 records), recent KEV additions, CVSS/EPSS enrichment and source-backed remediation evidence are present. Manual fixed-release verification and organisation-specific exposure/patch state remain incomplete. |
 | Asset risk correlation | Local utility only | The browser has a user-supplied asset-to-KEV matcher. No authenticated asset inventory, exposure, criticality or patch-management connector is present. |
-| Phase 2 schema and provenance checks | Existing provenance checks; full schema enforcement pending PR #29 | Full JSON Schema enforcement, source-reference and relationship endpoint checks, and negative schema fixtures are merged in PR #29 (commit fe7be18) and passed CI. Schema validation does not independently corroborate source claims. |
+| Phase 2 schema and provenance checks | Implemented / CI passed in PR #29 | Full JSON Schema enforcement, source-reference and relationship endpoint checks, and negative schema fixtures are merged in PR #29 (commit fe7be18) and passed CI. Schema validation does not independently corroborate source claims. |
 | Phase 2 documentation | Partially implemented | Actor/campaign data policy, intelligence schema, detection documentation and architecture documentation are maintained. Broader source corroboration and query test procedures remain open. |
 
 ## Actual validation evidence
 
 | Check | Result |
 |---|---|
-| Daily collection run 45353150960 | Collection, snapshot validation, static query checks and artifact commit succeeded. The Pages action succeeded after PR #28 changed the deployment checkout to main, made automatic deployment single-path and added an artifact settling delay. The action's pages_build_version still reports the triggering workflow SHA; PR #31 adds an explicit checkout-SHA-to-remote-main assertion for future runs. |
+| Daily collection run 45353816316 | Collection, snapshot validation, static query checks and artifact commit succeeded. The Pages action succeeded after PR #28 changed the deployment checkout to main, made automatic deployment single-path and added an artifact settling delay. The action's pages_build_version still reports the triggering workflow SHA; PR #31 adds an explicit checkout-SHA-to-remote-main assertion for future runs. |
 | Latest verified source health in run 45353816316 | 37/37 successful; ACSC absent |
 | Dashboard validator | Passed — 1,792 KEV records, 0 duplicate CVE IDs, 221 threat items, 210 business developments |
 | Phase 2 provenance validator | Passed — 1 actor, 1 campaign, 6 evidence-linked relationships, 1 source |
+| Phase 2 JSON Schema (PR #29) | Passed — required fields, types, enums, patterns, formats, local references and negative fixtures |
 | Frontend security regression | Passed — CSP directives, HTTPS-only URLs, hostile HTML, Markdown and code-fence escaping |
 | KQL structural checks | Passed — 21 KQL files; not an official Kusto parser |
 | SPL/YARA-L metadata and lightweight structure | Passed — 3 SPL and 2 YARA-L files; not official vendor compilers |
