@@ -214,7 +214,7 @@ nvd_metric = {"source": "nvd@nist.gov", "type": "Primary",
     "cvssData": {"version": "4.0", "baseScore": 9.3, "baseSeverity": "CRITICAL",
     "vectorString": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"}}
 nvd_payload = {"vulnerabilities": [
-    {"cve": {"id": "CVE-2026-12345", "lastModified": "2026-11-24T00:00:00.000",
+    {"cve": {"id": "CVE-2026-12345", "lastModified": "2026-11-24T00:00:00.000", "vulnStatus": "Received",
         "metrics": {"cvssMetricV40": [nvd_metric]}}},
     {"cve": {"id": "CVE-2026-54321", "lastModified": "2026-11-24T00:00:00.000", "metrics": {}}}
 ]}
@@ -224,7 +224,7 @@ with patch.object(collector, "request_url", return_value=(json.dumps(nvd_payload
     if any(call.kwargs.get("timeout") != 12 or call.kwargs.get("max_attempts") != 2 for call in mock_request.call_args_list):
         raise SystemExit("NVD CVSS requests must use bounded timeout and retry limits")
     metric = cvss_records[0].get("cvss") or {}
-    if cvss_meta["status"] != "success" or metric.get("version") != "4.0" or metric.get("base_score") != 9.3 or metric.get("severity") != "CRITICAL" or not metric.get("source_url", "").startswith("https://"):
+    if cvss_meta["status"] != "success" or metric.get("version") != "4.0" or metric.get("base_score") != 9.3 or metric.get("severity") != "CRITICAL" or metric.get("source") != "nvd@nist.gov" or metric.get("source_type") != "Primary" or metric.get("nvd_status") != "Received" or not metric.get("source_url", "").startswith("https://"):
         raise SystemExit("NVD CVSS metric lost its version, score, severity or source provenance")
     if cvss_records[1].get("cvss_status") != "not_scored_in_nvd" or cvss_records[1].get("cvss") is not None:
         raise SystemExit("NVD missing CVSS metrics must not be represented as a zero score")
