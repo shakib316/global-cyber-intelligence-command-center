@@ -386,6 +386,27 @@ def kev_remediation_text(vulnerability):
             "The catalogue action is general guidance, not a verified fix. Check the linked vendor advisory for the current fixed release "
             "or workaround; this report has not independently verified one.")
 
+def build_remediation_evidence(item,evidence,source_action,vendor_fixes,no_patch,gated):
+    """Attach an explicit, dated evidence state without claiming automated verification."""
+    sources=[]
+    for url in [item.get("url")]+[ref.get("source_url") for ref in (vendor_fixes or [])]:
+        if isinstance(url,str) and url.startswith("https://") and url not in sources:sources.append(url)
+    if vendor_fixes:
+        state="vendor_guidance_unverified"
+    elif no_patch and gated:
+        state="source_reports_workaround_portal"
+    elif no_patch:
+        state="source_reports_no_fix"
+    elif source_action:
+        state="specific_action_unverified"
+    elif item.get("enrichment_status")=="enriched":
+        state="not_found_in_reviewed_evidence"
+    else:
+        state="not_reviewed"
+    return {"state":state,"checked_at":STAMP,"evidence_sources":sources[:8],
+        "fixed_version":None,"analyst_verified":False,
+        "verification_note":"Automated extraction only; affected/fixed versions and deployment require vendor/analyst verification."}
+
 def enrich_records(records,max_workers=10):
     """Enrich source pages and follow a small number of explicitly linked security references."""
     if not records:return
@@ -443,6 +464,7 @@ def enrich_records(records,max_workers=10):
             elif no_patch:item["remediation_status"]="No vendor patch stated in source"
             elif source_action:item["remediation_status"]="Specific actionable guidance extracted"
             else:item["remediation_status"]="No specific fix identified in retrieved source text" if item.get("enrichment_status")=="enriched" else "Fix status unknown — source page not fully retrieved"
+        item["remediation_evidence"]=build_remediation_evidence(item,evidence,source_action,vendor_fixes,no_patch,gated)
 
 EPSS_API="https://api.first.org/data/v1/epss"
 NVD_API="https://services.nvd.nist.gov/rest/json/cves/2.0"
