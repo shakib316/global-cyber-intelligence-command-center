@@ -117,8 +117,44 @@ except ValueError:
     pass
 else:
     raise SystemExit("Redirect to link-local cloud metadata was not rejected")
-if "with safe_https_open(req,timeout=8)" not in collector_source or "with safe_https_open(req,timeout=25)" not in collector_source or "PinnedHTTPSConnection" not in collector_source:
-    raise SystemExit("External collector fetch paths are not using the SSRF-safe opener")
+if 'request_url(url,{"User-Agent":UA' not in collector_source or "PinnedHTTPSConnection" not in collector_source or "RETRYABLE_HTTP_STATUS" not in collector_source:
+    raise SystemExit("External collector fetch paths are missing pinned SSRF protection or bounded retry handling")
+
+
+# Transient network/service errors retry with bounded attempts; permanent HTTP
+# errors fail immediately rather than hiding bad URLs or access-denied responses.
+class FakeHeaders:
+    def get_content_charset(self):
+        return "utf-8"
+class FakeResponse:
+    status = 200
+    headers = FakeHeaders()
+    def __enter__(self):
+        return self
+    def __exit__(self, *args):
+        return False
+    def read(self, size=None):
+        return b"ok"
+    def geturl(self):
+        return "https://example.test/feed"
+transient = [collector.urllib.error.URLError("temporary network error"),
+             collector.urllib.error.URLError("temporary network error"),
+             FakeResponse()]
+with patch.object(collector, "safe_https_open", side_effect=transient) as open_mock, patch.object(collector.time, "sleep") as sleep_mock:
+    payload, charset, resolved = collector.request_url("https://example.test/feed", {"User-Agent": "test"}, 2)
+    if payload != b"ok" or charset != "utf-8" or resolved != "https://example.test/feed" or open_mock.call_count != 3 or sleep_mock.call_count != 2:
+        raise SystemExit("Transient request failures were not retried and recovered correctly")
+permanent = collector.urllib.error.HTTPError("https://example.test/missing", 404, "Not Found", {}, None)
+with patch.object(collector, "safe_https_open", side_effect=permanent) as open_mock, patch.object(collector.time, "sleep") as sleep_mock:
+    try:
+        collector.request_url("https://example.test/missing", {"User-Agent": "test"}, 2)
+    except collector.urllib.error.HTTPError as exc:
+        if exc.code != 404:
+            raise
+    else:
+        raise SystemExit("A permanent HTTP 404 was unexpectedly treated as success")
+    if open_mock.call_count != 1 or sleep_mock.call_count:
+        raise SystemExit("A permanent HTTP 404 was retried unnecessarily")
 
 # Source health must distinguish an empty successful feed from a failed feed,
 # retain the previous success timestamp after failure, and increment failures.
