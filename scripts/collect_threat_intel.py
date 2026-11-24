@@ -20,7 +20,7 @@ FEEDS=[
 ("splunk","Splunk Security Advisories","https://advisory.splunk.com/feed.xml","vendor","high"),
 ("uk_ncsc","UK NCSC","https://www.ncsc.gov.uk/api/1/services/v1/all-rss-feed.xml","government","high"),
 ("canada_cccs","Canadian CCCS","https://www.cyber.gc.ca/api/cccs/atom/v1/get?feed=alerts_advisories&lang=en","government","medium"),
-("australia_acsc","Australian ACSC","https://www.cyber.gov.au/rss/alerts","government","medium"),
+("australia_acsc","Australian ACSC","https://www.cyber.gov.au/acsc/view-all-content/alerts/rss","government","medium"),
 ("cert_eu","CERT-EU","https://cert.europa.eu/publications/security-advisories-rss","government","medium"),
 ("sans_isc","SANS Internet Storm Center","https://isc.sans.edu/rssfeed.xml","research","high"),
 ("bleepingcomputer","BleepingComputer","https://www.bleepingcomputer.com/feed/","news","medium"),
@@ -31,7 +31,7 @@ FEEDS=[
 
 ("cisco_psirt","Cisco PSIRT","https://sec.cloudapps.cisco.com/security/center/psirtrss20/CiscoSecurityAdvisory.xml","vendor","critical"),
 ("fortinet_psirt","Fortinet PSIRT","https://www.fortiguard.com/rss/ir.xml","vendor","high"),
-("google_security","Google Security Blog","https://security.googleblog.com/feeds/posts/default","vendor","high"),
+("google_security","Google Security Blog","https://blog.google/security/rss/","vendor","high"),
 ("redhat_security","Red Hat Security Advisories","https://access.redhat.com/security/data/metrics/rhsa.rss","vendor","high"),
 ("rapid7","Rapid7 Research","https://www.rapid7.com/blog/rss/","research","high"),
 ("sophos_xops","Sophos X-Ops","https://news.sophos.com/en-us/category/threat-research/feed/","research","high"),
@@ -200,8 +200,8 @@ def request_url(url,headers,timeout,max_bytes=None,max_attempts=4):
         time.sleep(delay)
     raise RuntimeError("Request exhausted retry attempts")
 
-def fetch(url):
-    raw,_,_=request_url(url,{"User-Agent":UA,"Accept":"application/rss+xml, application/atom+xml, application/xml, text/xml, text/html, application/json, */*"},timeout=25)
+def fetch(url,timeout=25,max_attempts=4):
+    raw,_,_=request_url(url,{"User-Agent":UA,"Accept":"application/rss+xml, application/atom+xml, application/xml, text/xml, text/html, application/json, */*"},timeout=timeout,max_attempts=max_attempts)
     return raw
 
 def load_source_health_state():
@@ -485,16 +485,16 @@ def enrich_records(records,max_workers=10):
                 if fixes:item.setdefault("vendor_remediation",[]).append({"source_url":result.get("resolved_url") or ref["url"],"source_label":ref.get("label") or "Vendor/security advisory","guidance":fixes[:4],"confidence":"Specific version/action wording extracted from linked security reference; analyst review required"})
     for item in records:
         evidence=item.get("details","")+"\n"+item.get("summary","");source_action=extract_specific_remediation(evidence);vendor_fixes=item.get("vendor_remediation",[])
+        no_patch=bool(re.search(r"no (?:security )?(?:patch|fix|workaround) (?:is )?(?:currently )?(?:available|released)|vendor (?:has )?not (?:yet )?released (?:a )?(?:patch|fix)|patch is not yet available|(?:a )?(?:security )?fix is not yet available|fix is not currently available|in the absence of an official patch",evidence,re.I))
+        gated=bool(re.search(r"temporary workaround.{0,240}(?:signing in|sign in|support portal|customer portal)",evidence,re.I))
         if vendor_fixes:
             combined=[fix for ref in vendor_fixes for fix in ref.get("guidance",[])]
             item["remediation_guidance"]=" ".join((source_action+combined)[:7])[:2400]
             item["remediation_status"]="Vendor-linked specific remediation extracted — verify affected/fixed versions"
         else:
             item["remediation_guidance"]=" ".join(source_action)[:1800] if source_action else ""
-            no_patch=re.search(r"no (?:security )?(?:patch|fix|workaround) (?:is )?(?:currently )?(?:available|released)|vendor (?:has )?not (?:yet )?released (?:a )?(?:patch|fix)|patch is not yet available|(?:a )?(?:security )?fix is not yet available|fix is not currently available|in the absence of an official patch",evidence,re.I)
-            gated=re.search(r"temporary workaround.{0,240}(?:signing in|sign in|support portal|customer portal)",evidence,re.I)
             if no_patch and gated:item["remediation_status"]="No vendor patch stated in source; workaround is referenced but requires vendor portal access"
-            elif no_patch:item["remediation_status"]="No vendor patch stated in source"
+            elif no_patch:item["remediation_status"]="Source states no patch/fix is available; verify current vendor status"
             elif source_action:item["remediation_status"]="Specific actionable guidance extracted"
             else:item["remediation_status"]="No specific fix identified in retrieved source text" if item.get("enrichment_status")=="enriched" else "Fix status unknown — source page not fully retrieved"
         item["remediation_evidence"]=build_remediation_evidence(item,evidence,source_action,vendor_fixes,no_patch,gated)
@@ -695,7 +695,8 @@ def main():
     for f in FEEDS:
         started=time.perf_counter()
         try:
-            rows=parse_feed(fetch(f[2]),f);entries+=rows;success+=1
+            feed_raw=fetch(f[2],timeout=12,max_attempts=2) if f[0]=="australia_acsc" else fetch(f[2])
+            rows=parse_feed(feed_raw,f);entries+=rows;success+=1
             health.append(record_source_health(health_state,f[1],f[2],"success",len(rows),started))
         except Exception as e:
             errors.append(f"{f[1]}: {type(e).__name__}: {e}");health.append(record_source_health(health_state,f[1],f[2],"failed",0,started,e))

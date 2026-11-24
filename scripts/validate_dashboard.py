@@ -340,6 +340,41 @@ candidate_state = collector.build_remediation_evidence(sample, "fix guidance", [
 if candidate_state["fixed_version"] is not None or candidate_state["analyst_verified"] or len(candidate_state["candidate_fixed_releases"]) != 2:
     raise SystemExit("Candidate release evidence must remain separate from verified fixed_version")
 
+# Regression: vendor-linked remediation must not reference no-fix variables
+# that are only relevant when no vendor advisory was found.
+feed_urls = {feed[0]: feed[2] for feed in collector.FEEDS}
+if feed_urls.get("google_security") != "https://blog.google/security/rss/":
+    raise SystemExit("Google Security Blog feed is not using the refreshed HTTPS RSS endpoint")
+if feed_urls.get("australia_acsc") != "https://www.cyber.gov.au/acsc/view-all-content/alerts/rss":
+    raise SystemExit("ACSC feed is not using the current alerts RSS endpoint")
+if 'timeout=12,max_attempts=2' not in collector_source:
+    raise SystemExit("ACSC collection does not use a bounded timeout/retry budget")
+article = {
+    "url": "https://research.example/story",
+    "title": "Example vulnerability CVE-2026-12345",
+    "summary": "Example vulnerability CVE-2026-12345 affects Example Product.",
+}
+article_page = {
+    "status": "enriched",
+    "details": "Example vulnerability CVE-2026-12345 affects Example Product.",
+    "resolved_url": "https://research.example/story",
+    "references": [{"url": "https://vendor.example/security/advisory", "label": "Vendor security advisory"}],
+}
+vendor_page = {
+    "status": "enriched",
+    "details": "Upgrade Example Product to version 4.2.1 to remediate this vulnerability.",
+    "resolved_url": "https://vendor.example/security/advisory",
+    "references": [],
+}
+with patch.object(collector, "enrich_page", side_effect=[article_page, vendor_page]):
+    collector.enrich_records([article], max_workers=1)
+if not article.get("vendor_remediation") or article.get("remediation_evidence", {}).get("state") != "vendor_guidance_unverified":
+    raise SystemExit("Vendor-linked remediation enrichment failed or did not preserve its unverified state")
+if article["remediation_evidence"].get("analyst_verified") is not False or article["remediation_evidence"].get("fixed_version") is not None:
+    raise SystemExit("Vendor-linked remediation was incorrectly marked verified")
+if "https://vendor.example/security/advisory" not in article["remediation_evidence"].get("evidence_sources", []):
+    raise SystemExit("Vendor-linked remediation lost its evidence source URL")
+
 for promo in (
     "Discover why SHA pinning alone isn't enough and learn how to close hidden security gaps.",
     "Learn what 6,000 real-world attacks reveal about MFA weaknesses.",
