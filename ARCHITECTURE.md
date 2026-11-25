@@ -7,7 +7,7 @@ The project is a public, GitHub Pages-hosted analyst-support dashboard backed by
 Public advisory, research and vendor feeds
 → GitHub Actions collector
 → normalization, enrichment, deduplication and source-health tracking
-→ dated JSON snapshots, daily Markdown reports and Phase 2 intelligence records
+→ dated JSON snapshots and daily Markdown reports
 → validation gates
 → GitHub Pages deployment
 → browser dashboard
@@ -19,8 +19,6 @@ Public advisory, research and vendor feeds
 | intel/latest.json | Pointer to the current dated snapshot and report |
 | intel/snapshots/YYYY/MM/DD.json | Daily structured intelligence, source health, KEV and candidate IOC data |
 | intel/source-health-state.json | Per-source last attempt, last success and consecutive failure state |
-| intel/phase2-intelligence.json | Evidence-linked actor, campaign and relationship dataset |
-| intel/schemas/phase2-intelligence.schema.json | JSON Schema 2020-12 contract for Phase 2 records |
 | detection-queries/ | KQL, SPL and Google SecOps YARA-L query library |
 | reports/YYYY/MM/DD.md | Analyst-facing dated briefing |
 
@@ -29,7 +27,6 @@ The browser loads the latest snapshot through intel/latest.json. Historical repo
 ## Trust and evidence model
 
 - Public feeds are incomplete and may be delayed, rate-limited, unavailable or changed without notice.
-- Material actor/campaign claims and relationships retain source IDs and rationale. Source-reported attribution is not independently confirmed by this dashboard.
 - An empty CVE/IOC association is a valid outcome; missing evidence must not be filled with assumptions.
 - IOC extraction produces candidates, not confirmed malicious indicators or blocklists.
 - CVSS, EPSS and CISA KEV are separate signals. A high CVSS score is not proof of exploitation; KEV membership is not proof an organisation is exposed or patched.
