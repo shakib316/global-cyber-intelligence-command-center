@@ -6,6 +6,7 @@ on:
       - "detection-queries/**"
       - "scripts/validate_detection_queries.py"
       - "scripts/validate_detection_formats.py"
+      - "scripts/validate_frontend_security.py"
       - "scripts/validate_dashboard.py"
       - "scripts/collect_threat_intel.py"
       - "index.html"
@@ -47,5 +48,7 @@ jobs:
         run: python scripts/validate_dashboard.py
       - name: Validate detection query metadata and KQL structure
         run: python scripts/validate_detection_queries.py
+      - name: Validate frontend security and safe rendering
+        run: python scripts/validate_frontend_security.py
       - name: Validate SPL and YARA-L metadata and structure
         run: python scripts/validate_detection_formats.py
