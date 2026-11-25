@@ -22,7 +22,7 @@ Public advisory, research and vendor feeds
 | detection-queries/ | KQL, SPL and Google SecOps YARA-L query library |
 | reports/YYYY/MM/DD.md | Analyst-facing dated briefing |
 
-The browser loads the latest snapshot through intel/latest.json. Historical reports are discovered from the repository archive. Actor/campaign data is loaded separately from intel/phase2-intelligence.json. Detection query files are fetched from the repository when the analyst opens the query library.
+The browser loads the latest snapshot through intel/latest.json. Historical reports are discovered from the repository archive. Detection query files are fetched from the repository when the analyst opens the query library.
 
 ## Trust and evidence model
 
@@ -39,7 +39,6 @@ The browser loads the latest snapshot through intel/latest.json. Historical repo
 - The dashboard escapes dynamic text before HTML insertion and routes external links through an HTTPS-only URL helper.
 - A GitHub Pages-compatible Content Security Policy is set in a meta tag. The current single-file UI retains inline JavaScript and CSS, so unsafe-inline is an explicit compatibility trade-off; this is not a nonce/hash-based strict CSP.
 - The repository and published site are public. Never commit credentials, customer data, private incident details, internal asset inventories or confidential indicators.
-- Browser-local watchlists and asset matching are local analyst conveniences, not server-side protected storage or verified asset integrations.
 
 ## Deployment flow
 
