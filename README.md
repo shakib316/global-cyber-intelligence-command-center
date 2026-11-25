@@ -18,7 +18,6 @@ A GitHub-hosted cyber-intelligence dashboard and daily collection pipeline for v
 - Threat cards with technical context, CVE references, evidence links, and adjacent remediation status.
 - Critical vulnerability watch, searchable/filterable KEV catalogue, historical daily reports, and date navigation.
 - IOC candidate extraction for analyst verification; candidates are not blocklists.
-- Browser-local watchlist, local asset-to-KEV text matcher, snapshot comparison, and executive digest.
 - KQL, SPL and YARA-L detection-query library with maturity labels and static metadata checks.
 - GitHub Actions for daily collection, dashboard validation, query-library checks, and GitHub Pages deployment.
 
