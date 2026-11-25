@@ -153,7 +153,7 @@ const remediationBlock=(x,kind="threat")=>{
  const concrete=/\b(?:version\s*v?\d|v\d+\.\d|fixed in\s+\S+|KB\d{4,}|build\s*\d|hotfix\s*\S+|disable\s+[^.]{2,}|block\s+[^.]{2,}|remove\s+[^.]{2,}|rotate\s+[^.]{2,}|isolate\s+[^.]{2,})/i.test(raw);
  const actionable=/\b(?:upgrade|update|install|apply|deploy|replace|disable|block|restrict|remove|uninstall|revoke|rotate|reset|isolate|configure|rollback|patch)\b/i.test(raw);
  const explicit=raw&&!generic&&concrete&&actionable?raw:"";
- const noFix=evidence.state==="source_reports_no_fix"||/no (?:patch|fix|workaround) (?:is )?(?:available|released|known)|patch(?:es)? (?:is|are) not yet available|no vendor fix/i.test([x.details,x.summary,x.title,x.remediation_status].join(" "));
+ const noFix=evidence.state==="source_reports_no_fix";
  const verified=evidence.analyst_verified===true&&(evidence.state==="verified_fixed_version"||evidence.state==="verified_vendor_mitigation");
  let state="NOT ESTABLISHED",tone="amber",detail="No specific fix identified in retrieved source text. This does not establish that no fix exists. Check the linked vendor advisory and confirm the exact product, branch and build.";
  if(verified){state=evidence.state==="verified_fixed_version"?"FIX VERIFIED":"MITIGATION VERIFIED";tone="green";detail=evidence.verification_note||("Analyst-verified remediation evidence"+(evidence.fixed_version?": "+evidence.fixed_version:"")+". Confirm the deployed asset is on the applicable fixed build.");}
