@@ -6,6 +6,7 @@ on:
       - "scripts/collect_threat_intel.py"
       - "scripts/validate_dashboard.py"
       - "scripts/validate_detection_queries.py"
+      - "scripts/validate_frontend_security.py"
       - "index.html"
       - "intel/**"
       - "reports/**"
@@ -42,6 +43,8 @@ jobs:
           node-version: "20"
       - name: Validate dashboard, collector, CVE coverage and business classifications
         run: python scripts/validate_dashboard.py
+      - name: Validate frontend security and safe rendering
+        run: python scripts/validate_frontend_security.py
       - name: Validate detection query metadata and KQL structure
         run: python scripts/validate_detection_queries.py
 
