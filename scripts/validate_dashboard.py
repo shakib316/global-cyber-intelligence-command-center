@@ -102,7 +102,7 @@ ast.parse(collector_source, filename=str(collector_path))
 
 daily_workflow_path = root / ".github/workflows/daily-threat-intel.yml"
 daily_workflow = daily_workflow_path.read_text(encoding="utf-8")
-for required_step in ("  deploy:", "    needs: collect", "actions: read", "pages: write", "id-token: write", "actions/upload-pages-artifact@v3", "Wait for Pages artifact visibility", "Verify checked-out main revision", "actions/deploy-pages@v4"):
+for required_step in ("  deploy:", "    needs: collect", "actions: read", "pages: write", "id-token: write", "actions/upload-pages-artifact@v5", "Wait for Pages artifact visibility", "Verify checked-out main revision", "actions/deploy-pages@v5"):
     if required_step not in daily_workflow:
         raise SystemExit("Daily collection workflow does not publish updated Pages content: " + required_step)
 if "          ref: main" not in daily_workflow:
