@@ -1,9 +1,9 @@
-# Phase 1 and Phase 2 completion matrix
+# Project implementation history and scope changes
 
 Repository: shakib316/global-cyber-intelligence-command-center  
 Branch: main  
 Assessment date: 2026-11-24  
-Overall: Phase 1 and Phase 2 are partially complete. This report intentionally does not equate code presence or green static CI with production effectiveness.
+Historical implementation record. The standalone Threat Actors and Campaigns dashboard views and their dedicated dataset/schema/validator were retired on 25 November 2026 to simplify the product. Their historical implementation details below are retained only as project history, not as current product capabilities.
 
 ## Phase 1 — Reliability, security, quality and UX
 
