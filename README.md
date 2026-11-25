@@ -5,7 +5,7 @@ A GitHub-hosted cyber-intelligence dashboard and daily collection pipeline for v
 **Live dashboard:** https://shakib316.github.io/global-cyber-intelligence-command-center/  
 **Source repository:** https://github.com/shakib316/global-cyber-intelligence-command-center
 
-> **Deployment and privacy:** The current dashboard is published using GitHub Pages from a public repository. Do not place secrets, private incident data, customer information, internal asset inventories, or confidential indicators in this repository or browser-local tools. This is not currently a private/self-hosted platform.
+> **Deployment and privacy:** The current dashboard is published using GitHub Pages from a public repository. Do not place secrets, private incident data, customer information, internal asset inventories or confidential indicators in this public repository. This is not currently a private/self-hosted platform.
 
 ## Implemented capabilities
 
