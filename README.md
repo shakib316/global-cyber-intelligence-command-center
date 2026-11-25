@@ -1,6 +1,6 @@
 # Global Cyber Intelligence Command Center (GCI)
 
-A GitHub-hosted cyber-intelligence dashboard and daily collection pipeline for vulnerabilities, exploited flaws, threat research, campaigns, indicators, and cybersecurity business developments.
+A GitHub-hosted cyber-intelligence dashboard and daily collection pipeline for vulnerabilities, exploited flaws, threat research, indicators, and cybersecurity business developments.
 
 **Live dashboard:** https://shakib316.github.io/global-cyber-intelligence-command-center/  
 **Source repository:** https://github.com/shakib316/global-cyber-intelligence-command-center
@@ -19,7 +19,7 @@ A GitHub-hosted cyber-intelligence dashboard and daily collection pipeline for v
 - Critical vulnerability watch, searchable/filterable KEV catalogue, historical daily reports, and date navigation.
 - IOC candidate extraction for analyst verification; candidates are not blocklists.
 - Browser-local watchlist, local asset-to-KEV text matcher, snapshot comparison, and executive digest.
-- KQL, SPL and YARA-L detection-query library with maturity labels and static metadata checks.\n- Evidence-linked threat actor profiles, campaign tracking and relationship records (initially one actor and one campaign; coverage is intentionally evidence-limited).
+- KQL, SPL and YARA-L detection-query library with maturity labels and static metadata checks.
 - GitHub Actions for daily collection, dashboard validation, query-library checks, and GitHub Pages deployment.
 
 ## Collection and reporting model
@@ -36,14 +36,6 @@ Each daily report records collection time and coverage window, per-source health
 - A CISA KEV due date is a compliance deadline for covered entities, not proof that a patch has been installed.
 - Deployment state is unknown without asset or patch-management telemetry.
 - Vendor-specific fixed-version verification is not yet automated for every CVE/KEV entry.
-
-## Threat actor and campaign intelligence
-
-The evidence-linked Phase 2 dataset is stored in `intel/phase2-intelligence.json` and described by `intel/schemas/phase2-intelligence.schema.json`. The dashboard exposes separate Threat actors and Campaigns views. Each material profile or relationship carries source IDs, confidence and a rationale. The initial dataset includes APT29 (MITRE ATT&CK G0016) and its source-listed Operation Ghost campaign (C0023); it deliberately leaves unsupported campaign targets, CVEs and IOCs empty rather than inferring them. A source profile's modification timestamp is not treated as last-observed actor activity.
-
-The relationship list currently records the source-backed APT29-to-Operation-Ghost association and the campaign's explicitly mapped ATT&CK techniques. No actor/campaign-to-CVE, IOC or detection-rule relationship is asserted without evidence. Detection opportunities in campaign profiles are analyst hunt suggestions, not tested rules or tenant coverage.
-
-Run `python scripts/validate_phase2_intelligence.py` to check record IDs, evidence references, confidence labels, timestamps, and relationship integrity. This validator checks structure and provenance links; it does not independently verify intelligence claims.
 
 ## Detection engineering
 
@@ -65,7 +57,7 @@ A successful workflow confirms only the steps in that workflow. Feed-level failu
 - Public feeds are incomplete and may be delayed, unavailable, rate-limited, or change format.
 - CERT-In is currently an index-scraping source and may fail; confirm advisories directly on CERT-In.
 - Australian ACSC is intentionally excluded at the user's request and should not appear as an active or failing source. Other active feeds can fail independently.
-- CVSS/EPSS, exploit validation, actor attribution, and IOC reputation are not universally available or independently verified for every item.
+- CVSS/EPSS, exploit validation, IOC reputation are not universally available or independently verified for every item.
 - Business-news feeds can contain duplicate, syndicated, market/stock, or low-relevance results; corroborate major deal claims with company announcements, filings, or multiple independent reports.
 - No automated containment, blocking, ticket creation, or production remediation is performed.
 - No private asset inventory or authenticated SIEM data is connected.
@@ -73,7 +65,7 @@ A successful workflow confirms only the steps in that workflow. Feed-level failu
 ## Architecture and completion status
 
 - Architecture and trust boundaries: ARCHITECTURE.md
-- Phase 1 and Phase 2 completion matrix: PHASE1_PHASE2_STATUS.md
+- Project history and implementation notes: PHASE1_PHASE2_STATUS.md
 
 ## Repository layout
 
