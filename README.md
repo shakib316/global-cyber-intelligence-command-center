@@ -61,6 +61,10 @@ A successful workflow confirms only the steps in that workflow. Feed-level failu
 - No automated containment, blocking, ticket creation, or production remediation is performed.
 - No private asset inventory or authenticated SIEM data is connected.
 
+## Master project requirements
+
+The controlling project scope, operating schedule, AI-assistant instructions, reusable prompts, security rules and definition of done are documented in [MASTER_REQUIREMENTS.md](MASTER_REQUIREMENTS.md). Read it before making material repository changes. Detailed daily report formatting remains in [REPORTING_STANDARD.md](REPORTING_STANDARD.md), and evidence rules remain in [INTELLIGENCE_QUALITY.md](INTELLIGENCE_QUALITY.md).
+
 ## Architecture and completion status
 
 - Architecture and trust boundaries: ARCHITECTURE.md
