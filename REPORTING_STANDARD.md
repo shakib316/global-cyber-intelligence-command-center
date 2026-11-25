@@ -75,6 +75,31 @@ Split into **Immediate — today** and **This week**. Every action must map to a
 - Explicitly say when no meaningful fix, IOC or KQL is available.
 - Add a short acronym glossary only when needed.
 
+## 3. Global remediation evidence model — mandatory for every vulnerability surface
+
+Apply the same remediation semantics to New Intelligence, Overview / Critical Vulnerability Watch, CISA KEV, daily briefing cards and any vulnerability detail view.
+
+### Allowed remediation states
+- **FIX VERIFIED** — only when an analyst has checked the authoritative vendor advisory, exact product/edition, affected branch/build, fixed release and applicability. Store analyst verification, checked timestamp, fixed version/build and direct source.
+- **MITIGATION VERIFIED** — vendor/analyst-confirmed workaround with exact configuration/action, scope, limitations and rollback/operational risks. Never label this as fixed.
+- **SPECIFIC ACTION — VERIFY** — concrete source-derived command, configuration change, package or version candidate exists, but exact applicability or deployment is not analyst-verified. Show amber status.
+- **CANDIDATE RELEASE — VERIFY** — version wording extracted automatically. Display as candidate only, with source link and explicit non-verified label. Never render green or imply fixed.
+- **VENDOR REPORTS NO FIX** — only when the reviewed authoritative source explicitly says no patch/fix is available. Show containment and next review guidance where available.
+- **WORKAROUND — PORTAL ACCESS** — vendor confirms a workaround exists but instructions are gated. Do not invent the procedure.
+- **NOT ESTABLISHED** — no specific remediation found in reviewed material, or the source was not retrieved. State that this does not prove no fix exists; distinguish not-reviewed from reviewed/no-fix-found.
+
+### Evidence and source rules
+- CISA KEV establishes known exploitation/catalogue status; its generic requiredAction is not a product-specific patch. Always seek the linked vendor advisory for remediation. Never infer that absence of a fix in KEV means no vendor fix exists.
+- Automated extraction is not analyst verification. A source-linked vendor statement or candidate version must remain amber until applicability is verified.
+- A green remediation status is reserved for analyst-verified fixed release or mitigation. Red is reserved for vendor-confirmed no-fix status, not CVSS severity.
+- Keep vulnerability severity (CVSS and its version/source), exploitation status (CISA KEV/vendor/researcher), EPSS estimate and remediation status as separate fields/indicators.
+- Show affected product/edition and affected versions separately from fixed versions. If unknown, say **Not disclosed / Not established**; do not infer.
+- For each CVE in a record with multiple CVEs, preserve its separate identity and map affected/fixed versions and mitigations per CVE where sources allow. If mapping is unavailable, explicitly state that the shared record contains multiple CVEs and each requires individual review.
+- Separate permanent fixes from temporary mitigations. Include prerequisites, impact, rollback and exposure conditions when source-supported.
+- Show source publisher, direct advisory link, source publication/update date and last evidence-check timestamp. Link vendor advisory, CVE/NVD and CISA KEV distinctly where applicable.
+- Do not use generic filler such as “apply mitigations in accordance with vendor instructions” as the remediation. If no specific guidance was found, say so plainly and link the best source.
+- Detection guidance must name required telemetry and distinguish a useful hunt from proof of exploitation. State when customer-side detection is not possible or is provider-side only.
+
 ## 3. Consistency and readability checks — mandatory before publishing
 - Dates: report title, generation timestamp, coverage window, incident date, source publication date and carry-forward labels agree.
 - Threats: CVE, CVSS version/score, affected versions, fixed version, KEV status, due date and exploit status do not contradict one another.
