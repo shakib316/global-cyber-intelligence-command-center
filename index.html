@@ -158,7 +158,7 @@ const technologyBackgroundBlock=(x,kind="threat")=>{
 const technicalDetailsBlock=(value)=>{
  const raw=cleanCopy(value||"");
  if(!raw)return descriptionBlock("Technical details","Not disclosed in the reviewed source material.");
- const sentences=raw.replace(/\s+/g," ").match(/[^.!?]+[.!?]?/g)||[raw];
+ const sentences=raw.includes("\n")?raw.split(/\n+/):raw.replace(/\s+/g," ").match(/[^.!?]+[.!?]?/g)||[raw];
  const lines=sentences.map(s=>s.trim()).filter(Boolean).slice(0,4).map(s=>s.length>260?s.slice(0,257).trimEnd()+"…":s);
  return '<div class="description-block"><span class="field-label">Technical details</span><ul>'+lines.map(s=>'<li>'+esc(s)+'</li>').join("")+'</ul></div>';
 };
@@ -291,7 +291,7 @@ function cvssOverview(v){
 function kevHtml(v){
  const action=kevAction(v),due=v.dueDate?tag("Due "+v.dueDate,"amber"):tag("No due date stated"),title=v.vulnerabilityName||"Vulnerability title not supplied by CISA KEV";
  const labels=[v.cveID,v.vendorProject,v.product,kevStatus(v),v.dateAdded?("Added "+v.dateAdded):""].filter(Boolean).slice(0,5);
- const detail=[v.shortDescription||"",v.knownRansomwareCampaignUse?("Known ransomware campaign use: "+v.knownRansomwareCampaignUse+"."):"",v.cwes?.length?("Weakness: "+v.cwes.join(", ")+"."):""].filter(Boolean).join(" ");
+ const ep=(v.epss_scores||[]).find(x=>x.cve===v.cveID),cv=v.cvss; const detail=[v.shortDescription||"",cv?"CVSS "+(cv.version||"")+" "+Number(cv.base_score).toFixed(1)+"/10 "+(cv.severity||"severity not stated"):"CVSS "+(v.cvss_status||"not available")+" (no score inferred)",ep?"EPSS "+(Number(ep.score)*100).toFixed(1)+"% 30-day estimate":"EPSS "+(v.epss_status||"not available")+" (no score inferred)",v.knownRansomwareCampaignUse==="Known"?"CISA KEV: known ransomware campaign use.":"CISA KEV: listed as a known exploited vulnerability."].filter(Boolean).join("\n");
  return '<tr><td><strong>'+esc(v.cveID)+'</strong><div class="label-row">'+labels.map(x=>tag(x,"neutral")).join(" ")+'</div></td><td>'+due+'</td><td><strong class="kev-title">'+esc(title)+'</strong>'+technologyBackgroundBlock(v,"kev")+technicalDetailsBlock(detail)+descriptionBlock("Remediation status",action.text)+'<p class="cell-description">Deployment status: not established by the KEV catalogue; verify against asset and patch-management telemetry.</p>'+sourceLinksBlock(v,"kev")+'</td></tr>';
 }
 function filteredKev(){const q=$("kevSearch").value.trim().toLowerCase(),vendor=$("kevVendor").value,due=$("kevDueFilter").value,today=new Date();today.setHours(0,0,0,0);const limit=new Date(today);limit.setDate(limit.getDate()+30);return KEV.filter(v=>{const hay=[v.cveID,v.vulnerabilityName,v.shortDescription,v.vendorProject,v.product,v.requiredAction,(v.cwes||[]).join(" "),v.knownRansomwareCampaignUse].join(" ").toLowerCase();if(q&&!hay.includes(q))return false;if(vendor&&v.vendorProject!==vendor)return false;if(due==="nodue"&&v.dueDate)return false;if(due==="overdue"&&(!v.dueDate||new Date(v.dueDate)>=today))return false;if(due==="upcoming"&&(!v.dueDate||new Date(v.dueDate)<today||new Date(v.dueDate)>limit))return false;return true})}
