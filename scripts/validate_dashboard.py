@@ -605,7 +605,7 @@ snapshot_path = root / "intel" / pointer["snapshot"]
 if not snapshot_path.exists():
     raise SystemExit("Latest intelligence snapshot is missing: " + str(snapshot_path))
 data = json.loads(snapshot_path.read_text(encoding="utf-8"))
-for field in ("items", "business_items", "source_health", "cisa_kev_catalog", "ioc_candidates"):
+for field in ("items", "business_items", "source_health", "ioc_candidates"):
     if not isinstance(data.get(field), list):
         raise SystemExit("Latest snapshot field must be an array: " + field)
 
@@ -640,10 +640,23 @@ def validate_record_shapes(records, label, array_fields=(), object_fields=()):
 validate_record_shapes(data["items"], "items", ("topics", "cves", "vendor_remediation", "cve_verification"), ("technology_context", "remediation_evidence"))
 validate_record_shapes(data["business_items"], "business_items", ("companies", "vendor_remediation"), ("business_context", "remediation_evidence"))
 validate_record_shapes(data["source_health"], "source_health")
-validate_record_shapes(data["cisa_kev_catalog"], "cisa_kev_catalog", ("cwes", "vendor_remediation", "cve_verification", "epss_scores"), ("technology_context", "remediation_evidence"))
 validate_record_shapes(data.get("cisa_kev_added_last_7_days", []), "cisa_kev_added_last_7_days", ("cwes", "vendor_remediation", "cve_verification", "epss_scores"), ("technology_context", "remediation_evidence"))
 
-kev = data.get("cisa_kev_catalog", [])
+if pointer.get("kev_catalog"):
+    if not re.fullmatch(r"kev-catalogs/\d{4}/\d{2}/\d{2}\.json", str(pointer["kev_catalog"])):
+        raise SystemExit("Latest pointer has an invalid KEV catalogue path")
+    kev_catalog_path = root / "intel" / pointer["kev_catalog"]
+    if not kev_catalog_path.exists():
+        raise SystemExit("Latest CISA KEV catalogue file is missing: " + str(kev_catalog_path))
+    kev_payload = json.loads(kev_catalog_path.read_text(encoding="utf-8"))
+    kev = kev_payload.get("cisa_kev_catalog", []) if isinstance(kev_payload, dict) else None
+else:
+    kev = data.get("cisa_kev_catalog", [])
+if not isinstance(kev, list):
+    raise SystemExit("CISA KEV catalogue must be an array")
+validate_record_shapes(kev, "cisa_kev_catalog", ("cwes", "vendor_remediation", "cve_verification", "epss_scores"), ("technology_context", "remediation_evidence"))
+if data.get("cisa_kev_catalog_count") != len(kev):
+    raise SystemExit("CISA KEV catalogue count does not match the full catalogue artifact")
 items = data.get("items", [])
 business_items = data.get("business_items", [])
 if not kev:

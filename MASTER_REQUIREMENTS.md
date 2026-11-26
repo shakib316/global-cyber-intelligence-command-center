@@ -366,7 +366,8 @@ Static lint is not an official Kusto/SPL/YARA-L parser, tenant-schema validation
 | `.github/workflows/daily-threat-intel.yml` | Daily collection and canonical Pages deployment |
 | `.github/workflows/dashboard-quality-watch.yml` | Scheduled dashboard/frontend quality watch |
 | `.github/workflows/detection-query-ci.yml` | Query and repository quality checks |
-| `intel/latest.json` | Pointer to latest snapshot/report artifacts |
+| `intel/latest.json` | Pointer to latest snapshot, separate full KEV catalogue and report artifacts |
+| `intel/kev-catalogs/YYYY/MM/DD.json` | Full dated CISA KEV catalogue, loaded on demand by the dashboard |
 | `intel/snapshots/YYYY/MM/DD.json` | Dated structured intelligence snapshot |
 | `intel/daily/YYYY/MM/DD.md` | Collector-generated daily artifact, where generated |
 | `intel/source-health-state.json` | Per-source health history/state |

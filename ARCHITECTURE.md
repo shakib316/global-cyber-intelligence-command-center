@@ -16,13 +16,14 @@ Public advisory, research and vendor feeds
 
 | Artifact | Purpose |
 |---|---|
-| intel/latest.json | Pointer to the current dated snapshot and report |
-| intel/snapshots/YYYY/MM/DD.json | Daily structured intelligence, source health, KEV and candidate IOC data |
+| intel/latest.json | Pointer to the current dated snapshot, separate KEV catalogue and report |
+| intel/snapshots/YYYY/MM/DD.json | Daily structured threat/business intelligence, source health and candidate IOC data; excludes the full KEV catalogue |
+| intel/kev-catalogs/YYYY/MM/DD.json | Complete dated CISA KEV catalogue, lazy-loaded when requested by the dashboard |
 | intel/source-health-state.json | Per-source last attempt, last success and consecutive failure state |
 | detection-queries/ | KQL, SPL and Google SecOps YARA-L query library |
 | reports/YYYY/MM/DD.md | Analyst-facing dated briefing |
 
-The browser loads the latest snapshot through intel/latest.json. Historical reports are discovered from the repository archive. Detection query files are fetched from the repository when the analyst opens the query library.
+The browser loads the compact latest snapshot through intel/latest.json. The full CISA KEV catalogue is fetched separately only when the analyst opens the KEV section or performs a KEV/global search. Historical reports are discovered from the repository archive. Detection query files are fetched from the repository when the analyst opens the query library.
 
 ## Trust and evidence model
 
