@@ -165,6 +165,42 @@ Rules:
 - Apply the same wording and fields to the dashboard UI and generated Markdown snapshots/reports. Do not omit the explanation simply because an item came from a different feed.
 - Keep source provenance and uncertainty. Automated glossary matching is contextual assistance, not independent verification of vulnerability impact or asset exposure.
 
+### Global source extraction, summary and data-quality standard — mandatory
+
+Apply to every collected advisory, vulnerability, threat-research item and relevant business story, across every configured feed and every dashboard/report surface. This is a collector-wide rule, not a source-specific exception.
+
+**1. Clean extraction**
+- Extract editorial/article content only. Exclude navigation, headers/footers, forms, cookie/consent banners, newsletter prompts, sign-up/login text, contact confirmations, preference-update notifications, advertisements, sponsored copy, related-story widgets and other page chrome.
+- Keep the original source URL, publisher, publication date and retrieval timestamp. Do not silently replace source text with generated or inferred content.
+- If extraction is contaminated or the page is not readable, mark the enrichment as limited/failed and retain a clearly labelled feed snippet. Never present page boilerplate as technical evidence.
+- Apply cleanup to both HTML article extraction and RSS/Atom feed summaries. Preserve technical paragraphs even when they contain product marketing terminology; filter only identifiable boilerplate/promotional content.
+
+**2. Concise, source-grounded summary**
+- Show a concise technical summary of approximately 3–5 sentences (or fewer when the source is brief), based only on relevant source statements.
+- Prioritise the vulnerability/incident, affected component, attack condition and impact when the source states them. Do not invent missing details or use generic product descriptions as the incident summary.
+- Keep full source-derived technical details available separately for analyst inspection. Clearly distinguish an extracted excerpt from an independently authored or analyst-verified summary.
+- If there is insufficient relevant source text, say that a reliable summary could not be extracted and link the primary advisory. Do not pad with generic operating-system/company descriptions, marketing text or unrelated page copy.
+
+**3. Correct product and CVE mapping**
+- Identify vendor, exact product/component/package, affected versions/branches/builds and CVE relationships independently. A vendor, operating-system distribution, advisory ID or headline is not automatically the affected product.
+- Explain advisory identifiers separately from the vulnerable product (for example, an Ubuntu USN is an advisory identifier; the affected component may be MIT Kerberos/krb5).
+- For multi-CVE advisories, retain one independently traceable record per CVE wherever evidence permits. Do not copy one CVE's impact, severity, affected versions or fix to all CVEs.
+- If the source does not establish the product/CVE/version relationship, show **Unverified / Not established** and identify what evidence is missing.
+
+**4. Remediation accuracy**
+- Prefer the authoritative vendor advisory/package security notice for fixed releases, affected release ranges, workarounds and restart/deployment requirements. Link directly to the relevant evidence.
+- Keep affected versions separate from fixed versions. State distribution/release-specific package versions only when the source explicitly supports them.
+- Never convert an extraction failure or absence of remediation text into **No patch available**. Use the defined **NOT ESTABLISHED** / **No fix confirmed in reviewed sources** semantics unless the vendor explicitly confirms no fix.
+- A candidate release extracted automatically remains unverified until exact product, edition, branch/build applicability and deployment are checked. A vendor fix statement is not proof that the user's assets are patched.
+- Show practical update/restart/mitigation steps only when the source states them; do not invent commands or operational instructions.
+
+**5. Evidence and validation**
+- Preserve per-claim source name, direct URL, publication/update date and evidence-check timestamp. Link vendor advisory, CVE/NVD and CISA KEV separately where applicable.
+- Distinguish source-reported facts, automated extraction, analyst assessment and analyst verification. Retrieval success, matching text or a green workflow does not establish factual correctness.
+- Add regression tests for common boilerplate phrases (contact confirmations, newsletters, preference notices, cookie banners and advertisements), legitimate technical paragraphs, multi-CVE mapping and source-specific remediation.
+- Validate that a record's summary is relevant, free of page chrome, concise and traceable to the linked source. If the check fails, downgrade enrichment quality rather than publishing contaminated text as technical detail.
+- Apply the same extraction, summary, mapping and remediation rules to dashboard cards, overview panels, KEV entries, daily snapshots and Markdown reports.
+
 ### Source policy
 - Use configured public government, CERT, vendor, cloud and reputable research/news sources.
 - Prefer primary advisories and company announcements. Use secondary sources for context/corroboration.
