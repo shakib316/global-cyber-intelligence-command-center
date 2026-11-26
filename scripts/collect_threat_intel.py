@@ -518,12 +518,18 @@ def describe_technology(title="", summary="", details="", vendor="", product="",
             usn = re.search(r"\bUSN-\d{4}-\d+\b", text_blob, re.I)
             if usn:
                 context["identifier_note"] = usn.group(0).upper() + " is an Ubuntu Security Notice identifier; it points to an Ubuntu security update/advisory, not a separate product."
+            consistency = technology_context_consistency(title, summary, details, vendor, product, context)
+            if not consistency["valid"]:
+                return {"status": "limited", "name": "Technology not confidently identified",
+                    "what_is_it": "Technology details could not be independently verified from the available sources.",
+                    "what_it_does": "Technology details could not be independently verified from the available sources.",
+                    "basis": "semantic consistency check failed: " + consistency["reason"]}
             return context
     candidate = str(product or "").strip() or str(vendor or "").strip()
     if candidate:
         return {"status": "limited", "name": candidate[:120],
-            "what_is_it": "The source identifies this as an affected product or component, but the available evidence is not enough to describe its exact role reliably.",
-            "what_it_does": "Check the linked vendor advisory for the product's purpose and confirm that the affected product and version are present in your environment.",
+            "what_is_it": "Technology details could not be independently verified from the available sources.",
+            "what_it_does": "Technology details could not be independently verified from the available sources.",
             "basis": "source product/vendor field; role not independently identified"}
     usn = re.search(r"\bUSN-\d{4}-\d+\b", text_blob, re.I)
     if usn:
@@ -532,8 +538,8 @@ def describe_technology(title="", summary="", details="", vendor="", product="",
             "what_it_does": "It tells Ubuntu users which package or system component has a security issue and where to find the related update guidance.",
             "basis": "identifier format"}
     return {"status": "not_identified", "name": "Technology not confidently identified",
-        "what_is_it": "The collected headline and source text do not identify a specific product or component clearly enough for a reliable plain-English explanation.",
-        "what_it_does": "Open the linked source and confirm the affected product, component and version before deciding whether your systems are affected.",
+        "what_is_it": "Technology details could not be independently verified from the available sources.",
+        "what_it_does": "Technology details could not be independently verified from the available sources.",
         "basis": "insufficient source evidence"}
 
 def enrich_page(url,title=""):
