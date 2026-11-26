@@ -9,6 +9,20 @@
 
 This document is the single high-level reference for the product's purpose, scope, user requirements, operating schedule, quality standards, AI-assistant instructions and repository-maintenance rules. Read it before making material changes.
 
+## Global editorial quality contract — mandatory for every intelligence item
+
+- **What is it?** must define the actual technology, product, framework, protocol, package manager, operating-system component or vulnerability class. Add one concise incident-context sentence when supported. Do not substitute the headline, discovery statement or attack summary for a definition.
+- **What does it do?** must explain the technology's normal purpose or function, then clarify its relevance to the reported event when evidence supports it. Do not put exploit mechanics here as a substitute for the technology's normal function.
+- Technology definitions may come from the reviewed incident article or a separate authoritative primary source. Store the exact documentation URL in the item's technology-background provenance and show it among the maximum three source links.
+- Curated definitions are permitted only when they have been checked against authoritative documentation. A term match alone must not be presented as evidence that a product is affected or vulnerable.
+- If no reliable definition is available, use the explicit **Not established in reviewed sources** fallback for both questions. Never fill the fields with a generic incident summary or an inferred product capability.
+- For non-technology business developments, both fields are **Not applicable**. For a technology product launch, define the technology only when source evidence supports it.
+- **Technical details** must contain up to four distinct, concise, source-supported facts about scope, affected components, mechanisms, execution flow, impact or relevant counts. Exclude repeated headline/lead summaries, duplicate facts, author quotations, boilerplate and truncated article fragments. Prefer analyst-written paraphrases over long quotations.
+- CVSS, EPSS, publication metadata, publisher and status belong in concise labels where relevant, not padded technical-detail paragraphs.
+- **Sources** must use meaningful publisher/domain labels with direct links, never generic “Source 1 / Source 2” numbering. Keep no more than three.
+- Apply these semantics in New Intelligence, Cyber Business, CISA KEV, overview vulnerability cards, generated daily reports and historical records. Historical cards should use the same source-backed fallback/catalogue logic where the original snapshot lacks the newer structured fields.
+- Regression tests must include both a positive definition case (NuGet) and a negative case where an incident sentence merely calls something a vulnerability (Fragnesia/XFRM), plus deduplication and four-line limits.
+
 ## 1. Product mission
 
 Build and maintain a reliable, clear, technically useful **Global Cyber Intelligence Command Center** for security practitioners. It should turn trustworthy public cyber sources into actionable, evidence-linked intelligence about vulnerabilities, active exploitation, threats, detection opportunities and cybersecurity industry developments.
