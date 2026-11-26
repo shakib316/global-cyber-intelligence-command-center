@@ -2,6 +2,23 @@
 
 **Status:** Master standard. Apply to every subsequent daily briefing, dashboard/business-news update and GitHub report. This supersedes inconsistent formatting in older drafts. Use 23 November 2026 as the visual reference for the threat table and concise threat write-ups; keep facts current and never copy stale content.
 
+## Mandatory global item format — applies everywhere
+
+Apply this exact six-part structure to every threat, vulnerability, advisory, incident and cybersecurity business/industry news item in dashboard cards, daily reports, KEV views and generated intelligence:
+
+1. **Title**
+2. **Labels** — include only labels needed to identify status, source, date, CVE or category.
+3. **Technology background**
+   - **What is it?**
+   - **What does it do?**
+   - State only facts explicitly supported by reviewed, source-linked material. If the source does not establish the technology's purpose/function, say **Not established in reviewed sources**. Never infer capabilities from a product name, headline, vendor, CVE mapping or general industry knowledge.
+   - For non-technology business developments, state **Not applicable** rather than inventing a technology description.
+4. **Technical details** — no more than four concise lines/sentences, with only source-supported facts.
+5. **Remediation status** — use the evidence states below for vulnerabilities/threats. For business news, state **Not applicable — business/industry development**.
+6. **Sources** — no more than three direct, relevant links; prefer primary sources.
+
+This global six-part format supersedes older per-card/per-item layouts and longer narrative templates below. It does not authorize removal of useful detection-query libraries, source-health information, collection metadata or other standalone dashboard functions; those remain separate product-level resources, not extra sections inside an intelligence item.
+
 ## 1. Reader and editorial principles
 - Write for a Security Engineer with 7 years' experience across SIEM/SOAR, Google SecOps, Splunk, Microsoft Sentinel, detection engineering, cloud security and incident response.
 - Make the briefing concise, technically useful and scannable. Use short, consistent labels, compact paragraphs, bullets and tables. Avoid generic padding, vague remediation, repeated facts and unexplained acronyms.
