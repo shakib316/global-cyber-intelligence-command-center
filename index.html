@@ -759,53 +759,15 @@ function conciseExcerpt(value,limit=900){
  return cut.slice(0,boundary>limit*.55?boundary+1:limit).trim()+" …";
 }
 const descriptionBlock=(label,value)=>{const clean=cleanCopy(value);return clean?'<div class="description-block"><span class="field-label">'+esc(label)+'</span><p>'+esc(clean)+'</p></div>':""};
-function inferTechnologyContext(x){
- const hay=[x?.title,x?.summary,x?.details,x?.vendorProject,x?.product,(x?.companies||[]).join(" ")].filter(Boolean).join(" ");
- const glossary=[
-  [/\b1password\b/i,"1Password","A password manager.","It securely stores passwords, passkeys and other sensitive information."],
-  [/\bdrupal\b/i,"Drupal","A content management system (CMS) for websites.","It helps organisations create, manage and publish website content."],
-  [/\blibpcap\b/i,"libpcap","A software library for capturing network packets.","It lets network and security tools inspect traffic for monitoring, troubleshooting and analysis."],
-  [/\bopenssl\b/i,"OpenSSL","A software toolkit for cryptography and secure connections.","It provides encryption, certificate and TLS functions used by many applications."],
-  [/\bwordpress\b/i,"WordPress","A content management system (CMS).","It lets site owners publish and manage website content, themes and plugins."],
-  [/\bapache(?: http server)?\b/i,"Apache HTTP Server","Web-server software.","It receives web requests and delivers websites and web applications."],
-  [/\bnginx\b/i,"NGINX","Web-server and reverse-proxy software.","It serves websites and routes traffic to application servers."],
-  [/\bfortios\b|\bfortigate\b/i,"Fortinet FortiOS / FortiGate","Network security software used in Fortinet firewalls.","It controls network traffic and provides firewall, VPN and other security functions."],
-  [/\bpan-os\b/i,"Palo Alto Networks PAN-OS","The operating system used by Palo Alto Networks firewalls.","It controls firewall policy and network traffic inspection."],
-  [/\bcisco ios xe\b/i,"Cisco IOS XE","The operating system used by many Cisco network devices.","It manages routing, switching and network-device features."],
-  [/\bvmware vcenter\b|\bvcenter server\b/i,"VMware vCenter Server","A management platform for VMware virtual infrastructure.","It lets administrators manage virtual machines, hosts and clusters."],
-  [/\bkubernetes\b|\bk8s\b/i,"Kubernetes","A platform for managing containerised applications.","It deploys, scales and maintains applications running in containers."],
-  [/\bdocker\b/i,"Docker","A platform and toolset for software containers.","It packages applications with dependencies so they run consistently."],
-  [/\bwindows\b/i,"Microsoft Windows","A desktop and server operating system.","It runs applications and manages devices, users, files and system services."],
-  [/\bexchange server\b|\bmicrosoft exchange\b/i,"Microsoft Exchange Server","Email and calendaring server software.","It provides organisations with email, calendars and contacts."],
-  [/\bsharepoint\b/i,"Microsoft SharePoint","A collaboration and document-management platform.","It helps teams store, share and manage documents and intranet content."],
-  [/\bchrome\b/i,"Google Chrome","A web browser.","It lets people access websites and run web applications."],
-  [/\bfirefox\b/i,"Mozilla Firefox","A web browser.","It lets people access websites and run web applications."],
-  [/\blinux kernel\b|\bkernel\b/i,"Linux kernel","The core of the Linux operating system.","It manages hardware, memory, processes and communication between software and devices."],
-  [/\bubuntu\b|\busn-\d{4}-\d+\b/i,"Ubuntu Linux","A Linux operating system distributed by Canonical.","It runs servers, desktops and cloud workloads. USN identifiers point to Ubuntu security notices and package updates."],
-  [/\bglibc\b/i,"GNU C Library (glibc)","A core library used by many Linux programs.","It provides common functions that applications use to interact with the operating system."],
-  [/\blibxml2\b/i,"libxml2","A software library for processing XML documents.","It lets applications parse and work with XML data."],
-  [/\bphp\b/i,"PHP","A programming language commonly used for websites and web applications.","It runs server-side application code that handles web requests."],
-  [/\bpostgres(?:ql)?\b/i,"PostgreSQL","An open-source relational database.","It stores structured application data and lets software query and update it."],
-  [/\bmysql\b/i,"MySQL","A relational database system.","It stores structured data used by websites and business applications."],
-  [/\bredis\b/i,"Redis","An in-memory data store.","Applications use it for caching, fast lookups, queues and temporary data."],
-  [/\bsplunk\b/i,"Splunk","A platform for collecting, searching and analysing machine-generated data.","Security and IT teams use it to investigate logs, monitor systems and build alerts."],
-  [/\bcrowdstrike\b/i,"CrowdStrike","A cybersecurity company known for endpoint protection and threat detection.","Its security platform helps organisations monitor endpoints and investigate threats."],
-  [/\bzscaler\b/i,"Zscaler","A cloud security company providing secure access and web protection.","Its services inspect and control user access to internet and private applications."],
-  [/\bfortinet\b/i,"Fortinet","A cybersecurity company that makes network security products.","Its portfolio includes firewalls, secure networking and endpoint security tools."],
-  [/\bpalo alto networks\b/i,"Palo Alto Networks","A cybersecurity company providing network, cloud and security operations products.","Its platforms help organisations protect networks, cloud workloads and endpoints."],
-  [/\bmicrosoft\b/i,"Microsoft","A technology company that makes operating systems, cloud services and business software.","Its products include Windows, Microsoft 365, Azure and identity/security services."],
-  [/\bgoogle\b|\bmandiant\b/i,"Google / Google Cloud","A technology company providing internet, cloud and security services.","Its security products and research help organisations protect cloud services and workloads."],
-  [/\bcloudflare\b/i,"Cloudflare","An internet infrastructure and security company.","Its services help protect and deliver websites, applications and network traffic."]
- ];
- for(const [pattern,name,what,purpose] of glossary){if(pattern.test(hay)){const usn=hay.match(/\bUSN-\d{4}-\d+\b/i);return {status:"identified",name,what_is_it:what,what_it_does:purpose,identifier_note:usn?usn[0].toUpperCase()+" is an Ubuntu Security Notice identifier, not a separate product.":""};}}
- const candidate=String(x?.product||x?.vendorProject||"").trim();
- if(candidate)return {status:"limited",name:candidate,what_is_it:"The source identifies this as an affected product or component, but the available evidence is not enough to describe its exact role reliably.",what_it_does:"Check the linked vendor advisory for the product's purpose and confirm the affected product and version in your environment."};
- if(/\bUSN-\d{4}-\d+\b/i.test(hay))return {status:"identified",name:"Ubuntu Security Notice",what_is_it:"An Ubuntu Security Notice (USN) is Canonical's identifier for a security advisory affecting Ubuntu software.",what_it_does:"It tells Ubuntu users which package or system component has a security issue and where to find update guidance."};
- return {status:"not_identified",name:"Technology not confidently identified",what_is_it:"The collected headline and source text do not identify a specific product or component clearly enough for a reliable explanation.",what_it_does:"Open the linked source and confirm the affected product, component and version before deciding whether your systems are affected."};
-}
+const TECHNOLOGY_CONTEXT_FALLBACK="Technology details could not be independently verified from the available sources.";
+function contextField(value){const v=cleanCopy(value||"");return v||TECHNOLOGY_CONTEXT_FALLBACK;}
 function technologyContextBlock(x){
- const c=x?.technology_context||inferTechnologyContext(x);
- return '<section class="card-section technology-context"><h5>Technology background</h5><div class="description-block"><span class="field-label">What is it?</span><p>'+esc(cleanCopy(c.what_is_it||"Not established from the available source."))+'</p></div><div class="description-block"><span class="field-label">What does it do?</span><p>'+esc(cleanCopy(c.what_it_does||"Not established from the available source."))+'</p></div></section>';
+ const c=x?.technology_context&&typeof x.technology_context==="object"?x.technology_context:{};
+ return '<section class="card-section technology-context"><h5>Technology background</h5><div class="description-block"><span class="field-label">What is it?</span><p>'+esc(contextField(c.what_is_it))+'</p></div><div class="description-block"><span class="field-label">What does it do?</span><p>'+esc(contextField(c.what_it_does))+'</p></div></section>';
+}
+function businessContextBlock(x){
+ const c=x?.business_context&&typeof x.business_context==="object"?x.business_context:{};
+ return '<section class="card-section technology-context business-context"><h5>Company / product background</h5><div class="description-block"><span class="field-label">What is it?</span><p>'+esc(contextField(c.what_is_it))+'</p></div><div class="description-block"><span class="field-label">What does it do?</span><p>'+esc(contextField(c.what_it_does))+'</p></div></section>';
 }
 function technicalDetailsBlock(value){
  const clean=cleanCopy(value);
@@ -992,7 +954,7 @@ function businessSignificance(x){
 }
 function businessCard(x){
  const details=cleanCopy(x.details||x.summary||"");
- return '<article class="threat intel-card"><h4 class="intel-title">'+esc(x.title)+'</h4><div class="label-row">'+tag(humanize(x.category||"Market update"),"blue")+'</div>'+technologyContextBlock(x)+technicalDetailsBlock(conciseExcerpt(details,650))+remediationBlock(x,"business")+sourceLinksBlock(x)+'</article>';
+ return '<article class="threat intel-card"><h4 class="intel-title">'+esc(x.title)+'</h4><div class="label-row">'+tag(humanize(x.category||"Market update"),"blue")+'</div>'+businessContextBlock(x)+technicalDetailsBlock(conciseExcerpt(details,650))+remediationBlock(x,"business")+sourceLinksBlock(x)+'</article>';
 }
 function renderBusiness(){const q=$("businessSearch").value.toLowerCase(),cat=$("businessCategory").value,status=$("businessStatus").value,detail=$("businessDetail").value;const list=BUSINESS.filter(x=>(!cat||x.category===cat)&&(!status||x.deal_status===status)&&(!detail||(detail==="enriched"?x.enrichment_status==="enriched":x.enrichment_status!=="enriched"))&&(!q||[x.title,x.summary,x.details,x.publisher,(x.companies||[]).join(" ")].join(" ").toLowerCase().includes(q)));const enriched=list.filter(x=>x.enrichment_status==="enriched").length;const newest=BUSINESS.map(x=>x.published).filter(Boolean).sort().pop();const collected=DATA?.retrieved_at_ist||DATA?.retrieved_at||"timestamp unavailable";const bh=(DATA?.source_health||[]).filter(x=>x.stream==="business");const bhOk=bh.filter(x=>x.status==="success").length;const freshness="Collected "+collected+" · newest event "+fmt(newest)+" · business feeds "+bhOk+"/"+bh.length+" healthy";$("businessCount").textContent=list.length+" of "+BUSINESS.length+" developments · "+freshness+" · "+enriched+" full-page / "+(list.length-enriched)+" feed-only";const counts={};BUSINESS.forEach(x=>counts[x.category]=(counts[x.category]||0)+1);$("businessSummary").innerHTML=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([k,v])=>'<div class="kpi"><span class="label">'+esc(k.toUpperCase())+'</span><strong>'+v+'</strong><span class="hint">Collected developments</span></div>').join("");const pages=Math.max(1,Math.ceil(list.length/BUSINESS_PAGE_SIZE));businessPage=Math.min(businessPage,pages-1);const rows=list.slice(businessPage*BUSINESS_PAGE_SIZE,(businessPage+1)*BUSINESS_PAGE_SIZE);$("businessPage").textContent="Page "+(businessPage+1)+" of "+pages;$("businessPrev").disabled=businessPage===0;$("businessNext").disabled=businessPage>=pages-1;$("businessList").innerHTML=rows.length?rows.map(businessCard).join(""):'<div class="empty">No business developments match these filters. Check source health or broaden the search.</div>'}
 function renderThreats(){if(!DATA)return;const q=$("threatSearch").value.toLowerCase(),topic=$("topicFilter").value,source=$("sourceFilter").value,priority=$("priorityFilter").value;const list=ALL.filter(x=>(!topic||(x.topics||[]).includes(topic))&&(!source||x.source===source)&&(!priority||String(x.priority||"").toLowerCase().includes(priority))&&(!q||[x.title,x.source,x.summary,x.details,x.remediation_guidance,(x.cves||[]).join(" "),(x.topics||[]).join(" ")].join(" ").toLowerCase().includes(q)));$("threatCount").textContent=list.length+" of "+ALL.length+" items";const pages=Math.max(1,Math.ceil(list.length/PAGE_SIZE));threatPage=Math.min(threatPage,pages-1);const rows=list.slice(threatPage*PAGE_SIZE,(threatPage+1)*PAGE_SIZE);$("threatPage").textContent="Page "+(threatPage+1)+" of "+pages;$("threatPrev").disabled=threatPage===0;$("threatNext").disabled=threatPage>=pages-1;$("threatList").innerHTML=rows.length?rows.map(itemHtml).join(""):'<div class="empty">No matching intelligence items.</div>'}
