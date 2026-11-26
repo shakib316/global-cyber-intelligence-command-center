@@ -376,6 +376,50 @@ def is_promotional_text(value):
     return bool(PROMOTIONAL_TEXT.search(str(value or "").strip()))
 
 
+def report_technology_background(record, kind="threat"):
+    """Return only explicit, source-linked technology background; never infer product function."""
+    background = record.get("technology_background")
+    if (isinstance(background, dict) and background.get("verified") is True
+            and background.get("what_is_it") and background.get("what_does_it_do")
+            and any(isinstance(u, str) and u.startswith("https://") for u in background.get("source_urls", []))):
+        return ("What is it? " + str(background["what_is_it"]) + "\\n"
+                + "What does it do? " + str(background["what_does_it"]))
+    if kind == "kev":
+        product = " ".join(str(record.get(k) or "").strip() for k in ("vendorProject", "product")).strip()
+        return ("What is it? CISA KEV identifies " + (product or "an affected product")
+                + " as affected; the catalogue entry does not establish the product's function.\\n"
+                + "What does it do? Not stated in the reviewed CISA record; no product function is inferred.")
+    if kind == "business" and record.get("category") != "Products & launches":
+        return ("What is it? Not applicable to this business/industry development.\\n"
+                + "What does it do? Not applicable; this is not a technology-function advisory.")
+    return ("What is it? Not established in the reviewed source material.\\n"
+            + "What does it do? Not established in the reviewed source material; no capability is inferred from a headline, vendor name or CVE association.")
+
+def report_technical_details(record, limit=4):
+    """Keep source-derived technical detail to at most four concise sentences."""
+    value = str(record.get("details") or record.get("summary") or "").strip()
+    if not value:
+        return "Not disclosed in the reviewed source material."
+    sentences = [x.strip() for x in re.split(r"(?<=[.!?])\\s+", re.sub(r"\\s+", " ", value)) if x.strip()]
+    return "\\n".join(x[:257].rstrip() + ("…" if len(x) > 260 else "") for x in sentences[:limit])
+
+def report_sources(record, kind="threat"):
+    """Return no more than three distinct HTTPS source links."""
+    urls = []
+    def add(url):
+        if isinstance(url, str) and url.startswith("https://") and url not in urls and len(urls) < 3:
+            urls.append(url)
+    add(record.get("canonical_url") or record.get("url"))
+    for ref in (record.get("vendor_remediation") or []) + (record.get("vendor_references") or []):
+        add(ref.get("source_url") or ref.get("url"))
+    for url in record.get("related_urls") or []:
+        add(url)
+    if kind == "kev":
+        add("https://nvd.nist.gov/vuln/detail/" + str(record.get("cveID") or ""))
+        add(record.get("notes"))
+    return urls
+
+
 def normalize_story_text(value):
     return re.sub(r"[^a-z0-9]+"," ",str(value or "").lower()).strip()
 
@@ -896,22 +940,21 @@ def main():
     lines += ["","## CISA KEV additions — last 7 days",""]
     if recentkev:
         for v in recentkev[:40]:
-            lines.append(f"- **{v.get('cveID','CVE unavailable')} — {v.get('vulnerabilityName','Name unavailable')}** | {v.get('vendorProject','unknown')} / {v.get('product','unknown')} | added {v.get('dateAdded','unknown')} | due {v.get('dueDate','not stated')} | [CISA record]({v.get('notes','https://www.cisa.gov/known-exploited-vulnerabilities-catalog')})")
-            lines.append("  - Fix / remediation: "+kev_remediation_text(v))
-            lines.append("  - EPSS context: "+format_epss_context(v)+" — FIRST.org; not an asset-specific risk score")
-            lines.append("  - CVSS context: "+format_cvss_context(v)+" — NVD technical severity, not an asset-specific risk score")
-            for ref in v.get("vendor_remediation",[]):
-                lines.append("  - Vendor evidence: ["+str(ref.get("source_label") or "Vendor advisory")+"]("+str(ref.get("source_url") or "")+") — analyst review required")
+            lines += [f"### {v.get('cveID','CVE unavailable')} — {v.get('vulnerabilityName','Name unavailable')}",
+                f"- Labels: {v.get('vendorProject','Vendor not disclosed')} · {v.get('product','Product not disclosed')} · Added {v.get('dateAdded','unknown')} · Due {v.get('dueDate','not stated')}",
+                "- Technology background: " + report_technology_background(v, "kev"),
+                "- Technical details: " + report_technical_details({"details": " ".join([str(v.get("shortDescription") or ""), "CVSS: "+format_cvss_context(v), "EPSS: "+format_epss_context(v)])}),
+                "- Remediation status: " + kev_remediation_text(v),
+                "- Sources: " + " · ".join(f"[Source {i+1}]({u})" for i,u in enumerate(report_sources(v,"kev"))), ""]
     else:lines.append("- No additions returned, or the feed failed; check source health.")
     lines += ["","## Advisories, campaigns and research — last 72 hours",""]
     if items:
-        for x in items[:100]:lines += [f"### {x['title']}",f"- Source: {x['source']} | Published: {x.get('published') or 'date not exposed in index'} | Detail enrichment: {x.get('enrichment_status','feed summary only')}",
-            f"- CVEs: {', '.join(x['cves']) or 'none extracted'} | Topic signals: {', '.join(x['topics']) or 'analyst review required'}",
-            f"- Summary: {x.get('summary','')[:900]}",
-            f"- Technical details: {x.get('details') or x.get('summary','')[:900]}",
-            f"- Fix / remediation: {x.get('remediation_guidance') or x.get('remediation_status') or 'Fix status unknown; check the linked vendor advisory for updates.'}",
-            f"- EPSS context: {format_epss_context(x)} — FIRST.org; not an asset-specific risk score",
-            f"- [Open source item]({x['url']})",""]
+        for x in items[:100]:lines += [f"### {x['title']}",
+            "- Labels: " + " · ".join(z for z in [x.get("source"), x.get("published"), ", ".join(x.get("cves", [])) or None] if z),
+            "- Technology background: " + report_technology_background(x, "threat"),
+            "- Technical details: " + report_technical_details({"details": " ".join([str(x.get("details") or x.get("summary") or ""), "CVSS: "+format_cvss_context(x), "EPSS: "+format_epss_context(x)])}),
+            "- Remediation status: " + str(x.get("remediation_guidance") or x.get("remediation_status") or "NOT ESTABLISHED — no specific remediation confirmed in reviewed material."),
+            "- Sources: " + " · ".join(f"[Source {i+1}]({u})" for i,u in enumerate(report_sources(x,"threat"))), ""]
     else:lines.append("No dated items returned. This does not mean no threats occurred; inspect source health.")
     business_health=[x for x in health if x.get("stream")=="business"]
     business_ok=sum(x.get("status")=="success" for x in business_health)
@@ -922,7 +965,12 @@ def main():
         lines += ["- Feed issues: "+"; ".join(x["source"]+" — "+str(x.get("error") or "unavailable") for x in failed_business)]
     if business_items:
         for x in business_items[:60]:
-            lines += ["### "+x["title"],"- Category: "+x["category"]+" | Deal stage: "+x["deal_status"]+" | Publisher: "+x["publisher"]+" | Published: "+(x.get("published") or "unknown")+" | Detail enrichment: "+x.get("enrichment_status","feed summary only"),"- Summary: "+x.get("summary","")[:900],"- Business background / implications: "+(x.get("details") or x.get("summary",""))[:2500],"- Action: Not applicable as a vulnerability fix; verify deal stage and material claims against company announcements or filings.","- Evidence: [Original report]("+x["url"]+")",""]
+            lines += ["### "+x["title"],
+                "- Labels: "+ " · ".join(z for z in [x.get("category"),x.get("deal_status"),x.get("publisher"),x.get("published")] if z),
+                "- Technology background: " + report_technology_background(x, "business"),
+                "- Technical details: " + report_technical_details(x),
+                "- Remediation status: Not applicable — business/industry development, not a vulnerability advisory.",
+                "- Sources: " + " · ".join(f"[Source {i+1}]({u})" for i,u in enumerate(report_sources(x,"business"))), ""]
     else:lines.append("- No business items collected; check business feed health.")
     lines += ["","## IOC candidates — analyst verification required",""]
     if iocs:
