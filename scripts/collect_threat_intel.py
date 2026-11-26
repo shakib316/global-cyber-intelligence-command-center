@@ -374,6 +374,9 @@ class ArticleText(HTMLParser):
         if t=="a" and self.anchor is not None:
             link=self.anchor;self.anchor=None;link["text"]=re.sub(r"\s+"," ",link["text"]).strip()
             if link["href"]:self.links.append(link)
+        if t=="tr" and self.table_row is not None:
+            row=re.sub(r"\\s+"," "," ".join(self.table_row)).strip();self.table_row=None
+            if len(row)>=25 and row not in self.paragraphs:self.paragraphs.append(row)
         if t in ("p","li") and self.capture:
             value=re.sub(r"\s+"," "," ".join(self.buf)).strip()
             if len(value)>=55 and value not in self.paragraphs:
