@@ -40,9 +40,9 @@ if health_state_path.exists():
         failures = record.get("consecutive_failures", 0)
         if not isinstance(failures, int) or failures < 0:
             raise SystemExit("Invalid consecutive failure counter for " + str(name))
-required = ["criticalVulnList", "prepareBriefing", "businessList", "queryGrid", "loadQueries", "reportPicker", "loadReportPath", "threatPrev", "businessPrev", "kevPrev", "cisa_kev_catalog", "CVERecord?id=", "kevStatus", "queriesLoaded", "const groups={}", "globalSearchPanel", "globalSearch", "globalScope", "kevSearch", "kevVendor", "kevDueFilter", "priorityFilter", "v.vulnerabilityName", "function globalSearch", "function filteredKev", "const remediationBlock=", "oldestReport", "intel\\/daily", "remediation_guidance", "No specific fix identified in retrieved source text", "function kevHtml", "function kevAction", "function itemHtml", "function businessCard", "function businessSignificance", "vendor_remediation", "LINKED VENDOR ADVISORY", "What to verify next", "businessDetail", "businessClear", "knownRansomwareCampaignUse", "Evidence ", "last_success_at", "last_attempt_at", "duration_ms", "consecutive_failures", "collection_result", "health_state"]
+required = ["criticalVulnList", "prepareBriefing", "businessList", "queryGrid", "loadQueries", "reportPicker", "loadReportPath", "threatPrev", "businessPrev", "kevPrev", "cisa_kev_catalog", "CVERecord?id=", "kevStatus", "queriesLoaded", "const groups={}", "globalSearchPanel", "globalSearch", "globalScope", "kevSearch", "kevVendor", "kevDueFilter", "priorityFilter", "v.vulnerabilityName", "function globalSearch", "function filteredKev", "const remediationBlock=", "oldestReport", "intel\\/daily", "remediation_guidance", "No specific remediation was established in the reviewed material", "function kevHtml", "function kevAction", "function itemHtml", "function businessCard", "function businessSignificance", "vendor_remediation", "SPECIFIC ACTION — VERIFY",  "businessDetail", "businessClear", "knownRansomwareCampaignUse", "Evidence ", "last_success_at", "last_attempt_at", "duration_ms", "consecutive_failures", "collection_result", "health_state"]
 required.extend(["async function fetchWithRetry", "X-RateLimit-Remaining", "Retry-After", "fetchWithRetry(API+", "fetchWithRetry(\"https://raw.githubusercontent.com/"])
-if "CANDIDATE FIXED RELEASE · NOT VERIFIED" not in html or "candidate_fixed_releases" not in html:
+if "CANDIDATE RELEASE — VERIFY" not in html or "candidate_fixed_releases" not in html:
     raise SystemExit("KEV remediation panel does not display unverified fixed-release candidates")
 missing = [x for x in required if x not in html]
 if missing:
@@ -58,14 +58,23 @@ ids = re.findall(r'\bid="([^"]+)"', html)
 duplicates = sorted({x for x in ids if ids.count(x) > 1})
 if duplicates:
     raise SystemExit("Dashboard contains duplicate HTML IDs: " + ", ".join(duplicates))
-if 'function itemHtml(x)' not in html or 'remediationBlock(x,"threat")' not in html:
+if "technologyBackgroundBlock" not in html or "technicalDetailsBlock" not in html or "sourceLinksBlock" not in html:
+    raise SystemExit("Dashboard is missing the global six-section intelligence card helpers")
+if "Not established in the reviewed source material" not in html or "No product-function description has been inferred" not in html:
+    raise SystemExit("Dashboard technology-background fallback must explicitly prevent unsupported product-function claims")
+if "slice(0,4)" not in html or "urls.length<3" not in html:
+    raise SystemExit("Dashboard must cap technical details at four lines and source links at three")
+collector = (root / "scripts/collect_threat_intel.py").read_text(encoding="utf-8")
+if "sentences[:limit]" not in collector or "len(urls) < 3" not in collector or "report_technology_background" not in collector:
+    raise SystemExit("Generated reports must enforce four technical-detail sentences, three source links and source-grounded technology background")
+if "function itemHtml(x)" not in html or 'remediationBlock(x,"threat")' not in html:
     raise SystemExit("Threat cards do not show adjacent remediation guidance")
 if 'name==="briefing"' not in html or 'loadReportPath(currentReportPath)' not in html:
     raise SystemExit("Full daily report is not lazy-loaded on briefing navigation")
 if len(re.findall(r"function itemHtml\(x\)", html)) != 1:
     raise SystemExit("Dashboard must have exactly one threat-card renderer")
-if 'descriptionBlock("What to verify next",businessSignificance(x))' not in html or 'remediationBlock(x,"business")' in html:
-    raise SystemExit("Business cards must show useful verification context without irrelevant vulnerability remediation")
+if 'technologyBackgroundBlock(x,"business")' not in html or 'descriptionBlock("Remediation status","Not applicable — business/industry development, not a vulnerability advisory.")' not in html:
+    raise SystemExit("Business cards must follow the global six-section format and mark remediation not applicable")
 if "function cleanCopy(value)" not in html or "Compact reading layout" not in html:
     raise SystemExit("Dashboard description cleanup or compact reading styles are missing")
 if "function epssOverview(v)" not in html or html.count("epssOverview(v)") != 2:
@@ -74,8 +83,8 @@ if "function cvssOverview(v)" not in html or html.count("cvssOverview(v)") != 2:
     raise SystemExit("CVSS evidence must be rendered only in the overview critical vulnerability watch")
 if 'function kevHtml(v)' not in html or 'v.requiredAction' not in html:
     raise SystemExit("KEV remediation column is missing")
-if 'function kevAction(v)' not in html or 'const a=kevAction(v)' not in html or 'kevStatus(v),a.specific?"green":"amber"' not in html:
-    raise SystemExit("Critical watch and KEV previews must use the shared specific-remediation guard")
+if 'function kevAction(v)' not in html or 'const action=kevAction(v)' not in html or 'descriptionBlock("Remediation status",action.text)' not in html:
+    raise SystemExit("KEV entries must use the shared evidence-based remediation status")
 critical_start = html.find('$("criticalVulnList").innerHTML=')
 critical_end = html.find('$("kevPreview").innerHTML=', critical_start)
 if critical_start < 0 or critical_end < 0 or 'kevAction(v)' not in html[critical_start:critical_end] or 'v.requiredAction' in html[critical_start:critical_end]:
@@ -468,10 +477,10 @@ daily_report_path = root / "intel" / pointer.get("report", "")
 if not daily_report_path.exists():
     raise SystemExit("Latest daily intelligence report is missing")
 daily_report = daily_report_path.read_text(encoding="utf-8")
-if "Fix / remediation:" not in daily_report or "Business background / implications:" not in daily_report:
-    raise SystemExit("Daily report is missing adjacent threat remediation or business context")
-if 'f"- EPSS context: {format_epss_context(x)} — FIRST.org; not an asset-specific risk score",' not in collector_source:
-    raise SystemExit("EPSS context must be emitted as a separate daily-report list item")
+if not all(token in collector_source for token in ('"- Labels: "', '"- Technology background: "', '"- Technical details: "', '"- Remediation status: "', '"- Sources: "')):
+    raise SystemExit("Collector-generated threat, vulnerability and business items must use the global six-section format")
+if "format_epss_context(x)" not in collector_source or "format_cvss_context(v)" not in collector_source:
+    raise SystemExit("CVSS and EPSS context must remain available in vulnerability labels")
 snapshot_path = root / "intel" / pointer["snapshot"]
 if not snapshot_path.exists():
     raise SystemExit("Latest intelligence snapshot is missing: " + str(snapshot_path))
