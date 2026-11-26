@@ -339,6 +339,19 @@ if "No patch" in str(ledger[0]["fields"]["fix_or_mitigation"]["value"]):
 if "def attach_cve_verification(records, kev_records=None)" not in collector_source or "CVE evidence ledger" not in collector_source:
     raise SystemExit("Collector does not emit the global per-CVE evidence ledger")
 
+
+# Reviewed primary-source override register must retain the key corrections for the 25 Nov KEV story.
+override_data=json.loads((root/"intel/cve-verification-overrides.json").read_text(encoding="utf-8"))
+override_rows=override_data["records"]
+if override_rows["CVE-2026-103406"]["product"]!="HPE Juniper Session Smart Conductor" or not override_rows["CVE-2026-103406"]["mapping_flag"]:
+    raise SystemExit("Juniper CVE-to-product mismatch is not explicitly flagged")
+if override_rows["CVE-2026-133303"]["cvss"]["score"]!=9.0 or override_rows["CVE-2026-133303"]["cvss"]["severity"]!="CRITICAL":
+    raise SystemExit("MiCollab CVE-2026-133303 must retain its vendor-confirmed CVSS 9.0 Critical score")
+if "patch 3.3" not in override_rows["CVE-2023-25914"]["fix"] or "patch 4.2" not in override_rows["CVE-2025-41450"]["fix"]:
+    raise SystemExit("Danfoss vendor patch versions are missing from the reviewed register")
+if not all(x.get("vendor_url","").startswith("https://") for x in override_rows.values()):
+    raise SystemExit("Reviewed CVE override is missing a primary vendor source URL")
+
 # CVEs must be re-extracted after full-page enrichment, including identifiers of variable length.
 cve_example = "Article text: affected components include CVE-2026-129538, CVE-2026-95325 and CVE-2026-100000001."
 if collector.extract_cves(cve_example) != ["CVE-2026-100000001", "CVE-2026-129538", "CVE-2026-95325"]:
