@@ -1115,7 +1115,7 @@ def main():
     if items:
         for x in items[:100]:lines += [f"### {x['title']}",f"- Source: {x['source']} | Published: {x.get('published') or 'date not exposed in index'} | Detail enrichment: {x.get('enrichment_status','feed summary only')}",
             f"- CVEs: {', '.join(x['cves']) or 'none extracted'} | Topic signals: {', '.join(x['topics']) or 'analyst review required'}",
-            f"- Summary: {x.get('summary','')[:900]}",
+            f"- Summary: {x.get('technical_summary') or 'A concise technical summary could not be extracted; review the linked source.'}",
             f"- Technical details: {x.get('details') or x.get('summary','')[:900]}",
             f"- What is it? {x.get('technology_context',{}).get('what_is_it','Technology context not available.')}",
             f"- What does it do? {x.get('technology_context',{}).get('what_it_does','Check the linked source for product purpose.')}",
