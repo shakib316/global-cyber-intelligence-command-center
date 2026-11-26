@@ -62,6 +62,11 @@ if "technologyBackgroundBlock" not in html or "technicalDetailsBlock" not in htm
     raise SystemExit("Dashboard is missing the global six-section intelligence card helpers")
 if "Not established in the reviewed source material" not in html or "No product-function description has been inferred" not in html:
     raise SystemExit("Dashboard technology-background fallback must explicitly prevent unsupported product-function claims")
+if "slice(0,4)" not in html or "urls.length<3" not in html:
+    raise SystemExit("Dashboard must cap technical details at four lines and source links at three")
+collector = (root / "scripts/collect_threat_intel.py").read_text(encoding="utf-8")
+if "sentences[:limit]" not in collector or "len(urls) < 3" not in collector or "report_technology_background" not in collector:
+    raise SystemExit("Generated reports must enforce four technical-detail sentences, three source links and source-grounded technology background")
 if "function itemHtml(x)" not in html or 'remediationBlock(x,"threat")' not in html:
     raise SystemExit("Threat cards do not show adjacent remediation guidance")
 if 'name==="briefing"' not in html or 'loadReportPath(currentReportPath)' not in html:
