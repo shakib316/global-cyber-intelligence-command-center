@@ -41,18 +41,18 @@ jobs:
                       output.append(char)
                       if escaped:
                           escaped = False
-                      elif char == "\\":
+                      elif char == chr(92):
                           escaped = True
                       elif char == '"':
                           in_string = False
                   elif char == '"':
                       in_string = True
                       output.append(char)
-                  elif char not in " \\t\\r\\n":
+                  elif not char.isspace():
                       output.append(char)
               if in_string or escaped:
                   raise ValueError("Unterminated JSON string")
-              return "".join(output).rstrip() + "\\n"
+              return "".join(output).rstrip() + chr(10)
 
           for path in files:
               original = path.read_text(encoding="utf-8")
