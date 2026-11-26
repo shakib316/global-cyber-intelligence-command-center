@@ -483,6 +483,29 @@ TECHNOLOGY_GLOSSARY = [
     (r"\bakamai\b", "Akamai", "An internet infrastructure and security company.", "Its services help deliver web content and protect websites and applications."),
 ]
 
+def technology_context_consistency(title="", summary="", details="", vendor="", product="", context=None):
+    """Flag a broad glossary match when a more specific technology is named."""
+    context = context if isinstance(context, dict) else {}
+    evidence = " ".join(str(x or "") for x in (title, summary, details, vendor, product)).lower()
+    name = str(context.get("name", "")).lower()
+    explanation = (str(context.get("what_is_it", "")) + " " + str(context.get("what_it_does", ""))).lower()
+    specific = (
+        (r"\\bnuget\\b|\\.net", "nuget"),
+        (r"\\blibpcap\\b", "libpcap"),
+        (r"\\bopenssl\\b", "openssl"),
+        (r"\\bkubernetes\\b|\\bk8s\\b", "kubernetes"),
+        (r"\\bdocker\\b", "docker"),
+        (r"\\bdrupal\\b", "drupal"),
+    )
+    for pattern, expected in specific:
+        if re.search(pattern, evidence, re.I) and expected not in name and expected not in explanation:
+            return {"valid": False, "reason": "Specific technology '" + expected + "' conflicts with generic context '" + (name or "unnamed") + "'."}
+    if re.search(r"\\b(?:nuget|\\.net|libpcap|openssl|kubernetes|docker|drupal)\\b", evidence, re.I):
+        if "desktop and server operating system" in explanation or "manages devices, users, files and system services" in explanation:
+            return {"valid": False, "reason": "Generic operating-system explanation conflicts with a specifically named technology."}
+    return {"valid": True, "reason": "No deterministic technology-context conflict detected."}
+
+
 def describe_technology(title="", summary="", details="", vendor="", product="", companies=None):
     """Return short plain-English context without guessing when identification is weak."""
     text_blob = " ".join(str(x or "") for x in (title, summary, details, vendor, product, *(companies or [])))
