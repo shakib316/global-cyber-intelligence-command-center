@@ -444,11 +444,17 @@ def extract_technology_background(record):
 def report_technology_background(record, kind="threat"):
     """Return only explicit, source-linked technology background; never infer product function."""
     background = record.get("technology_background")
-    if (isinstance(background, dict) and background.get("verified") is True
-            and background.get("what_is_it") and background.get("what_does_it_do")
-            and any(isinstance(u, str) and u.startswith("https://") for u in background.get("source_urls", []))):
-        return ("What is it? " + str(background["what_is_it"]) + "\n"
-                + "What does it do? " + str(background["what_does_it"]))
+    if isinstance(background, dict):
+        what_is_it = background.get("what_is_it")
+        # Current collector schema uses what_does_it_do; accept the older
+        # what_does_it spelling too so older snapshots cannot crash reporting.
+        what_does_it = background.get("what_does_it_do") or background.get("what_does_it")
+        source_urls = background.get("source_urls", [])
+        if (background.get("verified") is True and what_is_it and what_does_it
+                and isinstance(source_urls, list)
+                and any(isinstance(u, str) and u.startswith("https://") for u in source_urls)):
+            return ("What is it? " + str(what_is_it) + "\n"
+                    + "What does it do? " + str(what_does_it))
     if kind == "kev":
         product = " ".join(str(record.get(k) or "").strip() for k in ("vendorProject", "product")).strip()
         return ("What is it? CISA KEV identifies " + (product or "an affected product")

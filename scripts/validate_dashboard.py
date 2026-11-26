@@ -131,6 +131,19 @@ if not tech_background or not tech_background.get("verified") or not tech_backgr
     raise SystemExit("Explicit source technology definition was not extracted with provenance")
 if "Linux kernel" not in tech_background["what_is_it"] or not tech_background["what_does_it_do"]:
     raise SystemExit("Technology background extraction returned incomplete fields")
+rendered_technology_background = collector.report_technology_background(
+    {"technology_background": tech_background}, "threat")
+if "What does it do? " + tech_background["what_does_it_do"] not in rendered_technology_background:
+    raise SystemExit("Technology background reporter failed to render the collector's what_does_it_do field")
+legacy_background = {
+    "verified": True,
+    "what_is_it": "Legacy technology definition.",
+    "what_does_it": "Legacy operational function.",
+    "source_urls": ["https://example.com/advisory"],
+}
+if "What does it do? Legacy operational function." not in collector.report_technology_background(
+        {"technology_background": legacy_background}, "threat"):
+    raise SystemExit("Technology background reporter is not backward-compatible with legacy records")
 article_parser = collector.ArticleText()
 article_parser.feed("<p>Jane Doe is a senior managing editor at Example News and worked as a teacher before starting a career in journalism.</p><table><tr><td>Ubuntu 24.04</td><td>linux-image-6.8.0-99</td><td>Fixed</td></tr></table>")
 if not any("Ubuntu 24.04" in row and "linux-image-6.8.0-99" in row for row in article_parser.paragraphs):
