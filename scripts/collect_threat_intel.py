@@ -840,7 +840,13 @@ def format_cvss_context(record):
     return states.get(record.get("cvss_status"),"CVSS not available / not applicable")
 
 def enrich_kev_records(records,max_workers=8):
-    """Follow vendor URLs supplied by CISA KEV for recent additions only."""
+    """Add source-backed technology context to KEV records and follow vendor URLs."""
+    for record in records:
+        title = " ".join(str(record.get(k) or "") for k in ("vulnerabilityName", "vendorProject", "product"))
+        details = str(record.get("shortDescription") or "")
+        context = {"title": title, "details": details, "url": ""}
+        record["technology_background"] = record.get("technology_background") or extract_technology_background(context)
+        record["technical_details"] = extract_technical_details(context, 4)
     tasks=[]
     for record in records:
         raw=str(record.get("notes") or "")
@@ -1068,7 +1074,7 @@ def main():
                 "- Technology background: " + report_technology_background(v, "kev"),
                 "- Technical details: " + report_technical_details({"details": str(v.get("shortDescription") or "")}),
                 "- Remediation status: " + kev_remediation_text(v),
-                "- Sources: " + " · ".join(f"[Source {i+1}]({u})" for i,u in enumerate(report_sources(v,"kev"))), ""]
+                "- Sources: " + " · ".join(f"[{urlparse(u).netloc}]({u})" for u in report_sources(v,"kev")), ""]
     else:lines.append("- No additions returned, or the feed failed; check source health.")
     lines += ["","## Advisories, campaigns and research — last 72 hours",""]
     if items:
@@ -1077,7 +1083,7 @@ def main():
             "- Technology background: " + report_technology_background(x, "threat"),
             "- Technical details: " + report_technical_details(x),
             "- Remediation status: " + str(x.get("remediation_guidance") or x.get("remediation_status") or "NOT ESTABLISHED — no specific remediation confirmed in reviewed material."),
-            "- Sources: " + " · ".join(f"[Source {i+1}]({u})" for i,u in enumerate(report_sources(x,"threat"))), ""]
+            "- Sources: " + " · ".join(f"[{urlparse(u).netloc}]({u})" for u in report_sources(x,"threat")), ""]
     else:lines.append("No dated items returned. This does not mean no threats occurred; inspect source health.")
     business_health=[x for x in health if x.get("stream")=="business"]
     business_ok=sum(x.get("status")=="success" for x in business_health)
@@ -1093,7 +1099,7 @@ def main():
                 "- Technology background: " + report_technology_background(x, "business"),
                 "- Technical details: " + report_technical_details(x),
                 "- Remediation status: Not applicable — business/industry development, not a vulnerability advisory.",
-                "- Sources: " + " · ".join(f"[Source {i+1}]({u})" for i,u in enumerate(report_sources(x,"business"))), ""]
+                "- Sources: " + " · ".join(f"[{urlparse(u).netloc}]({u})" for u in report_sources(x,"business")), ""]
     else:lines.append("- No business items collected; check business feed health.")
     lines += ["","## IOC candidates — analyst verification required",""]
     if iocs:
