@@ -656,7 +656,7 @@ def enrich_records(records,max_workers=10):
             item["details"]=page_details if len(page_details)>len(feed_summary) else (feed_summary or "No description was exposed by the feed or retrieved source page. Review the linked advisory for authoritative details.")
             resolved=result.get("resolved_url","")
             if resolved.startswith("https://") and urlparse(resolved).netloc.lower() not in ("news.google.com","www.google.com"):item["canonical_url"]=resolved
-            item["enrichment_status"]=result.get("status","unknown");item["enriched_at"]=STAMP; item["technology_background"]=item.get("technology_background") or extract_technology_background(item)
+            item["enrichment_status"]=result.get("status","unknown");item["enriched_at"]=STAMP; item["technology_background"]=item.get("technology_background") or extract_technology_background(item); item["technical_details"]=extract_technical_details(item,4)
             if "category" in item:
                 title_norm=normalize_story_text(item.get("title",""))
                 details_norm=normalize_story_text(item.get("details",""))
