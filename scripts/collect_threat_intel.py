@@ -420,8 +420,9 @@ TECHNOLOGY_BACKGROUND_CATALOG = [
 ]
 
 def _incident_context_sentence(sentences):
-    patterns = re.compile(r"\b(researchers? (?:identified|discovered|found|observed)|threat actors?|attackers?|the campaign|the attack|the flaw|the vulnerability|the malware|the packages?)\b", re.I)
-    return next((s for s in sentences if patterns.search(s) and len(s) >= 45), "")
+    patterns = re.compile(r"\b(researchers? (?:identified|discovered|found|observed)|threat actors?|attackers?|the campaign|the attack|the malware|the packages?)\b", re.I)
+    return next((s for s in sentences if patterns.search(s) and len(s) >= 45
+                 and not re.search(r"\b(?:vulnerability|security flaw|is a flaw|is an exploit)\b", s, re.I)), "")
 
 def extract_technology_background(record):
     """Build technology context only from reviewed article text or curated primary documentation."""
