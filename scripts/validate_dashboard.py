@@ -40,8 +40,8 @@ if health_state_path.exists():
         failures = record.get("consecutive_failures", 0)
         if not isinstance(failures, int) or failures < 0:
             raise SystemExit("Invalid consecutive failure counter for " + str(name))
-required = ["criticalVulnList", "prepareBriefing", "businessList", "queryGrid", "loadQueries", "reportPicker", "loadReportPath", "threatPrev", "businessPrev", "kevPrev", "cisa_kev_catalog", "CVERecord?id=", "kevStatus", "queriesLoaded", "const groups={}", "globalSearchPanel", "globalSearch", "globalScope", "kevSearch", "kevVendor", "kevDueFilter", "priorityFilter", "v.vulnerabilityName", "function globalSearch", "function filteredKev", "const remediationBlock=", "oldestReport", "intel\\/daily", "remediation_guidance", "function kevHtml", "function kevAction", "function itemHtml", "function businessCard", "function businessSignificance", "vendor_remediation", "businessDetail", "businessClear", "knownRansomwareCampaignUse", "Evidence ", "last_success_at", "last_attempt_at", "duration_ms", "consecutive_failures", "collection_result", "health_state"]
-required.extend(["async function fetchWithRetry", "X-RateLimit-Remaining", "Retry-After", "fetchWithRetry(API+", "fetchWithRetry(\"https://raw.githubusercontent.com/"])
+required = ["criticalVulnList", "prepareBriefing", "businessList", "queryGrid", "loadQueries", "reportPicker", "loadReportPath", "threatPrev", "businessPrev", "kevPrev", "cisa_kev_catalog", "CVERecord?id=", "kevStatus", "queriesLoaded", "const groups={}", "globalSearchPanel", "globalSearch", "globalScope", "kevSearch", "kevVendor", "kevDueFilter", "priorityFilter", "v.vulnerabilityName", "function globalSearch", "function filteredKev", "const remediationBlock=", "oldestReport", "intel\\/daily", "remediation_guidance", "function kevHtml", "function kevAction", "function itemHtml", "function businessCard",  "vendor_remediation", "businessDetail", "businessClear", "knownRansomwareCampaignUse", "Evidence ", "last_success_at", "last_attempt_at", "duration_ms", "consecutive_failures", "collection_result", "health_state"]
+required.extend(["async function fetchWithRetry", "X-RateLimit-Remaining", "Retry-After", "fetchWithRetry(\"https://raw.githubusercontent.com/", "function normalizeDashboardData(raw)", "function renderSafely(label,targetId,callback)"])
 if "CANDIDATE FIXED RELEASE · NOT VERIFIED" not in html or "candidate_fixed_releases" not in html:
     raise SystemExit("KEV remediation panel does not display unverified fixed-release candidates")
 missing = [x for x in required if x not in html]
@@ -58,6 +58,17 @@ ids = re.findall(r'\bid="([^"]+)"', html)
 duplicates = sorted({x for x in ids if ids.count(x) > 1})
 if duplicates:
     raise SystemExit("Dashboard contains duplicate HTML IDs: " + ", ".join(duplicates))
+
+dom_ids = set(re.findall(r'\bid="([^"]+)"', html))
+dom_refs = set(re.findall(r'\$\("([^"]+)"\)', html))
+missing_dom_refs = sorted(dom_refs - dom_ids)
+if missing_dom_refs:
+    raise SystemExit("Dashboard references missing DOM IDs: " + ", ".join(missing_dom_refs))
+if "PARTIAL VIEW" in html:
+    raise SystemExit("Dashboard still uses the misleading partial-view connection state")
+if re.search(r"function (?:fullDetailsBlock|actionTextSpecific|businessSignificance)\(", html):
+    raise SystemExit("Dashboard contains known unused renderer/helper functions")
+
 if 'function itemHtml(x)' not in html or 'remediationBlock(x,"threat")' not in html:
     raise SystemExit("Threat cards do not show adjacent remediation guidance")
 if 'name==="briefing"' not in html or 'loadReportPath(currentReportPath)' not in html:
@@ -574,7 +585,7 @@ if "Technology details could not be independently verified from the available so
     raise SystemExit("Dashboard does not contain the canonical technology-context fallback")
 if "x?.technology_context||inferTechnologyContext" in html:
     raise SystemExit("Dashboard is still guessing technology context in the browser")
-for marker in ("def extract_specific_remediation", "def enrich_records", "def enrich_kev_records", "class ArticleText", '"details"', '"remediation_guidance"', '"remediation_status"', '"related_sources"', '"attack_techniques"', "CyberScoop", "SecurityWeek", "Dark Reading", "The Record", "TechCrunch Security", "canonical_url"):
+for marker in ("def extract_specific_remediation", "def enrich_records", "def enrich_kev_records", "class ArticleText", '"details"', '"remediation_guidance"', '"remediation_status"', '"related_sources"', "CyberScoop", "SecurityWeek", "Dark Reading", "The Record", "TechCrunch Security", "canonical_url"):
     if marker not in collector_source:
         raise SystemExit("Collector missing source enrichment/correlation capability: " + marker)
 
@@ -594,6 +605,44 @@ snapshot_path = root / "intel" / pointer["snapshot"]
 if not snapshot_path.exists():
     raise SystemExit("Latest intelligence snapshot is missing: " + str(snapshot_path))
 data = json.loads(snapshot_path.read_text(encoding="utf-8"))
+for field in ("items", "business_items", "source_health", "cisa_kev_catalog", "ioc_candidates"):
+    if not isinstance(data.get(field), list):
+        raise SystemExit("Latest snapshot field must be an array: " + field)
+
+def validate_record_shapes(records, label, array_fields=(), object_fields=()):
+    for index, record in enumerate(records):
+        if not isinstance(record, dict):
+            raise SystemExit(f"{label}[{index}] must be an object")
+        for field in array_fields:
+            if field in record and not isinstance(record[field], list):
+                raise SystemExit(f"{label}[{index}].{field} must be an array")
+        for field in object_fields:
+            if field in record and not isinstance(record[field], dict):
+                raise SystemExit(f"{label}[{index}].{field} must be an object")
+        evidence = record.get("remediation_evidence")
+        if isinstance(evidence, dict):
+            for field in ("evidence_sources", "candidate_fixed_releases"):
+                if field in evidence and not isinstance(evidence[field], list):
+                    raise SystemExit(f"{label}[{index}].remediation_evidence.{field} must be an array")
+        refs = record.get("vendor_remediation", [])
+        if isinstance(refs, list):
+            for ref_index, ref in enumerate(refs):
+                if not isinstance(ref, dict):
+                    raise SystemExit(f"{label}[{index}].vendor_remediation[{ref_index}] must be an object")
+                if "guidance" in ref and not isinstance(ref["guidance"], list):
+                    raise SystemExit(f"{label}[{index}].vendor_remediation[{ref_index}].guidance must be an array")
+        ledger = record.get("cve_verification", [])
+        if isinstance(ledger, list):
+            for ledger_index, entry in enumerate(ledger):
+                if not isinstance(entry, dict) or not isinstance(entry.get("fields", {}), dict):
+                    raise SystemExit(f"{label}[{index}].cve_verification[{ledger_index}] has an invalid shape")
+
+validate_record_shapes(data["items"], "items", ("topics", "cves", "vendor_remediation", "cve_verification"), ("technology_context", "remediation_evidence"))
+validate_record_shapes(data["business_items"], "business_items", ("companies", "vendor_remediation"), ("business_context", "remediation_evidence"))
+validate_record_shapes(data["source_health"], "source_health")
+validate_record_shapes(data["cisa_kev_catalog"], "cisa_kev_catalog", ("cwes", "vendor_remediation", "cve_verification", "epss_scores"), ("technology_context", "remediation_evidence"))
+validate_record_shapes(data.get("cisa_kev_added_last_7_days", []), "cisa_kev_added_last_7_days", ("cwes", "vendor_remediation", "cve_verification", "epss_scores"), ("technology_context", "remediation_evidence"))
+
 kev = data.get("cisa_kev_catalog", [])
 items = data.get("items", [])
 business_items = data.get("business_items", [])
@@ -672,7 +721,7 @@ if report_path.exists():
     if "Sentinel KQL" in report and "prepareBriefing" not in html:
         raise SystemExit("Report contains query section but dashboard lacks inline-query renderer")
 
-print("Dashboard checks passed: unique DOM IDs, latest/newer/older/oldest date navigation, historical report discovery, global search, filters, detailed threat/business cards, adjacent remediation, full KEV actions, watchlist, asset matcher, IOC correlation, ATT&CK/readiness, executive digest, JavaScript and collector syntax.")
+print("Dashboard checks passed: approved navigation, historical briefing, global search, threat/business cards, remediation evidence, full KEV catalogue, detection-query library, source health, JavaScript and collector syntax.")
 print("Full CISA KEV records:", len(kev), "| titles present:", len(kev), "| duplicate CVEs:", len(kev_ids) - len(set(kev_ids)))
 print("Business developments:", len(data["business_items"]))
 print("Business feeds:", len(business_sources))

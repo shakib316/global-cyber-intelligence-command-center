@@ -1098,9 +1098,6 @@ def main():
             item["cves"]=sorted(set(item["cves"])|evidence_cves)
             item["cve_extraction_recovered"]=sorted(missing_cves)
         item["cve_count"]=len(item["cves"])
-    for x in items:
-        body=x.get("title","")+" "+x.get("summary","")+" "+x.get("details","")
-        x["attack_techniques"]=sorted(set(re.findall(r"\bT\d{4}(?:\.\d{3})?\b",body,re.I)))
     vulns=kev.get("vulnerabilities",[]) if kev else []
     for v in vulns:
         v["technology_context"] = describe_technology(v.get("vulnerabilityName"), v.get("shortDescription"), v.get("notes"), v.get("vendorProject"), v.get("product"))
