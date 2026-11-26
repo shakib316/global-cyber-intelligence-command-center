@@ -99,7 +99,7 @@ critical_end = html.find('$("kevPreview").innerHTML=', critical_start)
 if critical_start < 0 or critical_end < 0 or 'kevAction(v)' not in html[critical_start:critical_end] or 'v.requiredAction' in html[critical_start:critical_end]:
     raise SystemExit("Critical vulnerability watch bypasses the shared KEV remediation guard")
 
-preview_end = html.find("renderKev();", critical_end)
+preview_end = html.find('renderSafely("CISA KEV catalogue","kevTable",renderKev);', critical_end)
 if critical_end < 0 or preview_end < 0 or 'kevAction(v)' not in html[critical_end:preview_end] or 'v.requiredAction' in html[critical_end:preview_end]:
     raise SystemExit("Recent KEV preview bypasses the shared KEV remediation guard")
 
