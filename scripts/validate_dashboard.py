@@ -477,10 +477,10 @@ daily_report_path = root / "intel" / pointer.get("report", "")
 if not daily_report_path.exists():
     raise SystemExit("Latest daily intelligence report is missing")
 daily_report = daily_report_path.read_text(encoding="utf-8")
-if "Fix / remediation:" not in daily_report or "Business background / implications:" not in daily_report:
-    raise SystemExit("Daily report is missing adjacent threat remediation or business context")
-if 'f"- EPSS context: {format_epss_context(x)} — FIRST.org; not an asset-specific risk score",' not in collector_source:
-    raise SystemExit("EPSS context must be emitted as a separate daily-report list item")
+if not all(token in collector_source for token in ('"- Labels: "', '"- Technology background: "', '"- Technical details: "', '"- Remediation status: "', '"- Sources: "')):
+    raise SystemExit("Collector-generated threat, vulnerability and business items must use the global six-section format")
+if "format_epss_context(x)" not in collector_source or "format_cvss_context(v)" not in collector_source:
+    raise SystemExit("CVSS and EPSS context must remain available in vulnerability labels")
 snapshot_path = root / "intel" / pointer["snapshot"]
 if not snapshot_path.exists():
     raise SystemExit("Latest intelligence snapshot is missing: " + str(snapshot_path))
