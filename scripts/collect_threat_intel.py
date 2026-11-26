@@ -66,8 +66,8 @@ def is_technical_security_story(s):
     """Keep vulnerability/threat reporting out of the business-development stream."""
     text = str(s or "")
     technical = re.search(
-        r"\\bCVE-\\d{4}-\\d{4,}\\b|zero.day|vulnerabilit|security advisory|"
-        r"actively exploited|exploited in attacks|patch(?:es|ed|ing)?\\b|"
+        r"\bCVE-\d{4}-\d{4,}\b|zero.day|vulnerabilit|security advisory|"
+        r"actively exploited|exploited in attacks|patch(?:es|ed|ing)?\b|"
         r"proof.of.concept|remote code execution|command injection|"
         r"privilege escalation|malware campaign|threat actor|ransomware campaign|"
         r"attackers? (?:target|exploit|abuse)|critical flaw",
@@ -79,7 +79,6 @@ def is_technical_security_story(s):
         r"data breach|cyberattack|security incident|systems? restored",
         text, re.I)
     return bool(technical and not material_business)
-
 def business_category(s):
     if is_technical_security_story(s):
         return "Not a business development"
