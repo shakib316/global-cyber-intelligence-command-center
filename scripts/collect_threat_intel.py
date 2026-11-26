@@ -1129,8 +1129,8 @@ def main():
         "ioc_candidates":iocs,"ioc_policy":"Candidate extraction only near explicit IOC wording. Verify against original report and local context.",
         "limitations":["Public feeds are not exhaustive and can fail or change format.","CERT-In is an official index scrape, not an RSS feed; open advisory pages to confirm details.",
         "Authenticated/paid feeds are not configured.","A CVE listing or IOC match is not proof of compromise.","No automatic response actions."]}
-    (ROOT/kev_catalog_path).write_text(json.dumps({"date_utc":DAY_UTC,"date_ist":DAY,"retrieved_at":STAMP,"cisa_kev_catalog":vulns},indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
-    (ROOT/snapshot).write_text(json.dumps(data,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
+    (ROOT/kev_catalog_path).write_text(json.dumps({"date_utc":DAY_UTC,"date_ist":DAY,"retrieved_at":STAMP,"cisa_kev_catalog":vulns},ensure_ascii=False,separators=(",",":"))+"\n",encoding="utf-8")
+    (ROOT/snapshot).write_text(json.dumps(data,ensure_ascii=False,separators=(",",":"))+"\n",encoding="utf-8")
     latest={"date_utc":DAY_UTC,"date_ist":DAY,"retrieved_at":STAMP,"retrieved_at_ist":STAMP_IST,"snapshot":f"snapshots/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.json","kev_catalog":f"kev-catalogs/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.json","report":f"daily/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.md"}
     (ROOT/"intel/latest.json").write_text(json.dumps(latest,indent=2)+"\n",encoding="utf-8")
     lines=[f"# Global Cyber Threat Radar — Automated Snapshot — {DAY} IST","",f"- Retrieved: {STAMP_IST} (UTC: {STAMP})","- Coverage: last 72 hours + undated CERT-In index entries",
