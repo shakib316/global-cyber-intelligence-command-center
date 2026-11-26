@@ -552,6 +552,12 @@ for label, headline, summary, expected in (
     ctx=collector.describe_technology(headline,summary,"")
     if ctx.get("name") != expected:
         raise SystemExit("Technology-context regression for "+label+": "+str(ctx.get("name")))
+business_unknown = collector.describe_business_context("Microsoft announces a new cloud partnership", "The companies announced a commercial partnership.", "", ["Microsoft"])
+if business_unknown.get("status") != "not_identified" or "independently verified" not in business_unknown.get("what_is_it", ""):
+    raise SystemExit("Business context must not turn a company mention into an unsupported product description")
+business_product = collector.describe_business_context("FortiGate firewall product security update", "FortiOS firewall product update", "")
+if business_product.get("name") != "Fortinet FortiOS / FortiGate":
+    raise SystemExit("Business product context did not identify a specifically named product")
 unknown=collector.describe_technology("Unclear security event","No affected product or component identified.","")
 if unknown.get("status") != "not_identified":
     raise SystemExit("Insufficient technology evidence did not use safe unidentified state")
@@ -647,7 +653,7 @@ if data.get("technology_context_version", 0) >= 1:
     kev_missing_context = [x.get("cveID", "unknown CVE") for x in kev if not isinstance(x.get("technology_context"), dict) or not x["technology_context"].get("what_is_it") or not x["technology_context"].get("what_it_does")]
     if kev_missing_context:
         raise SystemExit("CISA KEV records missing plain-English technology context: " + ", ".join(kev_missing_context[:5]))
-    if missing_details:
+if missing_details:
     raise SystemExit(f"{missing_details} intelligence records have no in-page detail field")
 if any(not x.get("remediation_status") for x in items):
     raise SystemExit("Threat intelligence records are missing explicit remediation status")
