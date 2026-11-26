@@ -468,6 +468,33 @@ if article["remediation_evidence"].get("analyst_verified") is not False or artic
 if "https://vendor.example/security/advisory" not in article["remediation_evidence"].get("evidence_sources", []):
     raise SystemExit("Vendor-linked remediation lost its evidence source URL")
 
+# Regression: strip website chrome without discarding technical advisory content.
+boilerplate_samples = (
+    "Thank you for contacting us. A member of our team will be in touch shortly. Close",
+    "Thank you for signing up for our newsletter. In these regular emails you will find the latest updates.",
+    "Your preferences have been successfully updated. Close notification",
+    "Accept all cookies or manage your cookie preferences.",
+)
+for sample_text in boilerplate_samples:
+    if not collector.is_boilerplate_text(sample_text):
+        raise SystemExit("Website boilerplate was not identified: " + sample_text)
+technical_text = (
+    "The Kerberos KDC incorrectly handled certain ASN.1 encodings in requests. "
+    "A remote attacker could possibly use this issue to cause the KDC to crash, resulting in a denial of service. "
+    "The vendor provides updated packages for supported Ubuntu releases."
+)
+if collector.is_boilerplate_text(technical_text):
+    raise SystemExit("Legitimate technical advisory content was incorrectly filtered")
+mixed = technical_text + "\\n\\nThank you for contacting us. A member of our team will be in touch shortly. Close"
+cleaned = collector.clean_extracted_text(mixed)
+if "Kerberos KDC" not in cleaned or "Thank you for contacting us" in cleaned:
+    raise SystemExit("Mixed article extraction retained page chrome or lost technical details")
+summary = collector.build_technical_summary(cleaned)
+if not summary or "Kerberos KDC" not in summary or len(summary) > 1100:
+    raise SystemExit("Source-grounded technical summary was not generated correctly")
+if collector.build_technical_summary("Thank you for signing up for our newsletter.") != "":
+    raise SystemExit("Boilerplate-only content generated a technical summary")
+
 for promo in (
     "Discover why SHA pinning alone isn't enough and learn how to close hidden security gaps.",
     "Learn what 6,000 real-world attacks reveal about MFA weaknesses.",
