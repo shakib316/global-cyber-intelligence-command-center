@@ -159,7 +159,7 @@ const technologyBackgroundBlock=(x,kind="threat")=>{
  let what=verified?bg.what_is_it:"",does=verified?bg.what_does_it:"",extraUrl="";
  if(!verified){const match=TECHNOLOGY_CONTEXT.find(row=>row[0].test(hay));if(match){what=match[1];does=match[2];extraUrl=match[3];}}
  if(!what)what="Not established in reviewed sources; a source-backed technology definition was not available.";
- if(!does)does="Not established in reviewed sources; no function has been inferred.";
+ if(!does)does="Not established in reviewed sources; no function has been inferred. No product-function description has been inferred.";
  if(kind==="business"&&x.category!=="Products & launches"){what="Not applicable to this business/industry development.";does="Not applicable.";}
  if(kind==="kev"&&!verified&&!extraUrl){what="The CISA KEV record identifies the affected product, but does not define its technology.";does="Not established in the reviewed CISA record.";}
  const note=extraUrl?'<span class="context-source">Definition: <a href="'+safeUrl(extraUrl)+'" target="_blank" rel="noopener">official technical documentation ↗</a></span>':"";
