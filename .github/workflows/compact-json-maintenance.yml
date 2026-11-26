@@ -1,0 +1,92 @@
+name: One-time Intelligence JSON Archive Compaction
+on:
+  push:
+    branches:
+      - maintenance/repository-cleanup-2026-11
+    paths:
+      - ".github/workflows/compact-json-maintenance.yml"
+permissions:
+  contents: write
+concurrency:
+  group: one-time-intel-json-compaction
+  cancel-in-progress: false
+jobs:
+  compact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out cleanup branch
+        uses: actions/checkout@v5
+        with:
+          ref: maintenance/repository-cleanup-2026-11
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Compact and semantically validate JSON archives
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path(".")
+          files = sorted((root / "intel").rglob("*.json"))
+          pending = []
+
+          def compact(source):
+              output = []
+              in_string = False
+              escaped = False
+              for char in source:
+                  if in_string:
+                      output.append(char)
+                      if escaped:
+                          escaped = False
+                      elif char == "\\\\":
+                          escaped = True
+                      elif char == '"':
+                          in_string = False
+                  elif char == '"':
+                      in_string = True
+                      output.append(char)
+                  elif char not in " \\t\\r\\n":
+                      output.append(char)
+              if in_string or escaped:
+                  raise ValueError("Unterminated JSON string")
+              return "".join(output).rstrip() + "\\n"
+
+          for path in files:
+              original = path.read_text(encoding="utf-8")
+              before = json.loads(original)
+              minimized = compact(original)
+              after = json.loads(minimized)
+              if before != after:
+                  raise ValueError(f"Semantic JSON mismatch: {path}")
+              pending.append((path, original, minimized))
+
+          total_before = total_after = changed = 0
+          for path, original, minimized in pending:
+              old_size = len(original.encode("utf-8"))
+              new_size = len(minimized.encode("utf-8"))
+              total_before += old_size
+              total_after += new_size
+              if minimized != original:
+                  path.write_text(minimized, encoding="utf-8")
+                  changed += 1
+              print(f"{path}: {old_size:,} -> {new_size:,} bytes; saved {old_size-new_size:,}")
+          saved = total_before - total_after
+          percent = saved * 100 / total_before if total_before else 0
+          print(f"TOTAL: {len(files)} files checked, {changed} compacted; "
+                f"{total_before:,} -> {total_after:,} bytes; saved {saved:,} ({percent:.2f}%).")
+          PY
+      - name: Commit compacted intelligence JSON files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add intel/
+          if git diff --cached --quiet; then
+            echo "No JSON archive changes."
+            exit 0
+          fi
+          git commit -m "Compact historical intelligence JSON archives"
+          git push origin HEAD:maintenance/repository-cleanup-2026-11
