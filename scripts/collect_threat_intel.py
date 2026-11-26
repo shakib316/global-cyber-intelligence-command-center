@@ -519,7 +519,7 @@ def report_technology_background(record, kind="threat"):
         if (background.get("verified") is True and what_is_it and what_does_it_do
                 and isinstance(source_urls, list)
                 and any(isinstance(u, str) and u.startswith("https://") for u in source_urls)):
-            return "What is it? " + str(what_is_it) + "\nWhat does it do? " + str(what_does_it)
+            return "What is it? " + str(what_is_it) + "\nWhat does it do? " + str(what_does_it_do)
     if kind == "business" and record.get("category") != "Products & launches":
         return "What is it? Not applicable to this business/industry development.\nWhat does it do? Not applicable."
     return ("What is it? Not established in reviewed sources; a source-backed technology definition was not available.\n"
