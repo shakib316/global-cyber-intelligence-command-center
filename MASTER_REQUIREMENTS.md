@@ -91,6 +91,10 @@ Times below are Asia/Kolkata (IST).
 - After changing schedules, inspect the workflow YAML and verify the next successful run.
 - A green workflow means its configured steps passed; it does not prove every feed or intelligence claim is complete.
 
+## Global intelligence item format
+
+Every threat, vulnerability, advisory, incident and cybersecurity business/industry news item must use the six-part format in [REPORTING_STANDARD.md](REPORTING_STANDARD.md): Title; necessary Labels; Technology background with “What is it?” and “What does it do?”; Technical details limited to four concise lines; Remediation status; and no more than three Sources links. Technology background must be explicitly supported by reviewed source material. If not established, state that; never invent a product function. For non-technology business developments, mark technology background not applicable.
+
 ## 4. Required website content
 
 ### 4.1 Overview
