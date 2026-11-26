@@ -358,7 +358,7 @@ class ArticleText(HTMLParser):
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.skip=0;self.capture=False;self.buf=[];self.paragraphs=[];self.meta=[]
-        self.links=[];self.anchor=None
+        self.links=[];self.anchor=None;self.table_row=None
     def handle_starttag(self,tag,attrs):
         a=dict(attrs);t=tag.lower()
         if t in ("script","style","noscript","svg","nav","footer","header","aside","form"):self.skip+=1
@@ -366,6 +366,7 @@ class ArticleText(HTMLParser):
             value=a.get("content","").strip()
             if value:self.meta.append(value)
         if t=="a" and a.get("href"):self.anchor={"href":a.get("href"),"text":""}
+        if t=="tr":self.table_row=[]
         if t in ("p","li"):self.capture=True;self.buf=[]
     def handle_endtag(self,tag):
         t=tag.lower()
@@ -386,6 +387,7 @@ class ArticleText(HTMLParser):
             self.capture=False;self.buf=[]
     def handle_data(self,data):
         if self.skip==0:
+            if self.table_row is not None:self.table_row.append(data.strip())
             if self.capture:self.buf.append(data.strip())
             if self.anchor is not None:self.anchor["text"]+=data.strip()
 
@@ -496,7 +498,7 @@ def enrich_page(url,title=""):
             part=re.sub(r"\s+"," ",part).strip();norm=normalize_story_text(part)
             if not part or is_promotional_text(part):continue
             if title_norm and norm and difflib.SequenceMatcher(None,norm,title_norm).ratio()>=0.94:continue
-            if re.search(r"comprehensive up-to-date news coverage|aggregated from sources all over the world by google news|identify and remediate systems affected by this advisory|for more details on how to apply this update|refer to the cve page\\(s\\) listed in the references section",part,re.I):continue
+            if re.search(r"comprehensive up-to-date news coverage|aggregated from sources all over the world by google news|identify and remediate systems affected by this advisory|for more details on how to apply this update|refer to the cve page|thank you for contacting us|member of our team will be in touch|thank you for signing up|close thank you|open source software operating system that runs from the desktop|subscribe to our newsletter|all rights reserved|privacy policy",part,re.I):continue
             if len(part)>45 and part not in cleaned:cleaned.append(part)
         text_value="\n\n".join(cleaned);base_host=urlparse(resolved).netloc.lower();references=[]
         for link in parser.links:
