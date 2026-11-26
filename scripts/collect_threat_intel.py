@@ -858,8 +858,13 @@ def extract_iocs(s,source,url):
 
 
 def attach_cve_verification(records, kev_records=None):
-    """Attach a field-level evidence ledger. Extraction is never promoted to analyst verification."""
+    """Attach field-level evidence, using a dated primary-source correction register where reviewed."""
     kev_by_id={str(x.get("cveID","")).upper():x for x in (kev_records or [])}
+    override_path=ROOT/"intel/cve-verification-overrides.json"
+    try:
+        overrides=json.loads(override_path.read_text(encoding="utf-8")).get("records",{}) if override_path.exists() else {}
+    except (OSError,ValueError):
+        overrides={}
     for record in records:
         cve_ids=record.get("cves") or ([record.get("cveID")] if record.get("cveID") else [])
         ledger=[]
@@ -867,6 +872,7 @@ def attach_cve_verification(records, kev_records=None):
             cve=str(raw_id or "").upper()
             if not CVE.fullmatch(cve): continue
             kev=kev_by_id.get(cve)
+            override=overrides.get(cve,{})
             nvd=kev or record if str(record.get("cveID","")).upper()==cve else kev or {}
             cisa_url="https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
             nvd_url="https://nvd.nist.gov/vuln/detail/"+cve
@@ -874,21 +880,29 @@ def attach_cve_verification(records, kev_records=None):
             if kev:
                 vendor_urls=[u.rstrip(".,)") for u in re.findall(r"https://[^\\s,;<>]+",str(kev.get("notes") or ""))]
                 vendor_urls += [x.get("source_url") for x in kev.get("vendor_remediation",[]) if x.get("source_url")]
+            if override.get("vendor_url"): vendor_urls.insert(0,override["vendor_url"])
             vendor_urls=list(dict.fromkeys(u for u in vendor_urls if isinstance(u,str) and u.startswith("https://")))
             metric=nvd.get("cvss") if isinstance(nvd.get("cvss"),dict) else None
-            title=(kev or {}).get("vulnerabilityName") or record.get("nvd_title") or None
-            product="/".join(str((kev or {}).get(k) or "").strip() for k in ("vendorProject","product") if (kev or {}).get(k)) or None
+            if override.get("cvss"):
+                o=override["cvss"]
+                metric={"version":o.get("version"),"base_score":o.get("score"),"severity":o.get("severity"),
+                    "source":o.get("source"),"source_type":"Vendor/CNA primary advisory","vector":o.get("vector"),
+                    "source_url":override.get("vendor_url") or nvd_url}
+            title=override.get("title") or (kev or {}).get("vulnerabilityName") or record.get("nvd_title") or None
+            product=override.get("product") or ("/".join(str((kev or {}).get(k) or "").strip() for k in ("vendorProject","product") if (kev or {}).get(k)) or None)
+            official_source=override.get("vendor_url") or (cisa_url if kev else nvd_url)
             fields={
-                "cve_id":{"value":cve,"status":"Verified (source)","source":"CVE identifier extracted from source record","source_url":record.get("url")},
-                "official_title":{"value":title,"status":"Verified (source)" if title and kev else "Unverified","source":"CISA KEV vulnerabilityName" if title and kev else "No authoritative title retrieved","source_url":cisa_url if kev else nvd_url},
-                "product":{"value":product,"status":"Verified (source)" if product and kev else "Unverified","source":"CISA KEV vendorProject/product" if product and kev else "No authoritative product mapping retrieved","source_url":cisa_url if kev else nvd_url},
-                "cvss":{"value":metric,"status":"Verified (source)" if metric else "Unverified","source":"NVD CVE API metric" if metric else "NVD score not retrieved / not available","source_url":nvd_url},
-                "kev_status":{"value":"Known exploited (CISA KEV)" if kev else "Not listed in checked CISA KEV snapshot" if kev_records is not None else "Not checked","status":"Verified (source)" if kev_records is not None else "Unverified","source":"CISA KEV catalogue snapshot" if kev_records is not None else "CISA KEV not checked","source_url":cisa_url},
-                "affected_versions":{"value":None,"status":"Unverified","source":"Exact affected-version ranges require vendor advisory/CPE review; not inferred from KEV listing","source_url":vendor_urls[0] if vendor_urls else nvd_url},
-                "fix_or_mitigation":{"value":(kev or {}).get("vendor_remediation") or None,"status":"Unverified","source":"Automated extraction from CISA-linked vendor references; analyst applicability review required" if vendor_urls else "No vendor fix statement retrieved; this is not proof no patch exists","source_url":vendor_urls[0] if vendor_urls else cisa_url}
+                "cve_id":{"value":cve,"status":"Verified (source)","source":"CISA KEV / source CVE identifier","source_url":cisa_url if kev else record.get("url")},
+                "official_title":{"value":title,"status":"Verified (source)" if title and (kev or override) else "Unverified","source":"Vendor advisory CVE-specific title" if override else ("CISA KEV vulnerabilityName" if title and kev else "No authoritative title retrieved"),"source_url":official_source},
+                "product":{"value":product,"status":"Verified (source)" if product and (kev or override) else "Unverified","source":"CVE-specific vendor advisory" if override else ("CISA KEV vendorProject/product" if product and kev else "No authoritative product mapping retrieved"),"source_url":official_source},
+                "cvss":{"value":metric,"status":"Verified (source)" if metric else "Unverified","source":override.get("cvss",{}).get("source") if override else ("NVD CVE API metric" if metric else "NVD score not retrieved / not available"),"source_url":metric.get("source_url") if metric else nvd_url},
+                "kev_status":{"value":"Known exploited (CISA KEV)" if kev else ("Not listed in checked CISA KEV snapshot" if kev_records is not None else "Not checked"),"status":"Verified (source)" if kev_records is not None else "Unverified","source":"CISA KEV catalogue snapshot" if kev_records is not None else "CISA KEV not checked","source_url":cisa_url},
+                "affected_versions":{"value":override.get("affected_versions"),"status":"Verified (source)" if override.get("affected_versions") else "Unverified","source":"CVE-specific vendor advisory" if override.get("affected_versions") else "Exact affected-version ranges not established; not inferred from KEV listing","source_url":override.get("vendor_url") or nvd_url},
+                "fix_or_mitigation":{"value":override.get("fix") or ((kev or {}).get("vendor_remediation") or None),"status":"Verified (source)" if override.get("fix") else "Unverified","source":"CVE-specific vendor advisory" if override.get("fix") else ("Automated extraction from CISA-linked vendor references; analyst applicability review required" if vendor_urls else "No vendor fix statement retrieved; this is not proof no patch exists"),"source_url":override.get("vendor_url") or (vendor_urls[0] if vendor_urls else cisa_url)}
             }
             ledger.append({"cve":cve,"product":product,"title":title,"fields":fields,
                 "sources":{"CISA_KEV":cisa_url,"NVD":nvd_url,"vendor_advisories":vendor_urls},
+                "mapping_flag":override.get("mapping_flag"),
                 "verification_note":"Each field has independent evidence status. Automated extraction is not analyst verification."})
         record["cve_verification"]=ledger
     return records
