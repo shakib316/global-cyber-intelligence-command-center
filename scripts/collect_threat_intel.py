@@ -449,6 +449,7 @@ TECHNOLOGY_GLOSSARY = [
     (r"\bvmware vcenter\b|\bvcenter server\b", "VMware vCenter Server", "A management platform for VMware virtual infrastructure.", "It lets administrators centrally manage virtual machines, hosts and clusters."),
     (r"\bkubernetes\b|\bk8s\b", "Kubernetes", "A platform for managing containerised applications.", "It deploys, scales and maintains applications running in containers across groups of servers."),
     (r"\bdocker\b", "Docker", "A platform and toolset for building and running software containers.", "It packages applications with their dependencies so they can run consistently across environments."),
+    (r"\bnuget\b|\.net(?:\s+(?:sdk|runtime|framework))?", "NuGet / .NET", "NuGet is the package manager for the .NET ecosystem.", "It manages third-party packages and dependencies in .NET applications. Malicious packages can abuse this mechanism to deliver malware."),
     (r"\bwindows\b", "Microsoft Windows", "A desktop and server operating system.", "It runs applications and manages devices, users, files and system services."),
     (r"\bexchange server\b|\bmicrosoft exchange\b", "Microsoft Exchange Server", "Email and calendaring server software.", "It provides organisations with email, calendars, contacts and related collaboration services."),
     (r"\bsharepoint\b", "Microsoft SharePoint", "A collaboration and document-management platform.", "It helps organisations store, share and manage documents, intranet pages and team information."),
