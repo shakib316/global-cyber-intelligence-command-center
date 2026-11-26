@@ -485,7 +485,7 @@ technical_text = (
 )
 if collector.is_boilerplate_text(technical_text):
     raise SystemExit("Legitimate technical advisory content was incorrectly filtered")
-mixed = technical_text + "\\n\\nThank you for contacting us. A member of our team will be in touch shortly. Close"
+mixed = technical_text + "\n\nThank you for contacting us. A member of our team will be in touch shortly. Close"
 cleaned = collector.clean_extracted_text(mixed)
 if "Kerberos KDC" not in cleaned or "Thank you for contacting us" in cleaned:
     raise SystemExit("Mixed article extraction retained page chrome or lost technical details")
