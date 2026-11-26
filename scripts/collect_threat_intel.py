@@ -409,33 +409,32 @@ def extract_technology_background(record):
     title = normalize_story_text(record.get("title") or "")
     if not text or not title:
         return None
-    sentences = [re.sub(r"\\s+", " ", s).strip()
-        for s in re.split(r"(?<=[.!?])\\s+|\\n+", text) if len(s.strip()) >= 35]
+    sentences = [re.sub(r"\s+", " ", s).strip()
+        for s in re.split(r"(?<=[.!?])\s+|\n+", text) if len(s.strip()) >= 35]
     title_terms = {w for w in title.split() if len(w) >= 4 and w not in {"security","update","vulnerability","advisory","critical","moderate","important"}}
     definitions = []
     for sentence in sentences:
         norm = normalize_story_text(sentence)
         overlap = sum(1 for term in title_terms if term in norm)
-        if overlap and re.search(r"\\b(?:is|are|refers to|is the)\\b", sentence, re.I):
-            if re.search(r"\\b(?:is an? |is the |are )", sentence, re.I):
+        if overlap and re.search(r"\b(?:is|are|refers to|is the)\b", sentence, re.I):
+            if re.search(r"\b(?:is an? |is the |are )", sentence, re.I):
                 definitions.append((overlap, sentence))
     if not definitions:
         return None
     definition = max(definitions, key=lambda x: (x[0], min(len(x[1]), 260)))[1][:420]
-    # Do not invent operational capabilities. If the source gives only a definition,
-    # state that its operational function was not explained by that source.
     function = next((s[:420] for s in sentences
-        if re.search(r"\\b(?:provides|enables|allows|lets|used to|used for|designed to|manages|connects|protects|supports)\\b", s, re.I)
+        if re.search(r"\b(?:provides|enables|allows|lets|used to|used for|designed to|manages|connects|protects|supports)\b", s, re.I)
         and sum(1 for term in title_terms if term in normalize_story_text(s)) > 0), None)
+    source = record.get("canonical_url") or record.get("url") or ""
+    if not source.startswith("https://"):
+        return None
     return {
         "verified": True,
         "what_is_it": definition,
         "what_does_it_do": function or "The reviewed source identifies the technology but does not explain its operational function.",
-        "source_urls": [record.get("canonical_url") or record.get("url")] if (record.get("canonical_url") or record.get("url","")).startswith("https://") else [],
+        "source_urls": [source],
         "evidence_type": "explicit source definition",
-    } if (record.get("canonical_url") or record.get("url","")).startswith("https://") else None
-
-
+    }
 def report_technology_background(record, kind="threat"):
     """Return only explicit, source-linked technology background; never infer product function."""
     background = record.get("technology_background")
