@@ -422,8 +422,8 @@ def extract_technology_background(record):
     for sentence in sentences:
         norm = normalize_story_text(sentence)
         overlap = sum(1 for term in title_terms if term in norm)
-        if overlap and re.search(r"\b(?:is|are|refers to|is the)\b", sentence, re.I):
-            if re.search(r"\b(?:is an? |is the |are )", sentence, re.I):
+        if overlap and re.search(r"\b(?:is|are|contains?|refers to|is the)\b", sentence, re.I):
+            if re.search(r"\b(?:is an? |is the |are |contains? )", sentence, re.I):
                 definitions.append((overlap, sentence))
     if not definitions:
         return None
