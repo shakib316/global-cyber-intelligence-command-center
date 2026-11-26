@@ -481,6 +481,9 @@ def extract_technical_details(record, limit=4):
             continue
         if sentence.startswith(('"', "'", "“", "‘")) or re.search(r"\b(?:said in a statement|according to the report|read more|subscribe|related articles)\b", sentence, re.I):
             continue
+        if re.match(r"^(?:cybersecurity )?researchers? (?:have )?(?:identified|discovered|found)\b", sentence, re.I):
+            # The article's lead commonly repeats the headline. Keep later mechanism/scope facts.
+            continue
         if re.search(r"\b(?:researcher .* said|security researcher .* said|the company said|the vendor said)\b", sentence, re.I) and len(sentence) < 180:
             continue
         if any(difflib.SequenceMatcher(None,norm,normalize_story_text(x)).ratio() > 0.9 for x in candidates):
