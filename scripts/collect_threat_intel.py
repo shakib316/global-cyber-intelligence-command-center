@@ -887,7 +887,7 @@ def attach_cve_verification(records, kev_records=None):
                 o=override["cvss"]
                 metric={"version":o.get("version"),"base_score":o.get("score"),"severity":o.get("severity"),
                     "source":o.get("source"),"source_type":"Vendor/CNA primary advisory","vector":o.get("vector"),
-                    "source_url":override.get("vendor_url") or nvd_url}
+                    "source_url":o.get("source_url") or override.get("vendor_url") or nvd_url}
             title=override.get("title") or (kev or {}).get("vulnerabilityName") or record.get("nvd_title") or None
             product=override.get("product") or ("/".join(str((kev or {}).get(k) or "").strip() for k in ("vendorProject","product") if (kev or {}).get(k)) or None)
             official_source=override.get("vendor_url") or (cisa_url if kev else nvd_url)
