@@ -116,11 +116,11 @@ ast.parse(collector_source, filename=str(collector_path))
 
 daily_workflow_path = root / ".github/workflows/daily-threat-intel.yml"
 daily_workflow = daily_workflow_path.read_text(encoding="utf-8")
-for required_step in ("  deploy:", "    needs: collect", "actions: read", "pages: write", "id-token: write", "actions/upload-pages-artifact@v5", "Wait for Pages artifact visibility", "Verify checked-out main revision", "actions/deploy-pages@v5"):
+for required_step in ("name: Commit raw intelligence to isolated staging branch", "git checkout -B intel-staging origin/main", "git push --force-with-lease origin HEAD:intel-staging"):
     if required_step not in daily_workflow:
-        raise SystemExit("Daily collection workflow does not publish updated Pages content: " + required_step)
-if "          ref: main" not in daily_workflow:
-    raise SystemExit("Pages deployment must check out latest main after the collector commit")
+        raise SystemExit("Daily collection workflow must stage raw intelligence for AI enrichment: " + required_step)
+if re.search(r"^  deploy:", daily_workflow, re.M):
+    raise SystemExit("Raw collection workflow must not deploy un-enriched intelligence")
 spec = importlib.util.spec_from_file_location("gci_collector", collector_path)
 collector = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(collector)
@@ -513,8 +513,10 @@ if "australia_acsc" in feed_urls:
     raise SystemExit("ACSC feed must remain intentionally excluded until its upstream availability is restored")
 if 'health_state.pop("Australian ACSC",None)' not in collector_source:
     raise SystemExit("Excluded ACSC source must not leave stale failure telemetry")
-if "actions: read" not in daily_workflow or "Wait for Pages artifact visibility" not in daily_workflow or "artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}" not in daily_workflow:
-    raise SystemExit("Daily deployment must wait for its uniquely named Pages artifact before deploy")
+if "actions/upload-pages-artifact@v5" in daily_workflow or "actions/deploy-pages@v5" in daily_workflow:
+    raise SystemExit("Raw collection workflow must not create or deploy a Pages artifact")
+if "intel-staging" not in daily_workflow:
+    raise SystemExit("Daily collection workflow must stage data for AI enrichment")
 article = {
     "url": "https://research.example/story",
     "title": "Example vulnerability CVE-2026-12345",

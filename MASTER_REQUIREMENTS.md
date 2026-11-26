@@ -87,16 +87,17 @@ Times below are Asia/Kolkata (IST).
 | Dashboard Quality Watch | Every **10 minutes**, plus relevant pushes and completion of configured workflows | Validate dashboard/data integrity and frontend security. This is a quality check, not a fresh intelligence collection. |
 | Detection Query Quality Checks | Relevant pushes, pull requests and manual dispatch | Validate query metadata/structure, dashboard, collector and frontend safeguards. |
 
-### Daily collection sequence
-1. Workflow starts on schedule or manual dispatch on `main`.
-2. Collector retrieves configured public advisories, research feeds, KEV and business-news sources.
-3. Collector normalizes, deduplicates, enriches and records source health.
-4. Snapshot/dashboard validation and static detection-query checks run.
-5. Changed `intel/` and `detection-queries/generated/` artifacts are committed to `main`.
-6. Deploy job checks out the latest `main`, verifies its SHA against remote `main`, creates the Pages artifact and deploys the dashboard.
-7. Quality Watch runs independently on its configured schedule and workflow events.
+### Daily collection and AI-enrichment sequence
+1. GitHub Actions starts collection at 09:00 IST on `main`.
+2. Collector retrieves configured public advisories, research feeds, KEV and business-news sources; records source health and creates the current-day structured collection.
+3. Static snapshot/dashboard and detection-query checks run against the collected data.
+4. The collector commits the raw/normalized collection to the isolated `intel-staging` branch. It must not update `main` or deploy GitHub Pages.
+5. The scheduled ChatGPT AI-enrichment task (approximately 10:15 IST) reads the staged snapshot, reviews every distinct current-day item against direct sources and authoritative references, enriches and deduplicates the content, and quarantines unsupported items with reasons.
+6. Only after all required enrichment and validation succeeds does the task publish the current-day enriched snapshot, daily report and latest pointer to `main` in one atomic Git commit. This main-branch push triggers the separate GitHub Pages deployment workflow.
+7. Verify the deployment and report collection, source-health, enrichment, quarantine, validation and deployment counts/statuses. If any critical step fails, do not advance the latest pointer or publish partial content.
+8. Quality Watch continues independently on its configured schedule and workflow events.
 
-**Important implementation distinction:** The current daily workflow's Git commit step stages `intel/` and `detection-queries/generated/`; it does not currently stage `reports/`. Do not claim that the analyst-facing `reports/YYYY/MM/DD.md` archive is automatically published by this workflow until the workflow is deliberately updated and verified. Collector-generated `intel/daily/` artifacts and analyst-facing `reports/` are distinct paths.
+**Important implementation distinction:** `intel-staging` is a temporary raw/normalized staging branch, not the public dashboard source. The website reads only `main`. Historical records before 27 November 2026 are read-only for this new pipeline. The collector does not currently retain complete raw article bodies for every feed; source URLs, feed metadata, normalized item fields and source-health results are the evidence baseline. Analyst-facing `reports/YYYY/MM/DD.md` and collector-generated `intel/daily/` are distinct paths; the ChatGPT task must update only the current day's paths.
 
 ### Schedule maintenance rules
 - Preserve the daily 09:00 IST collection unless the user explicitly changes it.
