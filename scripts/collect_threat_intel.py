@@ -274,7 +274,7 @@ def record_source_health(state,source,url,status,records,started,error=None,stre
 def save_source_health_state(state):
     path=ROOT/"intel/source-health-state.json"
     path.parent.mkdir(parents=True,exist_ok=True)
-    path.write_text(json.dumps({"schema_version":1,"updated_at":STAMP,"sources":state},indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
+    path.write_text(json.dumps({"schema_version":1,"updated_at":STAMP,"sources":state},ensure_ascii=False,separators=(",",":"))+"\n",encoding="utf-8")
 
 def lname(t): return t.rsplit("}",1)[-1].lower()
 def child(n,names):
@@ -1132,7 +1132,7 @@ def main():
     (ROOT/kev_catalog_path).write_text(json.dumps({"date_utc":DAY_UTC,"date_ist":DAY,"retrieved_at":STAMP,"cisa_kev_catalog":vulns},ensure_ascii=False,separators=(",",":"))+"\n",encoding="utf-8")
     (ROOT/snapshot).write_text(json.dumps(data,ensure_ascii=False,separators=(",",":"))+"\n",encoding="utf-8")
     latest={"date_utc":DAY_UTC,"date_ist":DAY,"retrieved_at":STAMP,"retrieved_at_ist":STAMP_IST,"snapshot":f"snapshots/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.json","kev_catalog":f"kev-catalogs/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.json","report":f"daily/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.md"}
-    (ROOT/"intel/latest.json").write_text(json.dumps(latest,indent=2)+"\n",encoding="utf-8")
+    (ROOT/"intel/latest.json").write_text(json.dumps(latest,separators=(",",":"))+"\n",encoding="utf-8")
     lines=[f"# Global Cyber Threat Radar — Automated Snapshot — {DAY} IST","",f"- Retrieved: {STAMP_IST} (UTC: {STAMP})","- Coverage: last 72 hours + undated CERT-In index entries",
         f"- Feed health: {good}/{len(health)}",f"- Advisory/research items: {len(items)}",f"- CISA KEV catalog: {len(vulns)}",f"- KEV additions last 7 days: {len(recentkev)}",f"- IOC candidates: {len(iocs)}",
         "","## Feed health","","| Source | Status | Result | Records | Last successful collection (UTC) | Last attempt (UTC) | Duration (ms) | Consecutive failures |","|---|---|---|---:|---|---|---:|---:|"]
