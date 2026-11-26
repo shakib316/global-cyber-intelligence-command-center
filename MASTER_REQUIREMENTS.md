@@ -146,6 +146,25 @@ This section is mandatory in every daily intelligence cycle, even when no materi
 
 ## 5. Intelligence collection and evidence rules
 
+### Plain-English technology explanations — global requirement
+
+Every threat, vulnerability, advisory, KEV record and relevant business/market item must include a short plain-English explanation of the named product, service, platform, library, operating-system component or company whenever it can be identified from reliable evidence. This applies across Overview, Daily Briefing, New Intelligence, Cyber Business, CISA KEV, generated daily artifacts and future intelligence feeds.
+
+Use these consistent prompts:
+- **What is it?** Identify the technology in everyday language (for example, Drupal is a website content-management system; 1Password is a password manager; libpcap is a library used to capture network traffic).
+- **What does it do?** Explain its practical purpose in one short sentence.
+- **Why does it matter here?** Connect the affected or exploited technology to the specific vulnerability, incident or business development where the source supports that connection.
+
+Rules:
+- Assume the reader may not recognise product names, package names, acronyms or advisory identifiers. Explain unfamiliar terms on first use.
+- Keep the explanation concise, ideally one or two short sentences per field; do not turn cards into product documentation.
+- Prefer a curated, source-backed glossary and product/vendor fields from primary advisories. Preserve the exact technical product/component name.
+- Explain advisory identifiers separately from the affected technology (for example, a USN is an Ubuntu Security Notice identifier; libpcap is the affected software library).
+- Never infer a product's purpose from its name alone. If the role cannot be established, explicitly say the source does not provide enough information and link the source.
+- Do not confuse a vendor/company with its specific affected product. Use a company background only for business items and a product explanation for vulnerabilities.
+- Apply the same wording and fields to the dashboard UI and generated Markdown snapshots/reports. Do not omit the explanation simply because an item came from a different feed.
+- Keep source provenance and uncertainty. Automated glossary matching is contextual assistance, not independent verification of vulnerability impact or asset exposure.
+
 ### Source policy
 - Use configured public government, CERT, vendor, cloud and reputable research/news sources.
 - Prefer primary advisories and company announcements. Use secondary sources for context/corroboration.
