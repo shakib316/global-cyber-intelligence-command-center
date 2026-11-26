@@ -4,6 +4,16 @@ This project is an analyst-support dashboard. Feed collection and automated extr
 
 ## Vulnerability and CVE records
 
+## Plain-English technology context
+
+- Add a concise **What is it?** and **What does it do?** explanation to each threat/advisory item and KEV record, and a company/product background to relevant business intelligence.
+- Use verified product/vendor fields and a curated glossary backed by primary product documentation.
+- Keep advisory identifiers (such as Ubuntu USN numbers) distinct from the actual affected package/library.
+- Unknown product role must remain explicitly unknown; never guess based on a product name or headline.
+- Validate the context object and dashboard rendering for threat, business and KEV records. Apply it to the entire KEV catalogue, not only the seven-day additions.
+- Keep the explanation short and consistent; it must not replace the original source details, affected versions, remediation or evidence links.
+
+
 - CVE IDs are extracted from titles, feed summaries, retrieved article text, and linked vendor-remediation evidence. CVE identifiers have variable numeric lengths.
 - The dashboard keeps the original source URL and distinguishes feed-only content from article-enriched content.
 - For CVE-bearing items, the collector follows a small number of security/advisory links explicitly present in the source article. For CISA KEV additions in the latest seven-day window, it also checks external vendor URLs supplied in the KEV notes.
