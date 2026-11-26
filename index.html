@@ -1021,7 +1021,7 @@ try{
  const tree=await fetchWithRetry(API+"/git/trees/"+BRANCH+"?recursive=1",{cache:"no-store"});
  if(tree.ok){
   const t=await tree.json();
-  const reportFiles=(t.tree||[]).filter(x=>x.type==="blob"&&/^(reports|intel\\/daily)\\/\\d{4}\\/\\d{2}\\/\\d{2}\\.md$/.test(x.path)).map(x=>x.path);
+  const reportFiles=(t.tree||[]).filter(x=>x.type==="blob"&&/^(reports|intel\/daily)\/\d{4}\/\d{2}\/\d{2}\.md$/.test(x.path)).map(x=>x.path);
   const byDate=new Map();
   reportFiles.forEach(path=>{const d=reportIso(path);if(!d)return;const old=byDate.get(d);if(!old||path.startsWith("reports/"))byDate.set(d,path)});
   REPORT_PATHS=[...byDate.values()].sort((a,b)=>reportIso(b).localeCompare(reportIso(a)));
