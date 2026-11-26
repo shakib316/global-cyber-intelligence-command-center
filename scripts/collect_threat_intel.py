@@ -946,16 +946,16 @@ def main():
             lines += [f"### {v.get('cveID','CVE unavailable')} — {v.get('vulnerabilityName','Name unavailable')}",
                 f"- Labels: {v.get('vendorProject','Vendor not disclosed')} · {v.get('product','Product not disclosed')} · Added {v.get('dateAdded','unknown')} · Due {v.get('dueDate','not stated')} · CVSS: {format_cvss_context(v)} · EPSS: {format_epss_context(v)}",
                 "- Technology background: " + report_technology_background(v, "kev"),
-                "- Technical details: " + report_technical_details({"details": " ".join([str(v.get("shortDescription") or ""), "CVSS: "+format_cvss_context(v), "EPSS: "+format_epss_context(v)])}),
+                "- Technical details: " + report_technical_details({"details": str(v.get("shortDescription") or "")}),
                 "- Remediation status: " + kev_remediation_text(v),
                 "- Sources: " + " · ".join(f"[Source {i+1}]({u})" for i,u in enumerate(report_sources(v,"kev"))), ""]
     else:lines.append("- No additions returned, or the feed failed; check source health.")
     lines += ["","## Advisories, campaigns and research — last 72 hours",""]
     if items:
         for x in items[:100]:lines += [f"### {x['title']}",
-            "- Labels: " + " · ".join(z for z in [x.get("source"), x.get("published"), ", ".join(x.get("cves", [])) or None] if z),
+            "- Labels: " + " · ".join(z for z in [x.get("source"), x.get("published"), ", ".join(x.get("cves", [])) or None, ("EPSS: " + format_epss_context(x)) if x.get("epss_scores") else None] if z),
             "- Technology background: " + report_technology_background(x, "threat"),
-            "- Technical details: " + report_technical_details({"details": " ".join([str(x.get("details") or x.get("summary") or ""), "CVSS: "+format_cvss_context(x), "EPSS: "+format_epss_context(x)])}),
+            "- Technical details: " + report_technical_details(x),
             "- Remediation status: " + str(x.get("remediation_guidance") or x.get("remediation_status") or "NOT ESTABLISHED — no specific remediation confirmed in reviewed material."),
             "- Sources: " + " · ".join(f"[Source {i+1}]({u})" for i,u in enumerate(report_sources(x,"threat"))), ""]
     else:lines.append("No dated items returned. This does not mean no threats occurred; inspect source health.")
