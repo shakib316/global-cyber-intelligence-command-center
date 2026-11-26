@@ -11,6 +11,17 @@
 - Include India/APAC relevance when supported. Explain acronyms on first use or in a short glossary.
 - Show local generation time and exact coverage window in Asia/Kolkata (IST).
 
+## Global plain-English technology context — every section
+
+Every relevant intelligence item must explain unfamiliar technology names in simple English, not only repeat the headline or CVE description. Apply this in the dashboard and generated Markdown, including threat/advisory cards, CISA KEV records, Critical Vulnerabilities Watch, daily threat write-ups, and relevant business/market stories.
+
+Use:
+- **What is it?** A plain-English category (for example, website content-management system, password manager, network packet-capture library, operating system, web server or cloud identity service).
+- **What does it do?** One short sentence explaining its practical purpose.
+- **Why it matters here:** A brief link to the affected component or business event, only when supported by the source.
+
+Explain advisory IDs separately from products (for example, USN-9203-1 is an Ubuntu Security Notice identifier; libpcap is the network packet-capture library). Prefer primary vendor documentation and a maintained glossary. If a product's role is not established, state that plainly instead of guessing. Preserve product/version names and source links. Keep the explanation concise and consistent across feeds.
+
 ## 2. Fixed daily briefing structure
 
 ### 1) YESTERDAY'S THREATS — one compact table
