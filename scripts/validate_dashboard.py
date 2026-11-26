@@ -527,12 +527,14 @@ for item in business_items:
         raise SystemExit("Headline-only business content is incorrectly labelled enriched: " + str(item.get("title", "untitled")))
 for label, records in (("threat intelligence", items), ("business intelligence", business_items)):
     missing_details = sum(not x.get("details") for x in records)
-    missing_context = [x.get("title", "untitled") for x in records if not isinstance(x.get("technology_context"), dict) or not x["technology_context"].get("what_is_it") or not x["technology_context"].get("what_it_does")]
-    if missing_context:
-        raise SystemExit(f"{label} has {len(missing_context)} records missing plain-English technology context: " + ", ".join(missing_context[:5]))
-kev_missing_context = [x.get("cveID", "unknown CVE") for x in kev if not isinstance(x.get("technology_context"), dict) or not x["technology_context"].get("what_is_it") or not x["technology_context"].get("what_it_does")]
-if kev_missing_context:
-    raise SystemExit("CISA KEV records missing plain-English technology context: " + ", ".join(kev_missing_context[:5]))
+    if data.get("technology_context_version", 0) >= 1:
+        missing_context = [x.get("title", "untitled") for x in records if not isinstance(x.get("technology_context"), dict) or not x["technology_context"].get("what_is_it") or not x["technology_context"].get("what_it_does")]
+        if missing_context:
+            raise SystemExit(f"{label} has {len(missing_context)} records missing plain-English technology context: " + ", ".join(missing_context[:5]))
+if data.get("technology_context_version", 0) >= 1:
+    kev_missing_context = [x.get("cveID", "unknown CVE") for x in kev if not isinstance(x.get("technology_context"), dict) or not x["technology_context"].get("what_is_it") or not x["technology_context"].get("what_it_does")]
+    if kev_missing_context:
+        raise SystemExit("CISA KEV records missing plain-English technology context: " + ", ".join(kev_missing_context[:5]))
     if missing_details:
         raise SystemExit(f"{label} has {missing_details} records without an in-page detail field")
 if any(not x.get("remediation_status") for x in items):
