@@ -10,8 +10,6 @@ on:
       - "scripts/validate_detection_queries.py"
       - "scripts/validate_frontend_security.py"
       - "index.html"
-      - "intel/**"
-      - "reports/**"
       - ".github/workflows/daily-threat-intel.yml"
   schedule:
     - cron: "30 3 * * *" # 09:00 Asia/Kolkata
