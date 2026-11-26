@@ -382,17 +382,17 @@ def report_technology_background(record, kind="threat"):
     if (isinstance(background, dict) and background.get("verified") is True
             and background.get("what_is_it") and background.get("what_does_it_do")
             and any(isinstance(u, str) and u.startswith("https://") for u in background.get("source_urls", []))):
-        return ("What is it? " + str(background["what_is_it"]) + "\\n"
+        return ("What is it? " + str(background["what_is_it"]) + "\n"
                 + "What does it do? " + str(background["what_does_it"]))
     if kind == "kev":
         product = " ".join(str(record.get(k) or "").strip() for k in ("vendorProject", "product")).strip()
         return ("What is it? CISA KEV identifies " + (product or "an affected product")
-                + " as affected; the catalogue entry does not establish the product's function.\\n"
+                + " as affected; the catalogue entry does not establish the product's function.\n"
                 + "What does it do? Not stated in the reviewed CISA record; no product function is inferred.")
     if kind == "business" and record.get("category") != "Products & launches":
-        return ("What is it? Not applicable to this business/industry development.\\n"
+        return ("What is it? Not applicable to this business/industry development.\n"
                 + "What does it do? Not applicable; this is not a technology-function advisory.")
-    return ("What is it? Not established in the reviewed source material.\\n"
+    return ("What is it? Not established in the reviewed source material.\n"
             + "What does it do? Not established in the reviewed source material; no capability is inferred from a headline, vendor name or CVE association.")
 
 def report_technical_details(record, limit=4):
@@ -400,8 +400,8 @@ def report_technical_details(record, limit=4):
     value = str(record.get("details") or record.get("summary") or "").strip()
     if not value:
         return "Not disclosed in the reviewed source material."
-    sentences = [x.strip() for x in re.split(r"(?<=[.!?])\\s+", re.sub(r"\\s+", " ", value)) if x.strip()]
-    return "\\n".join(x[:257].rstrip() + ("…" if len(x) > 260 else "") for x in sentences[:limit])
+    sentences = [x.strip() for x in re.split(r"(?<=[.!?])\s+", re.sub(r"\s+", " ", value)) if x.strip()]
+    return "\n".join(x[:257].rstrip() + ("…" if len(x) > 260 else "") for x in sentences[:limit])
 
 def report_sources(record, kind="threat"):
     """Return no more than three distinct HTTPS source links."""
