@@ -64,8 +64,15 @@ if 'name==="briefing"' not in html or 'loadReportPath(currentReportPath)' not in
     raise SystemExit("Full daily report is not lazy-loaded on briefing navigation")
 if len(re.findall(r"function itemHtml\(x\)", html)) != 1:
     raise SystemExit("Dashboard must have exactly one threat-card renderer")
-if 'descriptionBlock("What to verify next",businessSignificance(x))' not in html or 'remediationBlock(x,"business")' in html:
-    raise SystemExit("Business cards must show useful verification context without irrelevant vulnerability remediation")
+if 'function businessCard(x)' not in html or 'remediationBlock(x,"business")' not in html:
+    raise SystemExit("Business cards must use the standard six-part card layout")
+for section in ("Technology background","What is it?","What does it do?","Technical details","Remediation status","Sources"):
+    if section not in html:
+        raise SystemExit("Standard intelligence card section is missing: " + section)
+if 'lines=sentences.slice(0,4)' not in html or 'if(links.length===3)break' not in html:
+    raise SystemExit("Technical details must be capped at four lines and sources at three links")
+if 'c.identifier_note' in html or 'cveVerificationBlock(x.cve_verification)' in html:
+    raise SystemExit("Intelligence cards contain sections outside the approved six-part format")
 if "function cleanCopy(value)" not in html or "Compact reading layout" not in html:
     raise SystemExit("Dashboard description cleanup or compact reading styles are missing")
 if "function epssOverview(v)" not in html or html.count("epssOverview(v)") != 2:
