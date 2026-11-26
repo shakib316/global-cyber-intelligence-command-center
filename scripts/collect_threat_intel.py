@@ -441,7 +441,7 @@ def extract_technology_background(record):
                 what_is_it += " In this incident, " + context[:360]
             return {
                 "verified": True, "what_is_it": what_is_it,
-                "what_does_it_do": what_does_it,
+                "what_does_it_do": what_does_it_do,
                 "source_urls": [doc_url] + ([source] if source.startswith("https://") and source != doc_url else []),
                 "evidence_type": "curated primary technical documentation plus reviewed incident source",
             }
