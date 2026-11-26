@@ -144,23 +144,37 @@ function conciseExcerpt(value,limit=900){
 }
 const descriptionBlock=(label,value)=>{const clean=cleanCopy(value);return clean?'<div class="description-block"><span class="field-label">'+esc(label)+'</span><p>'+esc(clean)+'</p></div>':""};
 
+const TECHNOLOGY_CONTEXT=[
+ [/\bnuget\b/i,"NuGet is the package manager for the .NET ecosystem and the package repository/service used to distribute .NET libraries.","It lets developers create, publish, discover, install, restore and update package dependencies in .NET projects.","https://learn.microsoft.com/en-us/nuget/what-is-nuget"],
+ [/\bmsbuild\b|microsoft build engine/i,"MSBuild is Microsoft's build platform for .NET and Visual Studio projects.","It evaluates project files and targets to run build, restore and other configured project tasks.","https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild"],
+ [/\bwindows presentation foundation\b|\bwpf\b/i,"Windows Presentation Foundation (WPF) is a Windows desktop UI framework in .NET.","It provides a framework for building Windows desktop applications and their user interfaces.","https://learn.microsoft.com/en-us/dotnet/desktop/wpf/overview/"],
+ [/\bwinui 3\b/i,"WinUI 3 is Microsoft's native user-interface framework for Windows desktop applications.","It provides modern Windows UI controls and application interface components.","https://learn.microsoft.com/en-us/windows/apps/winui/winui3/"],
+ [/\bpan.?os\b/i,"PAN-OS is the operating system used by Palo Alto Networks next-generation firewalls.","It provides the firewall platform's networking and security capabilities.","https://docs.paloaltonetworks.com/pan-os"],
+ [/\bxfrm\b/i,"XFRM is a Linux kernel framework used for IPsec packet transformations and security associations.","It supports IPsec processing, including transformation and security-association operations in the network stack.","https://docs.kernel.org/networking/xfrm/index.html"],
+ [/\bphp\b/i,"PHP is a general-purpose scripting language commonly used for web development.","It can execute server-side application logic and generate dynamic web content.","https://www.php.net/manual/en/intro-whatis.php"]
+];
 const technologyBackgroundBlock=(x,kind="threat")=>{
- const bg=x.technology_background||{};
+ const bg=x.technology_background||{},hay=String((x.title||"")+" "+(x.details||x.summary||x.shortDescription||""));
  const verified=bg.verified===true&&typeof bg.what_is_it==="string"&&bg.what_is_it.trim()&&typeof bg.what_does_it_do==="string"&&bg.what_does_it_do.trim()&&Array.isArray(bg.source_urls)&&bg.source_urls.some(u=>typeof u==="string"&&u.startsWith("https://"));
- if(verified)return '<div class="description-block"><span class="field-label">Technology background</span><p><strong>What is it?</strong> '+esc(bg.what_is_it)+'<br><strong>What does it do?</strong> '+esc(bg.what_does_it)+'</p></div>';
- if(kind==="kev"){
-  const product=[x.vendorProject,x.product].filter(Boolean).join(" ");
-  return '<div class="description-block"><span class="field-label">Technology background</span><p><strong>What is it?</strong> CISA KEV identifies '+esc(product||"an affected product")+' as affected; the catalogue entry does not establish the product’s function.<br><strong>What does it do?</strong> Not stated in the reviewed CISA record. No product-function description has been inferred.</p></div>';
- }
- if(kind==="business"&&x.category!=="Products & launches")return '<div class="description-block"><span class="field-label">Technology background</span><p><strong>What is it?</strong> Not applicable to this business/industry development.<br><strong>What does it do?</strong> Not applicable; this item is not a technology-function advisory.</p></div>';
- return '<div class="description-block"><span class="field-label">Technology background</span><p><strong>What is it?</strong> Not established in the reviewed source material.<br><strong>What does it do?</strong> Not established in the reviewed source material. No function or capability is inferred from the headline, vendor name or CVE association.</p></div>';
+ let what=verified?bg.what_is_it:"",does=verified?bg.what_does_it:"",extraUrl="";
+ if(!verified){const match=TECHNOLOGY_CONTEXT.find(row=>row[0].test(hay));if(match){what=match[1];does=match[2];extraUrl=match[3];}}
+ if(!what)what="Not established in the reviewed source material. A source-backed technology definition was not available.";
+ if(!does)does="Not established in the reviewed source material. No product-function description has been inferred.";
+ if(kind==="business"&&x.category!=="Products & launches"){what="Not applicable to this business/industry development.";does="Not applicable.";}
+ if(kind==="kev"&&!verified&&!extraUrl){what="The CISA KEV record identifies the affected product, but does not define its technology.";does="Not established in the reviewed CISA record.";}
+ return '<div class="description-block"><span class="field-label">Technology background</span><p><strong>What is it?</strong> '+esc(what)+'<br><strong>What does it do?</strong> '+esc(does)+'</p></div>';
 };
-const technicalDetailsBlock=(value)=>{
- const raw=cleanCopy(value||"");
- if(!raw)return descriptionBlock("Technical details","Not disclosed in the reviewed source material.");
- const sentences=raw.includes("\n")?raw.split(/\n+/):raw.replace(/\s+/g," ").match(/[^.!?]+[.!?]?/g)||[raw];
- const lines=sentences.map(s=>s.trim()).filter(Boolean).slice(0,4).map(s=>s.length>260?s.slice(0,257).trimEnd()+"…":s);
- return '<div class="description-block"><span class="field-label">Technical details</span><ul>'+lines.map(s=>'<li>'+esc(s)+'</li>').join("")+'</ul></div>';
+const technicalDetailsBlock=(value,record={})=>{
+ let lines=Array.isArray(value)?value:String(value||"").split(/\n+/).flatMap(p=>p.match(/[^.!?]+[.!?]?/g)||[p]);
+ const summary=String(record.summary||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim(),title=String(record.title||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim(),seen=new Set();
+ const clean=lines.map(s=>String(s).trim()).filter(s=>{
+  const norm=s.toLowerCase().replace(/[^a-z0-9]+/g," ").trim(),key=norm;
+  if(!norm||seen.has(key)||norm===summary||norm===title)return false;
+  if(/^(?:cybersecurity )?researchers? (?:have )?(?:identified|discovered|found)\b/i.test(s))return false;
+  if(/^(?:["'“‘])/.test(s)||/\b(?:subscribe|related articles|read more|newsletter)\b/i.test(s))return false;
+  seen.add(key);return true;
+ }).slice(0,4).map(s=>s.length>260?s.slice(0,257).trimEnd()+"…":s);
+ return '<div class="description-block"><span class="field-label">Technical details</span>'+(clean.length?'<ul>'+clean.map(s=>'<li>'+esc(s)+'</li>').join("")+'</ul>':'<p>Not disclosed in the reviewed source material.</p>')+'</div>';
 };
 const sourceLinksBlock=(x,kind="threat")=>{
  const urls=[];
@@ -169,10 +183,11 @@ const sourceLinksBlock=(x,kind="threat")=>{
  for(const ref of (x.vendor_remediation||[]))add(ref.source_url);
  for(const ref of (x.vendor_references||[]))add(ref.url);
  const bg=x.technology_background||{}; for(const u of (bg.source_urls||[]))add(u);
+ const contextMatch=TECHNOLOGY_CONTEXT.find(row=>row[0].test(String((x.title||"")+" "+(x.details||x.summary||x.shortDescription||"")))); if(contextMatch)add(contextMatch[3]);
  const ev=x.remediation_evidence||{}; for(const u of (ev.evidence_sources||[]))add(u); for(const v of (ev.candidate_fixed_releases||[]))add(v.source_url);
  for(const u of (x.related_urls||[]))add(u);
  if(kind==="kev"){add("https://nvd.nist.gov/vuln/detail/"+encodeURIComponent(x.cveID||""));add(x.notes);}
- return '<div class="card-footer"><strong>Sources</strong> '+(urls.length?urls.map((u,i)=>'<a href="'+safeUrl(u)+'" target="_blank" rel="noopener">Source '+(i+1)+' ↗</a>').join(" · "):"Not available")+'</div>';
+ return '<div class="card-footer"><strong>Sources</strong> '+(urls.length?urls.map((u)=>{let label="Source";try{label=new URL(u).hostname.replace(/^www\./,"");}catch{}return '<a href="'+safeUrl(u)+'" target="_blank" rel="noopener">'+esc(label)+' ↗</a>';}).join(" · "):"Not available")+'</div>';
 };
 const remediationBlock=(x,kind="threat")=>{
  if(kind==="business")return descriptionBlock("Remediation status","Not applicable — business/industry development, not a vulnerability advisory.");
@@ -290,9 +305,10 @@ function cvssOverview(v){
 
 function kevHtml(v){
  const action=kevAction(v),due=v.dueDate?tag("Due "+v.dueDate,"amber"):tag("No due date stated"),title=v.vulnerabilityName||"Vulnerability title not supplied by CISA KEV";
- const labels=[v.cveID,v.vendorProject,v.product,kevStatus(v),v.dateAdded?("Added "+v.dateAdded):""].filter(Boolean).slice(0,5);
- const ep=(v.epss_scores||[]).find(x=>x.cve===v.cveID),cv=v.cvss; const detail=[v.shortDescription||"",cv?"CVSS "+(cv.version||"")+" "+Number(cv.base_score).toFixed(1)+"/10 "+(cv.severity||"severity not stated"):"CVSS "+(v.cvss_status||"not available")+" (no score inferred)",ep?"EPSS "+(Number(ep.score)*100).toFixed(1)+"% 30-day estimate":"EPSS "+(v.epss_status||"not available")+" (no score inferred)",v.knownRansomwareCampaignUse==="Known"?"CISA KEV: known ransomware campaign use.":"CISA KEV: listed as a known exploited vulnerability."].filter(Boolean).join("\n");
- return '<tr><td><strong>'+esc(v.cveID)+'</strong><div class="label-row">'+labels.map(x=>tag(x,"neutral")).join(" ")+'</div></td><td>'+due+'</td><td><strong class="kev-title">'+esc(title)+'</strong>'+technologyBackgroundBlock(v,"kev")+technicalDetailsBlock(detail)+descriptionBlock("Remediation status",action.text)+'<p class="cell-description">Deployment status: not established by the KEV catalogue; verify against asset and patch-management telemetry.</p>'+sourceLinksBlock(v,"kev")+'</td></tr>';
+ const ep=(v.epss_scores||[]).find(x=>x.cve===v.cveID),cv=v.cvss;
+ const labels=[v.cveID,v.vendorProject,v.product,kevStatus(v),v.dateAdded?("Added "+v.dateAdded):"",cv?"CVSS "+(cv.version||"")+" "+Number(cv.base_score).toFixed(1)+"/10 "+(cv.severity||""):"",ep?"EPSS "+(Number(ep.score)*100).toFixed(1)+"%":"",v.knownRansomwareCampaignUse==="Known"?"Known ransomware use":""].filter(Boolean).slice(0,8);
+ const detail=v.shortDescription||"Not disclosed in the reviewed CISA record.";
+ return '<tr><td><strong>'+esc(v.cveID)+'</strong><div class="label-row">'+labels.map(x=>tag(x,"neutral")).join(" ")+'</div></td><td>'+due+'</td><td><strong class="kev-title">'+esc(title)+'</strong>'+technologyBackgroundBlock(v,"kev")+technicalDetailsBlock(detail,v)+descriptionBlock("Remediation status",action.text)+'<p class="cell-description">Deployment status: not established by the KEV catalogue; verify against asset and patch-management telemetry.</p>'+sourceLinksBlock(v,"kev")+'</td></tr>';
 }
 function filteredKev(){const q=$("kevSearch").value.trim().toLowerCase(),vendor=$("kevVendor").value,due=$("kevDueFilter").value,today=new Date();today.setHours(0,0,0,0);const limit=new Date(today);limit.setDate(limit.getDate()+30);return KEV.filter(v=>{const hay=[v.cveID,v.vulnerabilityName,v.shortDescription,v.vendorProject,v.product,v.requiredAction,(v.cwes||[]).join(" "),v.knownRansomwareCampaignUse].join(" ").toLowerCase();if(q&&!hay.includes(q))return false;if(vendor&&v.vendorProject!==vendor)return false;if(due==="nodue"&&v.dueDate)return false;if(due==="overdue"&&(!v.dueDate||new Date(v.dueDate)>=today))return false;if(due==="upcoming"&&(!v.dueDate||new Date(v.dueDate)<today||new Date(v.dueDate)>limit))return false;return true})}
 function renderKev(){const list=filteredKev(),pages=Math.max(1,Math.ceil(list.length/KEV_PAGE_SIZE));kevPage=Math.min(kevPage,pages-1);$("kevFilterCount").textContent=list.length.toLocaleString()+" matching vulnerabilities · "+KEV.length.toLocaleString()+" total";$("kevPage").textContent="Page "+(kevPage+1)+" of "+pages;$("kevPrev").disabled=kevPage===0;$("kevNext").disabled=kevPage>=pages-1;$("kevTable").innerHTML=list.slice(kevPage*KEV_PAGE_SIZE,(kevPage+1)*KEV_PAGE_SIZE).map(kevHtml).join("")||'<tr><td colspan="4">No vulnerabilities match these filters.</td></tr>'}
@@ -301,7 +317,7 @@ function cveTag(c){const v=KEV.find(k=>k.cveID===c);const title=v&&v.vulnerabili
 function itemHtml(x){
  const sev=priorityLabel(x.priority),details=cleanCopy(x.details||x.summary||"");
  const labels=[x.source,fmt(x.published),...(x.cves||[]),x.enrichment_status==="limited"?"Feed-only":""].filter(Boolean).slice(0,5);
- return '<article class="threat intel-card"><div class="card-title-row"><h4>'+esc(x.title)+'</h4></div><div class="label-row">'+(sev?tag(sev,severityClass(sev)):"")+' '+labels.map(v=>tag(v,"neutral")).join(" ")+'</div>'+technologyBackgroundBlock(x,"threat")+technicalDetailsBlock(details)+remediationBlock(x,"threat")+sourceLinksBlock(x,"threat")+'</article>';
+ return '<article class="threat intel-card"><div class="card-title-row"><h4>'+esc(x.title)+'</h4></div><div class="label-row">'+(sev?tag(sev,severityClass(sev)):"")+' '+labels.map(v=>tag(v,"neutral")).join(" ")+'</div>'+technologyBackgroundBlock(x,"threat")+technicalDetailsBlock(x.technical_details||details,x)+remediationBlock(x,"threat")+sourceLinksBlock(x,"threat")+'</article>';
 }
 function globalSearch(){
  const q=$("globalSearch").value.trim().toLowerCase(),scope=$("globalScope").value,box=$("globalResults");
@@ -329,7 +345,7 @@ function businessSignificance(x){
 function businessCard(x){
  const details=cleanCopy(x.details||x.summary||"");
  const labels=[x.category,x.deal_status,x.publisher,fmt(x.published),x.enrichment_status!=="enriched"?"Feed-only":""].filter(Boolean).slice(0,5);
- return '<article class="threat intel-card"><div class="card-title-row"><h4>'+esc(x.title)+'</h4></div><div class="label-row">'+labels.map(v=>tag(v,"neutral")).join(" ")+'</div>'+technologyBackgroundBlock(x,"business")+technicalDetailsBlock(details)+descriptionBlock("Remediation status","Not applicable — business/industry development, not a vulnerability advisory.")+sourceLinksBlock(x,"business")+'</article>';
+ return '<article class="threat intel-card"><div class="card-title-row"><h4>'+esc(x.title)+'</h4></div><div class="label-row">'+labels.map(v=>tag(v,"neutral")).join(" ")+'</div>'+technologyBackgroundBlock(x,"business")+technicalDetailsBlock(x.technical_details||details,x)+descriptionBlock("Remediation status","Not applicable — business/industry development, not a vulnerability advisory.")+sourceLinksBlock(x,"business")+'</article>';
 }
 function renderBusiness(){const q=$("businessSearch").value.toLowerCase(),cat=$("businessCategory").value,status=$("businessStatus").value,detail=$("businessDetail").value;const list=BUSINESS.filter(x=>(!cat||x.category===cat)&&(!status||x.deal_status===status)&&(!detail||(detail==="enriched"?x.enrichment_status==="enriched":x.enrichment_status!=="enriched"))&&(!q||[x.title,x.summary,x.details,x.publisher,(x.companies||[]).join(" ")].join(" ").toLowerCase().includes(q)));const enriched=list.filter(x=>x.enrichment_status==="enriched").length;const newest=BUSINESS.map(x=>x.published).filter(Boolean).sort().pop();const collected=DATA?.retrieved_at_ist||DATA?.retrieved_at||"timestamp unavailable";const bh=(DATA?.source_health||[]).filter(x=>x.stream==="business");const bhOk=bh.filter(x=>x.status==="success").length;const freshness="Collected "+collected+" · newest event "+fmt(newest)+" · business feeds "+bhOk+"/"+bh.length+" healthy";$("businessCount").textContent=list.length+" of "+BUSINESS.length+" developments · "+freshness+" · "+enriched+" full-page / "+(list.length-enriched)+" feed-only";const counts={};BUSINESS.forEach(x=>counts[x.category]=(counts[x.category]||0)+1);$("businessSummary").innerHTML=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([k,v])=>'<div class="kpi"><span class="label">'+esc(k.toUpperCase())+'</span><strong>'+v+'</strong><span class="hint">Collected developments</span></div>').join("");const pages=Math.max(1,Math.ceil(list.length/BUSINESS_PAGE_SIZE));businessPage=Math.min(businessPage,pages-1);const rows=list.slice(businessPage*BUSINESS_PAGE_SIZE,(businessPage+1)*BUSINESS_PAGE_SIZE);$("businessPage").textContent="Page "+(businessPage+1)+" of "+pages;$("businessPrev").disabled=businessPage===0;$("businessNext").disabled=businessPage>=pages-1;$("businessList").innerHTML=rows.length?rows.map(businessCard).join(""):'<div class="empty">No business developments match these filters. Check source health or broaden the search.</div>'}
 function renderThreats(){if(!DATA)return;const q=$("threatSearch").value.toLowerCase(),topic=$("topicFilter").value,source=$("sourceFilter").value,priority=$("priorityFilter").value;const list=ALL.filter(x=>(!topic||(x.topics||[]).includes(topic))&&(!source||x.source===source)&&(!priority||String(x.priority||"").toLowerCase().includes(priority))&&(!q||[x.title,x.source,x.summary,x.details,x.remediation_guidance,(x.cves||[]).join(" "),(x.topics||[]).join(" ")].join(" ").toLowerCase().includes(q)));$("threatCount").textContent=list.length+" of "+ALL.length+" items";const pages=Math.max(1,Math.ceil(list.length/PAGE_SIZE));threatPage=Math.min(threatPage,pages-1);const rows=list.slice(threatPage*PAGE_SIZE,(threatPage+1)*PAGE_SIZE);$("threatPage").textContent="Page "+(threatPage+1)+" of "+pages;$("threatPrev").disabled=threatPage===0;$("threatNext").disabled=threatPage>=pages-1;$("threatList").innerHTML=rows.length?rows.map(itemHtml).join(""):'<div class="empty">No matching intelligence items.</div>'}

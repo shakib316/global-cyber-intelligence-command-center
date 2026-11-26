@@ -409,70 +409,122 @@ def is_promotional_text(value):
     return bool(PROMOTIONAL_TEXT.search(str(value or "").strip()))
 
 
+TECHNOLOGY_BACKGROUND_CATALOG = [
+    (r"\bnuget\b", "NuGet is the package manager for the .NET ecosystem and the package repository/service used to distribute .NET libraries.", "It lets developers create, publish, discover, install, restore and update package dependencies in .NET projects.", "https://learn.microsoft.com/en-us/nuget/what-is-nuget"),
+    (r"\bmsbuild\b|microsoft build engine", "MSBuild is Microsoft's build platform for .NET and Visual Studio projects.", "It evaluates project files and targets to run build, restore and other configured project tasks.", "https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild"),
+    (r"\bwindows presentation foundation\b|\bwpf\b", "Windows Presentation Foundation (WPF) is a Windows desktop UI framework in .NET.", "It provides a framework for building Windows desktop applications and their user interfaces.", "https://learn.microsoft.com/en-us/dotnet/desktop/wpf/overview/"),
+    (r"\bwinui 3\b", "WinUI 3 is Microsoft's native user-interface framework for Windows desktop applications.", "It provides modern Windows UI controls and application interface components.", "https://learn.microsoft.com/en-us/windows/apps/winui/winui3/"),
+    (r"\bpan.?os\b", "PAN-OS is the operating system used by Palo Alto Networks next-generation firewalls.", "It provides the firewall platform's networking and security capabilities.", "https://docs.paloaltonetworks.com/pan-os"),
+    (r"\bxfrm\b", "XFRM is a Linux kernel framework used for IPsec packet transformations and security associations.", "It supports IPsec processing, including transformation and security-association operations in the network stack.", "https://docs.kernel.org/networking/xfrm/index.html"),
+    (r"\bphp\b", "PHP is a general-purpose scripting language commonly used for web development.", "It can execute server-side application logic and generate dynamic web content.", "https://www.php.net/manual/en/intro-whatis.php"),
+]
+
+def _incident_context_sentence(sentences):
+    patterns = re.compile(r"\b(researchers? (?:identified|discovered|found|observed)|threat actors?|attackers?|the campaign|the attack|the malware|the packages?)\b", re.I)
+    return next((s for s in sentences if patterns.search(s) and len(s) >= 45
+                 and not re.search(r"\b(?:vulnerability|security flaw|is a flaw|is an exploit)\b", s, re.I)), "")
+
 def extract_technology_background(record):
-    """Extract a concise definition only when the retrieved source explicitly states it."""
+    """Build technology context only from reviewed article text or curated primary documentation."""
     text = str(record.get("details") or record.get("summary") or "")
     title = normalize_story_text(record.get("title") or "")
-    if not text or not title:
+    if not text and not title:
         return None
     sentences = [re.sub(r"\s+", " ", s).strip()
         for s in re.split(r"(?<=[.!?])\s+|\n+", text) if len(s.strip()) >= 35]
-    title_terms = {w for w in title.split() if len(w) >= 4 and w not in {"security","update","vulnerability","advisory","critical","moderate","important"}}
+    haystack = (title + " " + text).lower()
+    source = record.get("canonical_url") or record.get("url") or ""
+    for pattern, what_is_it, what_does_it_do, doc_url in TECHNOLOGY_BACKGROUND_CATALOG:
+        if re.search(pattern, haystack, re.I):
+            context = _incident_context_sentence(sentences)
+            if context:
+                what_is_it += " In this incident, " + context[:360]
+            return {
+                "verified": True, "what_is_it": what_is_it,
+                "what_does_it_do": what_does_it_do,
+                "source_urls": [doc_url] + ([source] if source.startswith("https://") and source != doc_url else []),
+                "evidence_type": "curated primary technical documentation plus reviewed incident source",
+            }
+    title_terms = {w for w in title.split() if len(w) >= 4 and w not in {
+        "security","update","vulnerability","advisory","critical","moderate","important",
+        "malicious","packages","attacks","attack","campaign","targeting","exploited"}}
     definitions = []
     for sentence in sentences:
         norm = normalize_story_text(sentence)
         overlap = sum(1 for term in title_terms if term in norm)
-        if overlap and re.search(r"\b(?:is|are|contains?|refers to|is the)\b", sentence, re.I):
-            if re.search(r"\b(?:is an? |is the |are |contains? )", sentence, re.I):
-                definitions.append((overlap, sentence))
-    if not definitions:
+        if (overlap and re.search(r"\b(?:is|are|contains?|refers to|known as)\b", sentence, re.I)
+                and not re.search(r"\b(?:vulnerability|flaw|exploit|attack|campaign|malware|threat)\b", sentence, re.I)):
+            definitions.append((overlap, sentence))
+    if not definitions or not source.startswith("https://"):
         return None
     definition = max(definitions, key=lambda x: (x[0], min(len(x[1]), 260)))[1][:420]
     function = next((s[:420] for s in sentences
         if re.search(r"\b(?:provides|enables|allows|lets|used to|used for|designed to|manages|connects|protects|supports)\b", s, re.I)
-        and sum(1 for term in title_terms if term in normalize_story_text(s)) > 0), None)
-    source = record.get("canonical_url") or record.get("url") or ""
-    if not source.startswith("https://"):
+        and sum(1 for term in title_terms if term in normalize_story_text(s)) > 0
+        and not re.search(r"\b(?:attackers?|malware|payload|exploit|campaign)\b", s, re.I)), None)
+    if not function and re.search(r"the core of (?:any )?linux operating system", definition, re.I):
+        function = "The reviewed source identifies the Linux kernel as the core of a Linux operating system but does not specify further operational functions."
+    if not function:
         return None
-    return {
-        "verified": True,
-        "what_is_it": definition,
-        "what_does_it_do": function or "The reviewed source identifies the technology but does not explain its operational function.",
-        "source_urls": [source],
-        "evidence_type": "explicit source definition",
-    }
+    return {"verified": True, "what_is_it": definition, "what_does_it_do": function,
+            "source_urls": [source], "evidence_type": "explicit source definition"}
+
+def extract_technical_details(record, limit=4):
+    """Select distinct, technically substantive source sentences; omit repeated intros and quotes."""
+    raw = str(record.get("details") or record.get("summary") or "")
+    title = normalize_story_text(record.get("title") or "")
+    summary = normalize_story_text(record.get("summary") or "")
+    candidates = []
+    for part in re.split(r"(?<=[.!?])\s+|\n+", raw):
+        sentence = re.sub(r"\s+", " ", part).strip(" \t\r\n-•")
+        if len(sentence) < 35:
+            continue
+        norm = normalize_story_text(sentence)
+        if not norm or norm == title or norm == summary or (summary and difflib.SequenceMatcher(None,norm,summary).ratio() > 0.88):
+            continue
+        if sentence.startswith(('"', "'", "“", "‘")) or re.search(r"\b(?:said in a statement|according to the report|read more|subscribe|related articles)\b", sentence, re.I):
+            continue
+        if re.match(r"^(?:cybersecurity )?researchers? (?:have )?(?:identified|discovered|found)\b", sentence, re.I):
+            # The article's lead commonly repeats the headline. Keep later mechanism/scope facts.
+            continue
+        if re.search(r"\b(?:researcher .* said|security researcher .* said|the company said|the vendor said)\b", sentence, re.I) and len(sentence) < 180:
+            continue
+        if any(difflib.SequenceMatcher(None,norm,normalize_story_text(x)).ratio() > 0.9 for x in candidates):
+            continue
+        candidates.append(sentence)
+    def score(sentence):
+        value = 0
+        if re.search(r"\b(?:MSBuild|DLL|sideload|PowerShell|RCE|remote code|kernel|package|payload|credential|privilege|root|version|build|CVE-|HTTP|process|registry|token|exploit|execute|download|restore|authentication)\b", sentence, re.I): value += 3
+        if re.search(r"\b\d+\b|CVE-\d{4}-\d+", sentence, re.I): value += 2
+        if len(sentence) < 260: value += 1
+        return value
+    selected = sorted(enumerate(candidates), key=lambda item: (-score(item[1]), item[0]))[:limit]
+    selected.sort(key=lambda item: item[0])
+    return [s[:257].rstrip() + ("…" if len(s) > 260 else "") for _, s in selected]
+
+def report_technical_details(record, limit=4):
+    """Return no more than four distinct technical details."""
+    values = record.get("technical_details")
+    if isinstance(values, list) and values:
+        return "\n".join(str(x) for x in values[:limit])
+    return "\n".join(extract_technical_details(record, limit)) or "Not disclosed in the reviewed source material."
+
 def report_technology_background(record, kind="threat"):
-    """Return only explicit, source-linked technology background; never infer product function."""
+    """Render complete, source-backed technology context without incident-text substitution."""
     background = record.get("technology_background")
     if isinstance(background, dict):
         what_is_it = background.get("what_is_it")
-        # Current collector schema uses what_does_it_do; accept the older
-        # what_does_it spelling too so older snapshots cannot crash reporting.
-        what_does_it = background.get("what_does_it_do") or background.get("what_does_it")
+        what_does_it_do = background.get("what_does_it_do") or background.get("what_does_it")
         source_urls = background.get("source_urls", [])
-        if (background.get("verified") is True and what_is_it and what_does_it
+        if (background.get("verified") is True and what_is_it and what_does_it_do
                 and isinstance(source_urls, list)
                 and any(isinstance(u, str) and u.startswith("https://") for u in source_urls)):
-            return ("What is it? " + str(what_is_it) + "\n"
-                    + "What does it do? " + str(what_does_it))
-    if kind == "kev":
-        product = " ".join(str(record.get(k) or "").strip() for k in ("vendorProject", "product")).strip()
-        return ("What is it? CISA KEV identifies " + (product or "an affected product")
-                + " as affected; the catalogue entry does not establish the product's function.\n"
-                + "What does it do? Not stated in the reviewed CISA record; no product function is inferred.")
+            return "What is it? " + str(what_is_it) + "\nWhat does it do? " + str(what_does_it_do)
     if kind == "business" and record.get("category") != "Products & launches":
-        return ("What is it? Not applicable to this business/industry development.\n"
-                + "What does it do? Not applicable; this is not a technology-function advisory.")
-    return ("What is it? Not established in the reviewed source material.\n"
-            + "What does it do? Not established in the reviewed source material; no capability is inferred from a headline, vendor name or CVE association.")
+        return "What is it? Not applicable to this business/industry development.\nWhat does it do? Not applicable."
+    return ("What is it? Not established in reviewed sources; a source-backed technology definition was not available.\n"
+            "What does it do? Not established in reviewed sources; no function has been inferred.")
 
-def report_technical_details(record, limit=4):
-    """Keep source-derived technical detail to at most four concise sentences."""
-    value = str(record.get("details") or record.get("summary") or "").strip()
-    if not value:
-        return "Not disclosed in the reviewed source material."
-    sentences = [x.strip() for x in re.split(r"(?<=[.!?])\s+", re.sub(r"\s+", " ", value)) if x.strip()]
-    return "\n".join(x[:257].rstrip() + ("…" if len(x) > 260 else "") for x in sentences[:limit])
 
 def report_sources(record, kind="threat"):
     """Return no more than three distinct HTTPS source links."""
@@ -610,7 +662,7 @@ def enrich_records(records,max_workers=10):
             item["details"]=page_details if len(page_details)>len(feed_summary) else (feed_summary or "No description was exposed by the feed or retrieved source page. Review the linked advisory for authoritative details.")
             resolved=result.get("resolved_url","")
             if resolved.startswith("https://") and urlparse(resolved).netloc.lower() not in ("news.google.com","www.google.com"):item["canonical_url"]=resolved
-            item["enrichment_status"]=result.get("status","unknown");item["enriched_at"]=STAMP; item["technology_background"]=item.get("technology_background") or extract_technology_background(item)
+            item["enrichment_status"]=result.get("status","unknown");item["enriched_at"]=STAMP; item["technology_background"]=item.get("technology_background") or extract_technology_background(item); item["technical_details"]=extract_technical_details(item,4)
             if "category" in item:
                 title_norm=normalize_story_text(item.get("title",""))
                 details_norm=normalize_story_text(item.get("details",""))
@@ -794,7 +846,13 @@ def format_cvss_context(record):
     return states.get(record.get("cvss_status"),"CVSS not available / not applicable")
 
 def enrich_kev_records(records,max_workers=8):
-    """Follow vendor URLs supplied by CISA KEV for recent additions only."""
+    """Add source-backed technology context to KEV records and follow vendor URLs."""
+    for record in records:
+        title = " ".join(str(record.get(k) or "") for k in ("vulnerabilityName", "vendorProject", "product"))
+        details = str(record.get("shortDescription") or "")
+        context = {"title": title, "details": details, "url": ""}
+        record["technology_background"] = record.get("technology_background") or extract_technology_background(context)
+        record["technical_details"] = extract_technical_details(context, 4)
     tasks=[]
     for record in records:
         raw=str(record.get("notes") or "")
@@ -1022,7 +1080,7 @@ def main():
                 "- Technology background: " + report_technology_background(v, "kev"),
                 "- Technical details: " + report_technical_details({"details": str(v.get("shortDescription") or "")}),
                 "- Remediation status: " + kev_remediation_text(v),
-                "- Sources: " + " · ".join(f"[Source {i+1}]({u})" for i,u in enumerate(report_sources(v,"kev"))), ""]
+                "- Sources: " + " · ".join(f"[{urlparse(u).netloc}]({u})" for u in report_sources(v,"kev")), ""]
     else:lines.append("- No additions returned, or the feed failed; check source health.")
     lines += ["","## Advisories, campaigns and research — last 72 hours",""]
     if items:
@@ -1031,7 +1089,7 @@ def main():
             "- Technology background: " + report_technology_background(x, "threat"),
             "- Technical details: " + report_technical_details(x),
             "- Remediation status: " + str(x.get("remediation_guidance") or x.get("remediation_status") or "NOT ESTABLISHED — no specific remediation confirmed in reviewed material."),
-            "- Sources: " + " · ".join(f"[Source {i+1}]({u})" for i,u in enumerate(report_sources(x,"threat"))), ""]
+            "- Sources: " + " · ".join(f"[{urlparse(u).netloc}]({u})" for u in report_sources(x,"threat")), ""]
     else:lines.append("No dated items returned. This does not mean no threats occurred; inspect source health.")
     business_health=[x for x in health if x.get("stream")=="business"]
     business_ok=sum(x.get("status")=="success" for x in business_health)
@@ -1047,7 +1105,7 @@ def main():
                 "- Technology background: " + report_technology_background(x, "business"),
                 "- Technical details: " + report_technical_details(x),
                 "- Remediation status: Not applicable — business/industry development, not a vulnerability advisory.",
-                "- Sources: " + " · ".join(f"[Source {i+1}]({u})" for i,u in enumerate(report_sources(x,"business"))), ""]
+                "- Sources: " + " · ".join(f"[{urlparse(u).netloc}]({u})" for u in report_sources(x,"business")), ""]
     else:lines.append("- No business items collected; check business feed health.")
     lines += ["","## IOC candidates — analyst verification required",""]
     if iocs:
