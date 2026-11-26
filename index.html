@@ -619,6 +619,78 @@ th{background:#eaf0f7!important;color:#344b65!important}td{background:#fff!impor
 #criticalTop .critical-sources .source-links{display:flex;flex-wrap:wrap;gap:8px;font-size:11px}
 #criticalTop .critical-sources a{font-weight:700}
 @media(max-width:760px){#criticalTop .critical-list{grid-template-columns:1fr;gap:10px}#criticalTop .critical-item{padding:14px}}
+
+/* Global typography and text-contrast correction — text styling only. */
+/* Consistent readable text across every dashboard tab. */
+#view-overview,#view-briefing,#view-threats,#view-business,#view-kev,#view-queries,#view-sources{color:#172b45}
+#view-overview h1,#view-overview h2,#view-overview h3,#view-overview h4,#view-overview h5,#view-overview h6,
+#view-briefing h1,#view-briefing h2,#view-briefing h3,#view-briefing h4,#view-briefing h5,#view-briefing h6,
+#view-threats h1,#view-threats h2,#view-threats h3,#view-threats h4,#view-threats h5,#view-threats h6,
+#view-business h1,#view-business h2,#view-business h3,#view-business h4,#view-business h5,#view-business h6,
+#view-kev h1,#view-kev h2,#view-kev h3,#view-kev h4,#view-kev h5,#view-kev h6,
+#view-queries h1,#view-queries h2,#view-queries h3,#view-queries h4,#view-queries h5,#view-queries h6,
+#view-sources h1,#view-sources h2,#view-sources h3,#view-sources h4,#view-sources h5,#view-sources h6{color:#102d50;font-weight:750}
+#view-overview p,#view-overview li,#view-briefing p,#view-briefing li,
+#view-threats p,#view-threats li,#view-business p,#view-business li,
+#view-kev p,#view-kev li,#view-queries p,#view-queries li,
+#view-sources p,#view-sources li{color:#263b54}
+#view-overview .muted,#view-overview .sub,#view-overview .meta,#view-overview .hint,
+#view-briefing .muted,#view-briefing .sub,#view-briefing .meta,#view-briefing .hint,
+#view-threats .muted,#view-threats .sub,#view-threats .meta,#view-threats .hint,
+#view-business .muted,#view-business .sub,#view-business .meta,#view-business .hint,
+#view-kev .muted,#view-kev .sub,#view-kev .meta,#view-kev .hint,
+#view-queries .muted,#view-queries .sub,#view-queries .meta,#view-queries .hint,
+#view-sources .muted,#view-sources .sub,#view-sources .meta,#view-sources .hint{color:#455b73!important}
+#view-overview .field-label,#view-briefing .field-label,#view-threats .field-label,
+#view-business .field-label,#view-kev .field-label,#view-queries .field-label,#view-sources .field-label{color:#40566f!important;font-size:11px;font-weight:800}
+#view-overview .cell-description,#view-threats .cell-description,#view-business .cell-description,
+#view-kev .cell-description,#view-queries .cell-description,#view-sources .cell-description{color:#334a63!important;font-size:13px;line-height:1.65}
+#view-overview .intel-title,#view-threats .intel-title,#view-business .intel-title{color:#102d50!important;font-size:18px!important;font-weight:780;line-height:1.4}
+#view-overview .intel-card .meta,#view-threats .intel-card .meta,#view-business .intel-card .meta{color:#455b73!important;font-size:12px!important}
+#view-overview .description-block p,#view-threats .description-block p,#view-business .description-block p{color:#263b54!important;font-size:14px;line-height:1.65}
+#view-overview .technology-context h5,#view-threats .technology-context h5,#view-business .technology-context h5{color:#173a5d!important;font-size:13px}
+#view-overview .card-section h5,#view-threats .card-section h5,#view-business .card-section h5,#view-kev .card-section h5{color:#173a5d!important;font-size:12px}
+#view-overview .remediation-panel p,#view-threats .remediation-panel p,#view-business .remediation-panel p{font-size:13px;line-height:1.6}
+#view-overview .source-links a,#view-threats .source-links a,#view-business .source-links a{font-size:12px}
+#view-overview .panelhead h3,#view-overview .panel h3,#view-threats .panelhead h3,#view-business .panelhead h3,
+#view-kev .panelhead h3,#view-queries .panelhead h3,#view-sources .panelhead h3{font-size:16px!important;color:#102d50!important;font-weight:780}
+#view-overview .kpi .label,#view-overview .kpi .hint,#view-business .kpi .label,#view-business .kpi .hint{color:#455b73!important;font-size:11px}
+#view-overview .feedrow strong,#view-overview .threat h4,#view-overview .feedrow p,#view-overview .threat p{color:#263b54!important}
+#view-overview .critical-product,#view-overview .critical-dates,#view-overview .critical-remediation p{color:#40566f!important;font-size:13px}
+#view-overview .critical-remediation h5,#view-overview .critical-sources h5{color:#344b65!important;font-size:11px}
+#view-overview .critical-evidence summary{color:#174b91!important;font-size:12px}
+#view-queries .query-card h4,#view-queries .query h4{color:#102d50!important;font-size:16px!important;font-weight:750;line-height:1.45}
+#view-queries .technology-heading h3{color:#173a5d!important;font-size:17px}
+#view-queries .query-details summary,#view-queries details summary{color:#174b91!important;font-size:13px}
+#view-queries .path{color:#455b73!important;font-size:12px}
+#view-briefing .brief h1{font-size:26px!important;line-height:1.3}
+#view-briefing .brief h2{font-size:21px!important;line-height:1.4}
+#view-briefing .brief h3{font-size:17px!important;line-height:1.45}
+#view-briefing .brief h4{font-size:15px!important}
+#view-briefing .brief p,#view-briefing .brief li{color:#263b54!important;font-size:14px!important;line-height:1.7}
+#view-briefing .brief th{color:#344b65!important;font-size:12px}
+#view-briefing .brief td{color:#263b54!important;font-size:13px}
+#view-kev table th,#view-sources table th{color:#344b65!important;font-size:12px}
+#view-kev table td,#view-sources table td{color:#263b54!important;font-size:13px}
+#view-kev .kev-title{color:#102d50!important;font-size:15px;font-weight:750}
+#view-kev .meta,#view-sources .meta{color:#455b73!important;font-size:12px}
+#view-sources .health{color:#263b54!important;font-size:13px}
+#view-sources .health .status{font-size:11px}
+#view-overview .empty,#view-briefing .empty,#view-threats .empty,#view-business .empty,#view-kev .empty,#view-queries .empty,#view-sources .empty{color:#455b73!important;font-size:14px}
+#view-overview a,#view-briefing a,#view-threats a,#view-business a,#view-kev a,#view-queries a,#view-sources a{ text-underline-offset:2px }
+/* Keep status-chip semantics and code-block syntax colours intact. */
+#view-overview .tag,#view-threats .tag,#view-business .tag,#view-kev .tag,#view-queries .tag,#view-sources .tag,
+#view-overview .status,#view-sources .status{font-weight:700}
+#view-briefing pre,#view-queries pre,#view-briefing code,#view-queries code{font-family:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace}
+@media(max-width:760px){
+ #view-overview .intel-title,#view-threats .intel-title,#view-business .intel-title{font-size:16px!important}
+ #view-queries .query-card h4,#view-queries .query h4{font-size:15px!important}
+ #view-briefing .brief h1{font-size:23px!important}
+ #view-briefing .brief h2{font-size:19px!important}
+ #view-briefing .brief h3{font-size:16px!important}
+ #view-briefing .brief p,#view-briefing .brief li{font-size:13px!important}
+}
+
 </style></head><body><div class="shell">
 <header class="top"><div class="brand"><div class="mark">⌁</div><div><h1>Global Cyber Intelligence Command Center</h1></div></div><div class="live"><i class="dot"></i><span id="connection">CONNECTING</span></div></header>
 <div class="layout"><aside class="side"><nav class="side-nav" aria-label="Primary navigation"><button type="button" class="nav active" data-view="overview" aria-current="page"><b>◫</b> Overview</button><button type="button" class="nav" data-view="briefing"><b>▤</b> Daily briefing</button><button type="button" class="nav" data-view="threats"><b>⌕</b> New intelligence</button><button type="button" class="nav" data-view="business"><b>▥</b> Cyber business & market</button><button type="button" class="nav" data-view="kev"><b>⚠</b> CISA KEV watch</button><button type="button" class="nav" data-view="queries"><b>⌘</b> Detection queries</button><button type="button" class="nav" data-view="sources"><b>◉</b> Source health</button></nav><div class="sidefoot">SOURCE OF TRUTH<br><strong>GitHub repository</strong><br>Full content rendered here · Read-only</div></aside>
