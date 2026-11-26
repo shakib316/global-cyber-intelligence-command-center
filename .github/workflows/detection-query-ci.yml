@@ -11,10 +11,10 @@ on:
       - "scripts/collect_threat_intel.py"
       - "index.html"
       - ".github/workflows/**"
-      - ".github/workflows/**"
       - ".github/workflows/detection-query-ci.yml"
   pull_request:
     paths:
+      - ".github/workflows/**"
       - "detection-queries/**"
       - "scripts/validate_detection_queries.py"
       - "scripts/validate_detection_formats.py"
