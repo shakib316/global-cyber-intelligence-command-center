@@ -61,6 +61,7 @@ BUSINESS_RULES=[
 ("Leadership",r"appoint|names? .*ceo|steps down|resign|leadership|chief .* officer"),
 ("Financial results",r"quarterly results|revenue|earnings|financial results|forecast"),
 ("Workforce & restructuring",r"layoff|job cuts|restructur|workforce|redundanc"),
+("Litigation & legal",r"lawsuit|sues? .*over|whistleblower|accounting fraud claim|court filing|settlement|indict(?:ed|ment)|charged with"),
 ("Regulation & policy",r"regulat|antitrust|sanction|policy change")]
 def is_technical_security_story(s):
     """Keep vulnerability/threat reporting out of the business-development stream."""
@@ -93,7 +94,7 @@ def deal_status(s):
     if re.search(r"rumou?red|reportedly|in talks|talks? (?:to acquire|over acquisition|reported)|reported .*acquisition talks|potential (?:acquisition|merger|buyout)|exploring (?:a sale|an acquisition)|considering acquisition|sources say",text,re.I):return "Rumoured"
     if re.search(r"definitive agreement|agreed to acquire|signed .*agreement|signed a deal",text,re.I):return "Signed"
     if re.search(r"announces? (?:plans? to )?acquir|announced .*acquisition|to acquire|acquisition announced|merger announced",text,re.I):return "Announced"
-    return "Rumoured" if re.search(r"report|potential|explor|consider|talk",text,re.I) else "Announced"
+    return "Rumoured" if re.search(r"report|potential|explor|consider|talk",text,re.I) else "Reported — status not established"
 
 def is_stock_market_noise(s):
     """Drop price-target/stock-move stories that do not report a company event."""
@@ -402,6 +403,39 @@ def is_promotional_text(value):
     return bool(PROMOTIONAL_TEXT.search(str(value or "").strip()))
 
 
+def extract_technology_background(record):
+    """Extract a concise definition only when the retrieved source explicitly states it."""
+    text = str(record.get("details") or record.get("summary") or "")
+    title = normalize_story_text(record.get("title") or "")
+    if not text or not title:
+        return None
+    sentences = [re.sub(r"\\s+", " ", s).strip()
+        for s in re.split(r"(?<=[.!?])\\s+|\\n+", text) if len(s.strip()) >= 35]
+    title_terms = {w for w in title.split() if len(w) >= 4 and w not in {"security","update","vulnerability","advisory","critical","moderate","important"}}
+    definitions = []
+    for sentence in sentences:
+        norm = normalize_story_text(sentence)
+        overlap = sum(1 for term in title_terms if term in norm)
+        if overlap and re.search(r"\\b(?:is|are|refers to|is the)\\b", sentence, re.I):
+            if re.search(r"\\b(?:is an? |is the |are )", sentence, re.I):
+                definitions.append((overlap, sentence))
+    if not definitions:
+        return None
+    definition = max(definitions, key=lambda x: (x[0], min(len(x[1]), 260)))[1][:420]
+    # Do not invent operational capabilities. If the source gives only a definition,
+    # state that its operational function was not explained by that source.
+    function = next((s[:420] for s in sentences
+        if re.search(r"\\b(?:provides|enables|allows|lets|used to|used for|designed to|manages|connects|protects|supports)\\b", s, re.I)
+        and sum(1 for term in title_terms if term in normalize_story_text(s)) > 0), None)
+    return {
+        "verified": True,
+        "what_is_it": definition,
+        "what_does_it_do": function or "The reviewed source identifies the technology but does not explain its operational function.",
+        "source_urls": [record.get("canonical_url") or record.get("url")] if (record.get("canonical_url") or record.get("url","")).startswith("https://") else [],
+        "evidence_type": "explicit source definition",
+    } if (record.get("canonical_url") or record.get("url","")).startswith("https://") else None
+
+
 def report_technology_background(record, kind="threat"):
     """Return only explicit, source-linked technology background; never infer product function."""
     background = record.get("technology_background")
@@ -565,7 +599,7 @@ def enrich_records(records,max_workers=10):
             item["details"]=page_details if len(page_details)>len(feed_summary) else (feed_summary or "No description was exposed by the feed or retrieved source page. Review the linked advisory for authoritative details.")
             resolved=result.get("resolved_url","")
             if resolved.startswith("https://") and urlparse(resolved).netloc.lower() not in ("news.google.com","www.google.com"):item["canonical_url"]=resolved
-            item["enrichment_status"]=result.get("status","unknown");item["enriched_at"]=STAMP
+            item["enrichment_status"]=result.get("status","unknown");item["enriched_at"]=STAMP; item["technology_background"]=item.get("technology_background") or extract_technology_background(item)
             if "category" in item:
                 title_norm=normalize_story_text(item.get("title",""))
                 details_norm=normalize_story_text(item.get("details",""))
@@ -606,6 +640,9 @@ def enrich_records(records,max_workers=10):
         else:
             item["remediation_guidance"]=" ".join(source_action)[:1800] if source_action else ""
             if no_patch and gated:item["remediation_status"]="No vendor patch stated in source; workaround is referenced but requires vendor portal access"
+            elif re.search(r"security update|security advisory|update .*available|update is now available|fixed in", evidence, re.I):
+                item["remediation_status"]="Vendor security update is referenced; exact fixed package/build must be confirmed in the advisory"
+                item["remediation_guidance"]="Review the linked vendor advisory and install the update for the affected product branch; verify the installed package/build against the vendor's fixed-version table."
             elif no_patch:item["remediation_status"]="Source states no patch/fix is available; verify current vendor status"
             elif source_action:item["remediation_status"]="Specific actionable guidance extracted"
             else:item["remediation_status"]="No specific fix identified in retrieved source text" if item.get("enrichment_status")=="enriched" else "Fix status unknown — source page not fully retrieved"
