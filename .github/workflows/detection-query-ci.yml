@@ -2,6 +2,7 @@ name: Detection Query Quality Checks
 
 on:
   push:
+    branches: [main]
     paths:
       - "detection-queries/**"
       - "scripts/validate_detection_queries.py"
