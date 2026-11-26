@@ -386,27 +386,27 @@ BOILERPLATE_TEXT = re.compile(
     r"already have an account|create an account|log in to continue|"
     r"share this (?:article|story|page)|related (?:articles|stories)|"
     r"read more stories|advertisement|sponsored content|"
-    r"all rights reserved|©\\s*\\d{4}|javascript is required",
+    r"all rights reserved|©\s*\d{4}|javascript is required",
     re.I,
 )
 
 
 def is_boilerplate_text(value):
     """Identify common non-editorial page text; false positives are deliberately avoided."""
-    text = re.sub(r"\\s+", " ", str(value or "")).strip()
+    text = re.sub(r"\s+", " ", str(value or "")).strip()
     return bool(text and (is_promotional_text(text) or BOILERPLATE_TEXT.search(text)))
 
 
 def clean_extracted_text(value):
     """Remove obvious page chrome while preserving source wording and paragraph order."""
     kept = []
-    for raw in re.split(r"\\n+", str(value or "")):
-        part = re.sub(r"\\s+", " ", html.unescape(raw)).strip()
+    for raw in re.split(r"\n+", str(value or "")):
+        part = re.sub(r"\s+", " ", html.unescape(raw)).strip()
         if len(part) < 35 or is_boilerplate_text(part):
             continue
         if part not in kept:
             kept.append(part)
-    return "\\n\\n".join(kept)
+    return "\n\n".join(kept)
 
 
 def build_technical_summary(value, max_sentences=4, max_chars=1100):
@@ -414,7 +414,7 @@ def build_technical_summary(value, max_sentences=4, max_chars=1100):
     cleaned = clean_extracted_text(value)
     if not cleaned:
         return ""
-    sentences = [re.sub(r"\\s+", " ", s).strip() for s in re.split(r"(?<=[.!?])\\s+", cleaned)]
+    sentences = [re.sub(r"\s+", " ", s).strip() for s in re.split(r"(?<=[.!?])\s+", cleaned)]
     selected = []
     for sentence in sentences:
         if len(sentence) < 45 or is_boilerplate_text(sentence):
@@ -621,11 +621,14 @@ def enrich_records(records,max_workers=10):
             item=futures[future]
             try:result=future.result()
             except Exception:result={"status":"fetch_failed","details":"","references":[]}
-            feed_summary=item.get("summary","").strip();page_details=result.get("details","").strip()
-            item["details"]=page_details if len(page_details)>len(feed_summary) else (feed_summary or "No description was exposed by the feed or retrieved source page. Review the linked advisory for authoritative details.")
+            feed_summary=clean_extracted_text(item.get("summary","").strip());page_details=clean_extracted_text(result.get("details","").strip())
+            item["summary"]=feed_summary
+            item["details"]=page_details if len(page_details)>len(feed_summary) else (feed_summary or "No relevant technical description was extracted from the feed or retrieved page. Review the linked primary advisory.")
+            item["technical_summary"]=build_technical_summary(item["details"]) or "A concise technical summary could not be extracted from the reviewed source text; consult the linked advisory."
             resolved=result.get("resolved_url","")
             if resolved.startswith("https://") and urlparse(resolved).netloc.lower() not in ("news.google.com","www.google.com"):item["canonical_url"]=resolved
-            item["enrichment_status"]=result.get("status","unknown");item["enriched_at"]=STAMP\n            if result.get("technical_summary"):item["technical_summary"]=build_technical_summary(result["technical_summary"])
+            item["enrichment_status"]=result.get("status","unknown");item["enriched_at"]=STAMP
+            if result.get("technical_summary"):item["technical_summary"]=build_technical_summary(result["technical_summary"])
             if "category" in item:
                 title_norm=normalize_story_text(item.get("title",""))
                 details_norm=normalize_story_text(item.get("details",""))
