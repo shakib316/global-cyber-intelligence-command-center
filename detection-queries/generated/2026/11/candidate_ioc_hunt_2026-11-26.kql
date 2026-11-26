@@ -1,0 +1,16 @@
+// ID: GCI-KQL-IOC-20261126
+// Title: Candidate IOC network and file hunt
+// Platform: Microsoft Defender XDR / Sentinel
+// Type: Threat-intelligence hunt; analyst verification required
+// Data source: DeviceNetworkEvents, DeviceFileEvents
+// Required fields: Timestamp, DeviceName, RemoteUrl, RemoteIP, SHA256, SHA1, MD5
+// Maturity: Draft
+// False positives: Shared hosting, stale indicators, benign redirects and common software hashes
+// Tuning: Verify each value against the primary report before use
+let Domains = dynamic(["talosintelligence.com", "golang.org"]);
+let IPs = dynamic([]);
+let Hashes = dynamic(["9f1f11a708d393e0a4109ae189bc64f1f3e312653dcf317a2bd406f18ffcc507", "2915b3f8b703eb744fc54c81f4a9c67f"]);
+union
+(DeviceNetworkEvents | where Timestamp > ago(7d) | where (isnotempty(RemoteUrl) and RemoteUrl has_any (Domains)) or (isnotempty(RemoteIP) and RemoteIP in (IPs)) | project Timestamp, DeviceName, EventType="Network", Indicator=coalesce(RemoteUrl,RemoteIP), InitiatingProcessFileName, InitiatingProcessCommandLine),
+(DeviceFileEvents | where Timestamp > ago(7d) | where SHA256 in (Hashes) or SHA1 in (Hashes) or MD5 in (Hashes) | project Timestamp, DeviceName, EventType="File", Indicator=coalesce(SHA256,SHA1,MD5), InitiatingProcessFileName, InitiatingProcessCommandLine)
+| order by Timestamp desc
