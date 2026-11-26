@@ -94,6 +94,27 @@ preview_end = html.find("renderKev();", critical_end)
 if critical_end < 0 or preview_end < 0 or 'kevAction(v)' not in html[critical_end:preview_end] or 'v.requiredAction' in html[critical_end:preview_end]:
     raise SystemExit("Recent KEV preview bypasses the shared KEV remediation guard")
 
+
+# Business-news quality gates: technical advisories must not leak into business news.
+technical_business_fixtures = [
+    "Critical Juniper Session Smart Conductor Flaw Exploited in Attacks CVE-2026-103406",
+    "Mitel MiCollab Zero-Days Exploited in Suspected AI-Assisted Attacks",
+    "Drupal Installer Patch Left a Gap Attackers Are Already Exploiting",
+    "Two Newly Disclosed GeoServer Vulnerabilities Under Attack",
+    "Microsoft China hackers exploiting a security flaw",
+]
+if any(collector.business_category(x) != "Not a business development" for x in technical_business_fixtures):
+    raise SystemExit("Technical vulnerability/threat story was incorrectly classified as business news")
+business_event_fixtures = [
+    "CrowdStrike acquires Zscaler in a $43.9 billion deal",
+    "Cybersecurity startup raises $50 million in Series B funding",
+    "Security company announces strategic partnership with Visa",
+    "Company appoints new chief information security officer",
+    "Cybersecurity vendor reports quarterly revenue growth",
+]
+if any(collector.business_category(x) == "Not a business development" for x in business_event_fixtures):
+    raise SystemExit("A genuine business event was incorrectly excluded from business news")
+
 scripts = re.findall(r"<script>([\s\S]*?)</script>", html, re.I)
 if not scripts:
     raise SystemExit("No inline dashboard JavaScript found")
