@@ -154,7 +154,7 @@ const TECHNOLOGY_CONTEXT=[
  [/\bphp\b/i,"PHP is a general-purpose scripting language commonly used for web development.","It can execute server-side application logic and generate dynamic web content.","https://www.php.net/manual/en/intro-whatis.php"]
 ];
 const technologyBackgroundBlock=(x,kind="threat")=>{
- const bg=x.technology_background||{},hay=String((x.title||"")+" "+(x.details||x.summary||""));
+ const bg=x.technology_background||{},hay=String((x.title||"")+" "+(x.details||x.summary||x.shortDescription||""));
  const verified=bg.verified===true&&typeof bg.what_is_it==="string"&&bg.what_is_it.trim()&&typeof bg.what_does_it_do==="string"&&bg.what_does_it_do.trim()&&Array.isArray(bg.source_urls)&&bg.source_urls.some(u=>typeof u==="string"&&u.startsWith("https://"));
  let what=verified?bg.what_is_it:"",does=verified?bg.what_does_it:"",extraUrl="";
  if(!verified){const match=TECHNOLOGY_CONTEXT.find(row=>row[0].test(hay));if(match){what=match[1];does=match[2];extraUrl=match[3];}}
@@ -162,8 +162,7 @@ const technologyBackgroundBlock=(x,kind="threat")=>{
  if(!does)does="Not established in reviewed sources; no function has been inferred. No product-function description has been inferred.";
  if(kind==="business"&&x.category!=="Products & launches"){what="Not applicable to this business/industry development.";does="Not applicable.";}
  if(kind==="kev"&&!verified&&!extraUrl){what="The CISA KEV record identifies the affected product, but does not define its technology.";does="Not established in the reviewed CISA record.";}
- const note=extraUrl?'<span class="context-source">Definition: <a href="'+safeUrl(extraUrl)+'" target="_blank" rel="noopener">official technical documentation ↗</a></span>':"";
- return '<div class="description-block"><span class="field-label">Technology background</span><p><strong>What is it?</strong> '+esc(what)+'<br><strong>What does it do?</strong> '+esc(does)+'</p>'+note+'</div>';
+ return '<div class="description-block"><span class="field-label">Technology background</span><p><strong>What is it?</strong> '+esc(what)+'<br><strong>What does it do?</strong> '+esc(does)+'</p></div>';
 };
 const technicalDetailsBlock=(value,record={})=>{
  let lines=Array.isArray(value)?value:String(value||"").split(/\n+/).flatMap(p=>p.match(/[^.!?]+[.!?]?/g)||[p]);
@@ -184,6 +183,7 @@ const sourceLinksBlock=(x,kind="threat")=>{
  for(const ref of (x.vendor_remediation||[]))add(ref.source_url);
  for(const ref of (x.vendor_references||[]))add(ref.url);
  const bg=x.technology_background||{}; for(const u of (bg.source_urls||[]))add(u);
+ const contextMatch=TECHNOLOGY_CONTEXT.find(row=>row[0].test(String((x.title||"")+" "+(x.details||x.summary||x.shortDescription||"")))); if(contextMatch)add(contextMatch[3]);
  const ev=x.remediation_evidence||{}; for(const u of (ev.evidence_sources||[]))add(u); for(const v of (ev.candidate_fixed_releases||[]))add(v.source_url);
  for(const u of (x.related_urls||[]))add(u);
  if(kind==="kev"){add("https://nvd.nist.gov/vuln/detail/"+encodeURIComponent(x.cveID||""));add(x.notes);}
