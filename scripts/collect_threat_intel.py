@@ -376,8 +376,8 @@ class ArticleText(HTMLParser):
             value=re.sub(r"\s+"," "," ".join(self.buf)).strip()
             if len(value)>=55 and value not in self.paragraphs:
                 # Exclude author biographies and newsletter/related-story boilerplate.
-                noise = re.search(r"\\b(?:is|was) (?:an? )?(?:international correspondent|senior (?:managing )?editor|reporter|journalist|staff writer)\\b|"
-                    r"\\b(?:holds?|earned|received) (?:a |an )?(?:bachelor|master|doctorate|degree)\\b|"
+                noise = re.search(r"\b(?:is|was) (?:an? )?(?:international correspondent|senior (?:managing )?editor|reporter|journalist|staff writer)\b|"
+                    r"\b(?:holds?|earned|received) (?:a |an )?(?:bachelor|master|doctorate|degree)\b|"
                     r"worked as .* before starting a career|subscribe to our newsletter|"
                     r"related (?:articles|stories)|read more:", value, re.I)
                 if not noise and not is_promotional_text(value):
