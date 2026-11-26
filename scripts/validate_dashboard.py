@@ -320,6 +320,25 @@ for example in specific_fixes:
     if not collector.extract_specific_remediation(example):
         raise SystemExit("A concrete remediation example was not extracted: " + example)
 
+# CVE evidence ledger: field-level provenance, uncertainty and product/CVE mapping.
+kev_fixture=[{"cveID":"CVE-2026-12345","vendorProject":"Example Vendor","product":"Example Product",
+ "vulnerabilityName":"Example Product remote code execution","notes":"https://vendor.example/advisory",
+ "cvss":{"version":"3.1","base_score":9.0,"severity":"CRITICAL","source_url":"https://nvd.nist.gov/vuln/detail/CVE-2026-12345"},
+ "vendor_remediation":[{"source_url":"https://vendor.example/advisory","guidance":["Upgrade Example Product to version 4.2.1."]}]}]
+ledger_records=[{"cves":["CVE-2026-12345","CVE-2026-54321"],"url":"https://research.example/report"}]
+collector.attach_cve_verification(ledger_records,kev_fixture)
+ledger=ledger_records[0]["cve_verification"]
+if len(ledger)!=2 or ledger[0]["product"]!="Example Vendor/Example Product":
+    raise SystemExit("CVE evidence ledger did not preserve one-to-one product mapping")
+if ledger[0]["fields"]["cvss"]["status"]!="Verified (source)" or ledger[0]["fields"]["kev_status"]["status"]!="Verified (source)":
+    raise SystemExit("CVE ledger did not preserve NVD/CISA field provenance")
+if ledger[0]["fields"]["affected_versions"]["status"]!="Unverified" or ledger[1]["fields"]["product"]["status"]!="Unverified":
+    raise SystemExit("CVE ledger must not infer affected versions or product mappings")
+if "No patch" in str(ledger[0]["fields"]["fix_or_mitigation"]["value"]):
+    raise SystemExit("Extracted vendor guidance must not be represented as a confirmed patch")
+if "def attach_cve_verification(records, kev_records=None)" not in collector_source or "CVE evidence ledger" not in collector_source:
+    raise SystemExit("Collector does not emit the global per-CVE evidence ledger")
+
 # CVEs must be re-extracted after full-page enrichment, including identifiers of variable length.
 cve_example = "Article text: affected components include CVE-2026-129538, CVE-2026-95325 and CVE-2026-100000001."
 if collector.extract_cves(cve_example) != ["CVE-2026-100000001", "CVE-2026-129538", "CVE-2026-95325"]:
