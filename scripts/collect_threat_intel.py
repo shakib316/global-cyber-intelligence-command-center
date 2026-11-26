@@ -542,6 +542,24 @@ def describe_technology(title="", summary="", details="", vendor="", product="",
         "what_it_does": "Technology details could not be independently verified from the available sources.",
         "basis": "insufficient source evidence"}
 
+def describe_business_context(title="", summary="", details="", companies=None):
+    """Keep business/company context separate from threat technology classification.
+
+    Only describe a product when a specific technology is named and matched by
+    the curated glossary. Company names alone are not enough to infer product
+    purpose or business role.
+    """
+    evidence = " ".join(str(x or "") for x in (title, summary, details))
+    context = describe_technology(title, summary, details)
+    broad_company_names = {"microsoft", "google / google cloud", "fortinet", "cisco",
+                           "palo alto networks", "crowdstrike", "zscaler", "cloudflare", "akamai"}
+    if context.get("status") == "identified" and context.get("name", "").lower() not in broad_company_names:
+        return context
+    return {"status": "not_identified", "name": "Company or product not confidently identified",
+            "what_is_it": "Technology details could not be independently verified from the available sources.",
+            "what_it_does": "Technology details could not be independently verified from the available sources.",
+            "basis": "business story does not establish a specific product role"}
+    
 def enrich_page(url,title=""):
     """Fetch readable article text plus candidate security/advisory links."""
     try:
@@ -1067,7 +1085,7 @@ def main():
     for x in items:
         x["technology_context"] = describe_technology(x.get("title"), x.get("summary"), x.get("details"))
     for x in business_items:
-        x["technology_context"] = describe_technology(x.get("title"), x.get("summary"), x.get("details"), companies=x.get("companies"))
+        x["business_context"] = describe_business_context(x.get("title"), x.get("summary"), x.get("details"), x.get("companies"))
     # CVEs must be extracted after full-page retrieval; feed snippets alone are incomplete.
     for item in items:
         item["cves"]=extract_cves(item.get("title"),item.get("summary"),item.get("details"),
