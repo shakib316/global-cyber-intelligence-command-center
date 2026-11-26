@@ -513,8 +513,10 @@ if "australia_acsc" in feed_urls:
     raise SystemExit("ACSC feed must remain intentionally excluded until its upstream availability is restored")
 if 'health_state.pop("Australian ACSC",None)' not in collector_source:
     raise SystemExit("Excluded ACSC source must not leave stale failure telemetry")
-if "actions: read" not in daily_workflow or "Wait for Pages artifact visibility" not in daily_workflow or "artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}" not in daily_workflow:
-    raise SystemExit("Daily deployment must wait for its uniquely named Pages artifact before deploy")
+if "actions/upload-pages-artifact@v5" in daily_workflow or "actions/deploy-pages@v5" in daily_workflow:
+    raise SystemExit("Raw collection workflow must not create or deploy a Pages artifact")
+if "intel-staging" not in daily_workflow:
+    raise SystemExit("Daily collection workflow must stage data for AI enrichment")
 article = {
     "url": "https://research.example/story",
     "title": "Example vulnerability CVE-2026-12345",
