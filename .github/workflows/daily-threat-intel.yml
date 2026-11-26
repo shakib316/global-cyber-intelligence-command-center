@@ -2,6 +2,7 @@ name: Daily Threat Intelligence Collection
 
 on:
   push:
+    branches: [main]
     paths:
       - "scripts/collect_threat_intel.py"
       - "scripts/validate_dashboard.py"
