@@ -379,6 +379,88 @@ def is_promotional_text(value):
 def normalize_story_text(value):
     return re.sub(r"[^a-z0-9]+"," ",str(value or "").lower()).strip()
 
+
+# Curated, deliberately conservative plain-English descriptions. Add entries only
+# when the technology's purpose is clear from reliable product documentation.
+TECHNOLOGY_GLOSSARY = [
+    (r"\b1password\b", "1Password", "A password manager.", "It securely stores passwords, passkeys, software licences and other sensitive information so people and teams can access them without reusing passwords."),
+    (r"\bdrupal\b", "Drupal", "A content management system (CMS) for websites.", "It helps organisations create, manage and publish website content."),
+    (r"\blibpcap\b", "libpcap", "A software library for capturing network packets.", "It lets network and security tools read traffic seen by a network interface for monitoring, troubleshooting or analysis."),
+    (r"\bopenssl\b", "OpenSSL", "A widely used software toolkit for cryptography and secure connections.", "It provides encryption, certificate and TLS functions used by many applications."),
+    (r"\bopenSSH\b", "OpenSSH", "A set of tools for secure remote login and file transfer.", "It provides encrypted SSH connections used to administer systems and move files."),
+    (r"\bwordpress\b", "WordPress", "A content management system (CMS) used to build websites.", "It lets site owners publish pages, posts and manage website features through themes and plugins."),
+    (r"\bjoomla\b", "Joomla", "A content management system (CMS) for websites.", "It helps users build and manage websites and online applications."),
+    (r"\bapache(?: http server)?\b", "Apache HTTP Server", "Web-server software.", "It receives web requests and delivers websites and web applications to visitors."),
+    (r"\bnginx\b", "NGINX", "Web-server and reverse-proxy software.", "It serves websites and can route traffic to application servers, balance load and handle TLS connections."),
+    (r"\bfortios\b|\bfortigate\b", "Fortinet FortiOS / FortiGate", "Network security software used in Fortinet firewalls.", "It controls network traffic and provides firewall, VPN and other security functions."),
+    (r"\bpan-os\b|\bpalo alto networks firewall\b", "Palo Alto Networks PAN-OS", "The operating system used by Palo Alto Networks firewalls.", "It controls firewall policy, network traffic inspection and security services."),
+    (r"\bcisco ios xe\b", "Cisco IOS XE", "The operating system used by many Cisco network devices.", "It manages routing, switching and network-device features."),
+    (r"\bvmware vcenter\b|\bvcenter server\b", "VMware vCenter Server", "A management platform for VMware virtual infrastructure.", "It lets administrators centrally manage virtual machines, hosts and clusters."),
+    (r"\bkubernetes\b|\bk8s\b", "Kubernetes", "A platform for managing containerised applications.", "It deploys, scales and maintains applications running in containers across groups of servers."),
+    (r"\bdocker\b", "Docker", "A platform and toolset for building and running software containers.", "It packages applications with their dependencies so they can run consistently across environments."),
+    (r"\bwindows\b", "Microsoft Windows", "A desktop and server operating system.", "It runs applications and manages devices, users, files and system services."),
+    (r"\bexchange server\b|\bmicrosoft exchange\b", "Microsoft Exchange Server", "Email and calendaring server software.", "It provides organisations with email, calendars, contacts and related collaboration services."),
+    (r"\bsharepoint\b", "Microsoft SharePoint", "A collaboration and document-management platform.", "It helps organisations store, share and manage documents, intranet pages and team information."),
+    (r"\bactive directory\b", "Microsoft Active Directory", "A directory service for managing users, computers and access in Windows environments.", "It centralises authentication, identity information and access policies."),
+    (r"\bentra(?: id)?\b", "Microsoft Entra ID", "Microsoft's cloud identity and access-management service.", "It manages sign-ins and access to cloud applications and services."),
+    (r"\bchrome\b", "Google Chrome", "A web browser.", "It lets people access websites and run web applications."),
+    (r"\bfirefox\b", "Mozilla Firefox", "A web browser.", "It lets people access websites and run web applications."),
+    (r"\blinux kernel\b|\bkernel\b", "Linux kernel", "The core of the Linux operating system.", "It manages hardware, memory, processes and communication between software and devices."),
+    (r"\bubuntu\b|\busn-\d{4}-\d+\b", "Ubuntu Linux", "A Linux operating system distributed by Canonical.", "It runs servers, desktops and cloud workloads. USN numbers identify Ubuntu Security Notices describing security updates."),
+    (r"\bglibc\b", "GNU C Library (glibc)", "A core library used by many Linux programs.", "It provides common functions that applications use to interact with the operating system."),
+    (r"\bsystemd\b", "systemd", "A system and service manager used by many Linux distributions.", "It starts and manages system services and other parts of the operating system."),
+    (r"\blibxml2\b", "libxml2", "A software library for processing XML documents.", "It lets applications parse, read and work with XML data."),
+    (r"\blibssh\b", "libssh", "A software library for implementing SSH connections.", "It lets applications communicate securely with remote systems using SSH."),
+    (r"\bphp\b", "PHP", "A programming language commonly used for websites and web applications.", "It runs server-side application code that generates pages and handles web requests."),
+    (r"\bpostgres(?:ql)?\b", "PostgreSQL", "An open-source relational database.", "It stores structured application data and lets software query and update that data."),
+    (r"\bmysql\b", "MySQL", "A relational database system.", "It stores structured data used by websites and business applications."),
+    (r"\bredis\b", "Redis", "An in-memory data store.", "Applications commonly use it for caching, fast lookups, queues and temporary data."),
+    (r"\bsamba\b", "Samba", "Software that provides Windows-compatible file and print sharing on Linux and Unix systems.", "It lets systems share files and services over a network."),
+    (r"\bwireshark\b", "Wireshark", "A network protocol analysis tool.", "It captures and displays network traffic so engineers can troubleshoot or investigate communications."),
+    (r"\btcpdump\b", "tcpdump", "A command-line network packet capture tool.", "It captures network traffic for troubleshooting and security analysis."),
+    (r"\b1password\b", "1Password", "A password manager.", "It securely stores passwords, passkeys and other sensitive information for individuals and teams."),
+    (r"\bsplunk\b", "Splunk", "A platform for collecting, searching and analysing machine-generated data.", "Security and IT teams use it to investigate logs, monitor systems and build alerts and dashboards."),
+    (r"\bcrowdstrike\b", "CrowdStrike", "A cybersecurity company best known for endpoint protection and threat detection products.", "Its security platform helps organisations monitor endpoints and investigate threats."),
+    (r"\bzscaler\b", "Zscaler", "A cloud security company providing secure access and web protection services.", "Its services inspect and control user access to internet and private applications."),
+    (r"\bfortinet\b", "Fortinet", "A cybersecurity company that makes network security products.", "Its portfolio includes firewalls, secure networking and endpoint security tools."),
+    (r"\bcisco\b", "Cisco", "A technology company that makes networking and cybersecurity products.", "Its products connect networks and provide routing, switching and security capabilities."),
+    (r"\bpalo alto networks\b", "Palo Alto Networks", "A cybersecurity company providing network, cloud and security operations products.", "Its platforms help organisations protect networks, cloud workloads and endpoints."),
+    (r"\bmicrosoft\b", "Microsoft", "A technology company that makes operating systems, cloud services and business software.", "Its products include Windows, Microsoft 365, Azure and identity/security services."),
+    (r"\bgoogle\b|\bmandiant\b", "Google / Google Cloud", "A technology company providing internet, cloud and security services.", "Its security products and research help organisations protect cloud services, identities and workloads."),
+    (r"\bcloudflare\b", "Cloudflare", "A company providing internet infrastructure and security services.", "Its services help protect and deliver websites, applications and network traffic."),
+    (r"\bakamai\b", "Akamai", "An internet infrastructure and security company.", "Its services help deliver web content and protect websites and applications."),
+]
+
+def describe_technology(title="", summary="", details="", vendor="", product="", companies=None):
+    """Return short plain-English context without guessing when identification is weak."""
+    text_blob = " ".join(str(x or "") for x in (title, summary, details, vendor, product, *(companies or [])))
+    # Prefer the explicit KEV product/vendor field, then the advisory text.
+    explicit = " ".join(str(x or "") for x in (product, vendor, *(companies or [])))
+    haystacks = [explicit, text_blob] if explicit.strip() else [text_blob]
+    for pattern, name, what, purpose in TECHNOLOGY_GLOSSARY:
+        if any(re.search(pattern, hay, re.I) for hay in haystacks):
+            context = {"status": "identified", "name": name, "what_is_it": what, "what_it_does": purpose, "basis": "curated technology glossary"}
+            usn = re.search(r"\bUSN-\d{4}-\d+\b", text_blob, re.I)
+            if usn:
+                context["identifier_note"] = usn.group(0).upper() + " is an Ubuntu Security Notice identifier; it points to an Ubuntu security update/advisory, not a separate product."
+            return context
+    candidate = str(product or "").strip() or str(vendor or "").strip()
+    if candidate:
+        return {"status": "limited", "name": candidate[:120],
+            "what_is_it": "The source identifies this as an affected product or component, but the available evidence is not enough to describe its exact role reliably.",
+            "what_it_does": "Check the linked vendor advisory for the product's purpose and confirm that the affected product and version are present in your environment.",
+            "basis": "source product/vendor field; role not independently identified"}
+    usn = re.search(r"\bUSN-\d{4}-\d+\b", text_blob, re.I)
+    if usn:
+        return {"status": "limited", "name": usn.group(0).upper(),
+            "what_is_it": "An Ubuntu Security Notice (USN) is Canonical's identifier for a security advisory affecting Ubuntu software.",
+            "what_it_does": "It tells Ubuntu users which package or system component has a security issue and where to find the related update guidance.",
+            "basis": "identifier format"}
+    return {"status": "not_identified", "name": "Technology not confidently identified",
+        "what_is_it": "The collected headline and source text do not identify a specific product or component clearly enough for a reliable plain-English explanation.",
+        "what_it_does": "Open the linked source and confirm the affected product, component and version before deciding whether your systems are affected.",
+        "basis": "insufficient source evidence"}
+
 def enrich_page(url,title=""):
     """Fetch readable article text plus candidate security/advisory links."""
     try:
@@ -846,6 +928,11 @@ def main():
     # Retrieve article-level context and follow only explicitly linked security references.
     enrich_records(items)
     enrich_records(business_items)
+    # Add consistent plain-English context to every threat and business record.
+    for x in items:
+        x["technology_context"] = describe_technology(x.get("title"), x.get("summary"), x.get("details"))
+    for x in business_items:
+        x["technology_context"] = describe_technology(x.get("title"), x.get("summary"), x.get("details"), companies=x.get("companies"))
     # CVEs must be extracted after full-page retrieval; feed snippets alone are incomplete.
     for item in items:
         item["cves"]=extract_cves(item.get("title"),item.get("summary"),item.get("details"),
@@ -862,6 +949,8 @@ def main():
         body=x.get("title","")+" "+x.get("summary","")+" "+x.get("details","")
         x["attack_techniques"]=sorted(set(re.findall(r"\bT\d{4}(?:\.\d{3})?\b",body,re.I)))
     vulns=kev.get("vulnerabilities",[]) if kev else []
+    for v in vulns:
+        v["technology_context"] = describe_technology(v.get("vulnerabilityName"), v.get("shortDescription"), v.get("notes"), v.get("vendorProject"), v.get("product"))
     recentkev=sorted([v for v in vulns if v.get("dateAdded","")>=(NOW_IST.date()-dt.timedelta(days=7)).isoformat()],key=lambda x:x.get("dateAdded",""),reverse=True)
     enrich_kev_records(recentkev[:40])
     attach_kev_remediation_evidence(recentkev[:40])
@@ -898,6 +987,8 @@ def main():
         for v in recentkev[:40]:
             lines.append(f"- **{v.get('cveID','CVE unavailable')} — {v.get('vulnerabilityName','Name unavailable')}** | {v.get('vendorProject','unknown')} / {v.get('product','unknown')} | added {v.get('dateAdded','unknown')} | due {v.get('dueDate','not stated')} | [CISA record]({v.get('notes','https://www.cisa.gov/known-exploited-vulnerabilities-catalog')})")
             lines.append("  - Fix / remediation: "+kev_remediation_text(v))
+            tc=v.get("technology_context",{}); lines.append("  - What is it? "+tc.get("what_is_it","Technology context not available.")); lines.append("  - What does it do? "+tc.get("what_it_does","Check the linked source for product purpose."))
+            if tc.get("identifier_note"): lines.append("  - Identifier context: "+tc["identifier_note"])
             lines.append("  - EPSS context: "+format_epss_context(v)+" — FIRST.org; not an asset-specific risk score")
             lines.append("  - CVSS context: "+format_cvss_context(v)+" — NVD technical severity, not an asset-specific risk score")
             for ref in v.get("vendor_remediation",[]):
@@ -909,6 +1000,8 @@ def main():
             f"- CVEs: {', '.join(x['cves']) or 'none extracted'} | Topic signals: {', '.join(x['topics']) or 'analyst review required'}",
             f"- Summary: {x.get('summary','')[:900]}",
             f"- Technical details: {x.get('details') or x.get('summary','')[:900]}",
+            f"- What is it? {x.get('technology_context',{}).get('what_is_it','Technology context not available.')}",
+            f"- What does it do? {x.get('technology_context',{}).get('what_it_does','Check the linked source for product purpose.')}",
             f"- Fix / remediation: {x.get('remediation_guidance') or x.get('remediation_status') or 'Fix status unknown; check the linked vendor advisory for updates.'}",
             f"- EPSS context: {format_epss_context(x)} — FIRST.org; not an asset-specific risk score",
             f"- [Open source item]({x['url']})",""]
@@ -922,7 +1015,7 @@ def main():
         lines += ["- Feed issues: "+"; ".join(x["source"]+" — "+str(x.get("error") or "unavailable") for x in failed_business)]
     if business_items:
         for x in business_items[:60]:
-            lines += ["### "+x["title"],"- Category: "+x["category"]+" | Deal stage: "+x["deal_status"]+" | Publisher: "+x["publisher"]+" | Published: "+(x.get("published") or "unknown")+" | Detail enrichment: "+x.get("enrichment_status","feed summary only"),"- Summary: "+x.get("summary","")[:900],"- Business background / implications: "+(x.get("details") or x.get("summary",""))[:2500],"- Action: Not applicable as a vulnerability fix; verify deal stage and material claims against company announcements or filings.","- Evidence: [Original report]("+x["url"]+")",""]
+            lines += ["### "+x["title"],"- Category: "+x["category"]+" | Deal stage: "+x["deal_status"]+" | Publisher: "+x["publisher"]+" | Published: "+(x.get("published") or "unknown")+" | Detail enrichment: "+x.get("enrichment_status","feed summary only"),"- Summary: "+x.get("summary","")[:900],"- Business background / implications: "+(x.get("details") or x.get("summary",""))[:2500],"- Company / technology background: "+x.get("technology_context",{}).get("what_is_it","The source does not identify a product or technology clearly enough to describe."),"- What it does: "+x.get("technology_context",{}).get("what_it_does","Review the source for additional context."),"- Action: Not applicable as a vulnerability fix; verify deal stage and material claims against company announcements or filings.","- Evidence: [Original report]("+x["url"]+")",""]
     else:lines.append("- No business items collected; check business feed health.")
     lines += ["","## IOC candidates — analyst verification required",""]
     if iocs:
