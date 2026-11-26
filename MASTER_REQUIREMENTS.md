@@ -165,6 +165,40 @@ Rules:
 - Apply the same wording and fields to the dashboard UI and generated Markdown snapshots/reports. Do not omit the explanation simply because an item came from a different feed.
 - Keep source provenance and uncertainty. Automated glossary matching is contextual assistance, not independent verification of vulnerability impact or asset exposure.
 
+### Technology-background accuracy — permanent data-quality gate
+
+Mandatory for every threat, vulnerability, advisory, KEV record and relevant business/market item in the collector, snapshot, dashboard and generated reports.
+
+**Required output structure:** exactly two fields:
+- **What is it?** Concisely identify the actual affected technology, product, package, service or ecosystem.
+- **What does it do?** Concisely explain its purpose and how it relates to the reported threat, only where supported by reliable evidence.
+
+**Identification and evidence**
+1. Identify the actual technology from the primary advisory, vendor documentation, original researcher report or other reliable source. Use the exact affected product/component/package, not merely a vendor name, broad operating system or unrelated technology mentioned in passing.
+2. Cross-check descriptions against primary sources, vendor advisories and original security research. Preserve evidence URLs and distinguish source-confirmed facts from inference.
+3. Evaluate headline, category, affected product/vendor, source summary/details and proposed background together. They must be semantically consistent.
+4. Specificity precedence: an explicitly named package, library, framework, service or product takes precedence over a broad platform/OS mention. A NuGet/.NET package campaign must not inherit a generic Windows OS description merely because Windows is the payload target.
+5. Never infer purpose from a name, category, vendor, URL or incidental keyword. Never use a generic OS/company glossary entry as fallback for an unrelated package, library, framework or service.
+6. If the technology or role cannot be confidently identified, use this exact safe fallback: **"Technology details could not be independently verified from the available sources."** Do not fabricate explanations; mark context limited/unverified and retain source links.
+7. Automated glossary matching is not source verification. A keyword match alone does not prove that technology is affected.
+8. Do not silently rewrite historical records. Review historical corrections through an explicit evidence-backed migration and impact summary.
+
+**Automated quality gate**
+- Check semantic consistency across headline, category, affected product, Technology Background and threat description.
+- Reject or flag generic descriptions that conflict with a more specific named technology, including Windows/Linux descriptions attached to unrelated packages or cloud services.
+- Regression-test NuGet/.NET malware, Windows vulnerabilities, Linux vulnerabilities, network security appliances, cloud security incidents, phishing and supply-chain attacks.
+- Test correct identification and safe fallback. Static checks are not proof of source verification.
+- Run existing dashboard, collector, frontend-security and detection-query validation. Do not declare complete until applicable checks pass.
+
+**Required regression example**
+Headline: "13 Malicious NuGet Packages Turn Fake .NET Job Assessments Into Malware Delivery Traps"
+
+Expected technology: NuGet / .NET.
+- What is it? "NuGet is the package manager for the .NET ecosystem."
+- What does it do? "It manages third-party packages and dependencies in .NET applications. Malicious packages can abuse this mechanism to deliver malware."
+
+Reject the unrelated description: "A desktop and server operating system" / "It runs applications and manages devices, users, files and system services."
+
 ### Global source extraction, summary and data-quality standard — mandatory
 
 Apply to every collected advisory, vulnerability, threat-research item and relevant business story, across every configured feed and every dashboard/report surface. This is a collector-wide rule, not a source-specific exception.
