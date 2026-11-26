@@ -616,12 +616,13 @@ for item in items:
     ctx = item.get("technology_context")
     if not isinstance(ctx, dict) or not ctx.get("what_is_it") or not ctx.get("what_it_does"):
         raise SystemExit("Threat record missing technology context: " + str(item.get("title", "untitled")))
-for item in business_items:
-    ctx = item.get("business_context")
-    if not isinstance(ctx, dict) or not ctx.get("what_is_it") or not ctx.get("what_it_does"):
-        raise SystemExit("Business record missing separate company/product context: " + str(item.get("title", "untitled")))
-    if item.get("technology_context"):
-        raise SystemExit("Business record must not reuse threat technology_context: " + str(item.get("title", "untitled")))
+if data.get("business_context_version", 0) >= 1:
+    for item in business_items:
+        ctx = item.get("business_context")
+        if not isinstance(ctx, dict) or not ctx.get("what_is_it") or not ctx.get("what_it_does"):
+            raise SystemExit("Business record missing separate company/product context: " + str(item.get("title", "untitled")))
+        if item.get("technology_context"):
+            raise SystemExit("Business record must not reuse threat technology_context: " + str(item.get("title", "untitled")))
 for item in items:
     for ref in item.get("vendor_remediation", []):
         if not str(ref.get("source_url", "")).startswith("https://") or not ref.get("guidance"):
