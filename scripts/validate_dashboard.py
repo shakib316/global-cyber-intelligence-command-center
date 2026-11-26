@@ -116,11 +116,11 @@ ast.parse(collector_source, filename=str(collector_path))
 
 daily_workflow_path = root / ".github/workflows/daily-threat-intel.yml"
 daily_workflow = daily_workflow_path.read_text(encoding="utf-8")
-for required_step in ("  deploy:", "    needs: collect", "actions: read", "pages: write", "id-token: write", "actions/upload-pages-artifact@v5", "Wait for Pages artifact visibility", "Verify checked-out main revision", "actions/deploy-pages@v5"):
+for required_step in ("name: Commit raw intelligence to isolated staging branch", "git checkout -B intel-staging origin/main", "git push --force-with-lease origin HEAD:intel-staging"):
     if required_step not in daily_workflow:
-        raise SystemExit("Daily collection workflow does not publish updated Pages content: " + required_step)
-if "          ref: main" not in daily_workflow:
-    raise SystemExit("Pages deployment must check out latest main after the collector commit")
+        raise SystemExit("Daily collection workflow must stage raw intelligence for AI enrichment: " + required_step)
+if re.search(r"^  deploy:", daily_workflow, re.M):
+    raise SystemExit("Raw collection workflow must not deploy un-enriched intelligence")
 spec = importlib.util.spec_from_file_location("gci_collector", collector_path)
 collector = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(collector)
