@@ -1,7 +1,7 @@
 <!doctype html>
-<html lang="en"><!-- Acceptance build: collector-owned technology context; separate business context; safe fallback; existing dashboard behavior preserved. --><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#08111f"><meta name="description" content="Complete Global Cyber Threat Radar, intelligence briefings and detection queries."><meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.github.com https://raw.githubusercontent.com; form-action 'self'; upgrade-insecure-requests"><title>Global Cyber Intelligence Command Center</title>
+<html lang="en"><!-- Acceptance build: full KEV, CVE links, remediation caveats, date navigation, paginated feeds and lazy technology-grouped detection library. --><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#08111f"><meta name="description" content="Complete Global Cyber Threat Radar, intelligence briefings and detection queries."><meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.github.com https://raw.githubusercontent.com; form-action 'self'; upgrade-insecure-requests"><title>Global Cyber Intelligence Command Center</title>
 <style>
-:root{color-scheme:light;--bg:#f4f7fb;--panel:#fff;--line:#cbd5e1;--text:#172b45;--muted:#52657c;--cyan:#075985;--blue:#174ea6;--red:#a61b2b;--amber:#7a4b00;--green:#12633c;--ink:#172b45;--surface:#fff;--surface-soft:#f1f5f9;--panel-soft:#f1f5f9;--navy:#e8eef6;--navy-2:#dce6f1;--accent:#174ea6;--accent-soft:#e8f0ff;--danger:#a61b2b;--warning:#7a4b00;--success:#12633c;--shadow:0 2px 10px rgba(15,35,60,.07)}
+:root{color-scheme:light;--bg:#f3f6fc;--panel:#fff;--panel2:#edf3ff;--line:#d9e2ec;--text:#101d43;--muted:#52677d;--cyan:#0758cf;--blue:#1769d2;--red:#d92d3a;--amber:#a85a08;--green:#21834a;--ink:#14283d;--surface:#fff;--surface-soft:#f6f9fc}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% -10%,#17395b 0,transparent 38%),var(--bg);color:var(--text);font:14px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial}a{color:var(--cyan);text-decoration:none}a:hover{text-decoration:underline}button,input,select{font:inherit}.shell{max-width:1600px;margin:auto;padding:22px}.top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:20px}.brand{display:flex;gap:13px;align-items:center}.mark{width:46px;height:46px;border:1px solid #32607a;border-radius:13px;display:grid;place-items:center;background:#10283a;color:var(--cyan);font-size:23px}.eyebrow{font-size:10px;letter-spacing:2px;color:var(--cyan);font-weight:800}.brand h1{font-size:19px;line-height:1.2;margin:3px 0}.sub,.muted{color:var(--muted);font-size:12px}.live{display:flex;align-items:center;gap:8px;color:var(--green);font-size:11px;border:1px solid #285747;background:#10281f;padding:8px 12px;border-radius:30px;white-space:nowrap}.dot{width:7px;height:7px;background:var(--green);border-radius:50%}
 .layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:18px}.side{background:#0b1726;border:1px solid var(--line);border-radius:16px;padding:13px;height:max-content;position:sticky;top:12px}.side small{display:block;color:#68809b;font-size:10px;letter-spacing:1.5px;font-weight:800;margin:8px 10px}.nav{display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:9px;color:#a9bbcf;cursor:pointer;margin:3px 0;font-size:13px}.nav.active,.nav:hover{background:#173049;color:#fff}.nav b{font-size:15px;width:18px;text-align:center;color:var(--cyan)}.sidefoot{border-top:1px solid var(--line);margin-top:15px;padding:13px 9px 4px;color:var(--muted);font-size:11px}
 .main{min-width:0}.headline{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:0 0 15px}.headline h2{margin:0;font-size:23px}.headline p{margin:4px 0 0;color:var(--muted)}.actions,.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.btn{border:1px solid var(--line);background:#122238;color:#d9e8f8;border-radius:9px;padding:8px 11px;cursor:pointer}.btn:hover{border-color:var(--cyan)}.btn.primary{background:#12394a;border-color:#28667b;color:#a9f3fa}.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin-bottom:15px}.kpi,.panel{background:linear-gradient(145deg,#112138,#0d1929);border:1px solid var(--line);border-radius:14px}.kpi{padding:14px}.kpi .label{color:var(--muted);font-size:10px}.kpi strong{display:block;font-size:25px;margin:3px 0}.kpi .hint{font-size:10px;color:#7890aa}.grid2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(260px,.85fr);gap:13px;margin-bottom:14px}.panel{padding:15px;margin-bottom:13px}.panelhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px}.panel h3{font-size:14px;margin:0}.tag{display:inline-block;font-size:10px;padding:3px 7px;border-radius:20px;background:#1a3047;color:#9fc7e7;margin:3px 4px 0 0}.tag.red{background:#3a202b;color:#ff9da5}.tag.amber{background:#3b3020;color:#f7d18a}.tag.green{background:#16382e;color:#88e4ba}.feedrow{padding:11px 0;border-top:1px solid #1c3047}.feedrow:first-child{border-top:0}.feedrow strong{font-size:13px}.feedrow p{margin:4px 0;color:#9fb1c6;font-size:12px}.toolbar{margin:12px 0}.search,.select{background:#0b1726;border:1px solid var(--line);border-radius:9px;padding:9px 11px;color:var(--text)}.search{flex:1;min-width:180px}.threat{padding:14px 0;border-top:1px solid #1d3046}.threat:first-child{border-top:0}.threat h4{margin:0 0 5px;font-size:14px}.threat p{color:#9eb0c4;margin:6px 0;font-size:12px;white-space:pre-wrap}.meta{font-size:10px;color:#8298b1;display:flex;gap:10px;flex-wrap:wrap}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;padding:10px 8px;border-bottom:1px solid #20344b;vertical-align:top}th{color:#8da5bd;font-size:10px;text-transform:uppercase;letter-spacing:1px}td{color:#cbd8e7}.health{display:grid;grid-template-columns:1fr auto;gap:9px;padding:7px 0;border-bottom:1px solid #1b2c41;font-size:12px}.status{font-size:10px;border-radius:20px;padding:3px 7px}.ok{color:#86e6b6;background:#14352c}.bad{color:#ff9da5;background:#3b2028}.view{display:none}.view.active{display:block}.empty{padding:26px;text-align:center;color:var(--muted)}.foot{text-align:center;color:#627992;font-size:10px;padding:20px 0}
@@ -26,8 +26,7 @@ body{background:#f3f6fc;color:#101d43;font-family:Inter,ui-sans-serif,system-ui,
 body{font-size:14px;line-height:1.65;color:var(--ink)}p{line-height:1.7}
 .tag{font-size:10px;line-height:1.45;font-weight:650;letter-spacing:.01em;padding:4px 8px;margin:2px 4px 2px 0;border:1px solid transparent;white-space:normal;vertical-align:middle}
 .tag.neutral{background:#f0f3f7;color:#52677d;border-color:#e0e6ed}.tag.blue{background:#eaf2ff;color:#24549a;border-color:#d7e5fb}.tag.red{background:#fdebed;color:#a32331;border-color:#f7d3d7}.tag.amber{background:#fff4dc;color:#805300;border-color:#f3e2b7}.tag.green{background:#e7f6ed;color:#176b47;border-color:#cdebd9}
-.intel-card{padding:18px 0;border-top:1px solid #e4eaf1}.intel-card:first-child{border-top:0}.card-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.card-title-row h4{font-size:15px;line-height:1.45;color:#152d48;margin:0 0 8px;font-weight:750;overflow-wrap:anywhere}.label-row{display:flex;align-items:center;flex-wrap:wrap;gap:3px;margin:4px 0 10px}.technology-context{margin:.65rem 0;padding:.65rem .75rem;border-left:3px solid var(--cyan);background:var(--surface-soft);border-radius:6px}.technology-context .description-block{margin:.35rem 0 0}.technology-context .field-label{font-weight:700}
-.description-block{margin:10px 0 12px;padding:0 0 0 12px;border-left:3px solid #dbe6f2}.field-label{display:block;color:#63788e;font-size:10px;letter-spacing:.09em;font-weight:800;text-transform:uppercase;margin-bottom:3px}.description-block p{font-size:13px;line-height:1.75;color:#31475e;margin:0;max-width:110ch;white-space:pre-line;overflow-wrap:anywhere}.card-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:10px;border-top:1px solid #edf1f5;font-size:12px}.card-footer a{font-weight:700;color:#1458a8}.cell-description{font-size:12px;line-height:1.65;color:#344b61;margin:6px 0;min-width:180px;max-width:420px;white-space:normal;overflow-wrap:anywhere}
+.intel-card{padding:18px 0;border-top:1px solid #e4eaf1}.intel-card:first-child{border-top:0}.card-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.card-title-row h4{font-size:15px;line-height:1.45;color:#152d48;margin:0 0 8px;font-weight:750;overflow-wrap:anywhere}.label-row{display:flex;align-items:center;flex-wrap:wrap;gap:3px;margin:4px 0 10px}.description-block{margin:10px 0 12px;padding:0 0 0 12px;border-left:3px solid #dbe6f2}.field-label{display:block;color:#63788e;font-size:10px;letter-spacing:.09em;font-weight:800;text-transform:uppercase;margin-bottom:3px}.description-block p{font-size:13px;line-height:1.75;color:#31475e;margin:0;max-width:110ch;white-space:pre-line;overflow-wrap:anywhere}.card-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:10px;border-top:1px solid #edf1f5;font-size:12px}.card-footer a{font-weight:700;color:#1458a8}.cell-description{font-size:12px;line-height:1.65;color:#344b61;margin:6px 0;min-width:180px;max-width:420px;white-space:normal;overflow-wrap:anywhere}
 .technology-group{margin:14px 0 22px}.technology-heading{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #dce5ef;margin-bottom:12px}.technology-heading h3{font-size:16px;color:#173a5b;margin:0}.querygrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.query-card{padding:16px;background:#fff;border:1px solid #dbe4ee;border-radius:12px;box-shadow:0 1px 3px rgba(20,40,60,.04)}.query-card h4{font-size:14px;line-height:1.5;color:#172f4a;overflow-wrap:anywhere}.query-details{margin-top:12px;border-top:1px solid #e8edf3;padding-top:10px}.query-details summary{cursor:pointer;font-size:12px;color:#1657a3;font-weight:700}.query-details pre{max-height:420px;overflow:auto}.brief{max-width:none}.brief p,.brief li{font-size:14px;line-height:1.75;color:#2e4358}.brief h1{font-size:26px;line-height:1.3}.brief h2{font-size:20px;line-height:1.4;color:#173a5b;margin-top:28px}.brief h3{font-size:16px;line-height:1.45;color:#155e75}.brief table{font-size:13px}.brief td{font-size:13px;line-height:1.65;min-width:145px;max-width:420px;padding:12px 10px}.brief th{font-size:10px;line-height:1.5;padding:11px 10px}.brief blockquote{padding:12px 15px}
 @media(max-width:760px){.card-title-row{flex-direction:column;gap:3px}.querygrid{grid-template-columns:1fr}.card-footer{align-items:flex-start;flex-direction:column}.brief td{min-width:170px}}
 
@@ -76,622 +75,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 html{scroll-behavior:smooth}body{overflow-x:hidden}.shell,.main,.panel,.query,.query-card{min-width:0}
 img,svg,video,canvas{max-width:100%;height:auto}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
-\n/* Remediation evidence states: colour indicates verification state, not vulnerability severity. */\n.remediation-panel.remediation-green{background:#eef8f1;border-color:#c6e6d0;border-left-color:#23834d}.remediation-panel.remediation-amber{background:#fff8e8;border-color:#f0dfb5;border-left-color:#bd861c}.remediation-panel.remediation-red{background:#fff0f0;border-color:#f0caca;border-left-color:#bd3945}.remediation-evidence{border-top:1px solid #e8edf3;padding-top:7px;margin-top:7px;font-size:11px;color:#607287}.remediation-evidence p{margin:3px 0}.critical-item .remediation-status{display:inline-block;margin:3px 0}\n
-
-/* Phase 1 presentation-only refinements: preserve all existing sections and data. */
-.shell{--ink:#18324d;--muted:#61758c}
-.headline{align-items:center;box-shadow:0 2px 10px rgba(22,55,92,.035)}
-.headline p{font-size:12px;line-height:1.5}
-.panel{border-radius:14px;box-shadow:0 2px 10px rgba(22,55,92,.045)}
-.panelhead{padding-bottom:9px;border-bottom:1px solid #e8edf4}
-.panelhead h3{font-size:15px;letter-spacing:-.01em;color:#173a5e}
-.toolbar{gap:9px;align-items:center}
-.toolbar .search{min-width:220px}
-.toolbar .select{min-width:145px}
-.intel-card{padding:16px 15px;margin:0 -2px;border:1px solid #e2e9f2;border-radius:12px;background:#fff;box-shadow:0 1px 4px rgba(23,52,82,.035)}
-.intel-card+.intel-card{margin-top:10px}
-.card-title-row{gap:14px}
-.card-title-row h4{font-size:15px;line-height:1.45;color:#142f4c}
-.card-title-row>.tag{flex:0 0 auto;white-space:nowrap}
-.label-row{align-items:center;gap:5px 6px;margin:7px 0 10px}
-.label-row .tag{max-width:100%;overflow-wrap:anywhere}
-.intel-card .meta{font-size:11px;line-height:1.5;color:#637990;margin:6px 0 10px}
-.intel-card .technology-context{margin:10px 0;background:#f7f9fc;border:1px solid #e7edf4;border-left:3px solid #8aaed7}
-.intel-card .description-block{max-width:110ch}
-.intel-card .field-label{color:#60758b}
-.intel-card .card-footer{margin-top:10px}
-.global-search-panel{box-shadow:0 2px 10px rgba(22,55,92,.04)}
-.global-search-head strong{font-size:15px}
-.global-results{border-radius:8px}
-.global-result{padding:11px 12px}
-.global-result strong{line-height:1.45}
-.kpi{border-radius:12px}
-.kpi .label{font-size:10px;letter-spacing:.055em;font-weight:750}
-.kpi .hint{font-size:11px;line-height:1.45}
-#criticalTop{box-shadow:0 2px 10px rgba(140,40,50,.04)}
-#criticalTop h3{font-size:15px}
-.critical-item{background:#fffdfd}
-.query-card{box-shadow:0 2px 8px rgba(22,55,92,.04)}
-.query-card h4{font-size:14px;line-height:1.5}
-.query-details summary,.detail-expander summary{padding:5px 0}
-button:disabled{opacity:.48;cursor:not-allowed}
-@media(max-width:760px){
- .headline{padding:12px 13px;gap:10px}
- .headline .actions{display:flex;gap:6px}
- .toolbar{align-items:stretch}
- .toolbar .search,.toolbar .select{min-width:0;width:100%}
- .intel-card{padding:13px 11px;margin-left:0;margin-right:0}
- .card-title-row{align-items:flex-start}
- .card-title-row>.label-row{margin:0;justify-content:flex-start}
- .card-title-row>.tag{white-space:normal}
- .panelhead{gap:7px}
- .global-search-panel{padding:12px}
-}
-
-
-/* Command-centre visual redesign — presentation only; existing data and behaviour remain unchanged. */
-
-html{background:var(--bg)}
-body{background:linear-gradient(180deg,#eaf0f8 0,#f4f6fa 230px,var(--bg) 100%);color:var(--text);font-size:14px;line-height:1.6}
-.shell{max-width:1760px;padding:20px 26px 30px}
-.top{
- background:linear-gradient(112deg,#102b4c 0%,#173f6b 70%,#1d5680 100%);
- border:0;border-radius:17px;padding:19px 23px;margin-bottom:18px;
- box-shadow:0 10px 28px rgba(16,43,76,.16)
-}
-.top .brand{gap:14px}.top .brand h1{font-size:21px;letter-spacing:-.025em;color:#fff}
-.top .mark{width:44px;height:44px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);color:#d9edff;border-radius:12px}
-.live{background:rgba(8,28,49,.42);border-color:rgba(255,255,255,.18);color:#c8f3df;padding:8px 12px}
-.live .dot{background:#43d69b;box-shadow:0 0 0 4px rgba(67,214,155,.13)}
-.layout{display:grid;grid-template-columns:232px minmax(0,1fr);gap:20px;align-items:start}
-.side{
- display:block;position:sticky;top:16px;z-index:8;height:max-content;
- padding:12px;background:#fff;border:1px solid var(--line);border-radius:15px;
- box-shadow:var(--shadow);overflow:visible
-}
-.side-nav{display:flex;flex-direction:column;gap:4px}
-.nav{
- width:100%;display:flex;align-items:center;gap:11px;padding:11px 12px;margin:0;
- border:1px solid transparent;border-radius:10px;background:transparent;
- color:#435873;font-size:13px;font-weight:650;transition:background .16s,border-color .16s,color .16s
-}
-.nav b{width:20px;color:#6b83a1;font-size:16px}
-.nav:hover{background:#f3f6fb;color:var(--navy);border-color:#e8edf5}
-.nav.active,.nav.active:hover{background:var(--accent-soft);border-color:#d8e5fb;color:#164f9e}
-.nav.active b{color:var(--accent)}
-.sidefoot{display:block;border-top:1px solid #e8edf4;margin-top:13px;padding:13px 9px 5px;color:#718198;font-size:10px;line-height:1.7}
-.sidefoot strong{color:#29496e;font-size:11px}
-.main{min-width:0}
-.headline{
- background:transparent;border:0;border-radius:0;padding:3px 2px 15px;margin:0 0 12px;
- box-shadow:none;align-items:center
-}
-.headline h2{font-size:25px;letter-spacing:-.035em;color:var(--navy);font-weight:780}
-.headline p{font-size:12px;color:var(--muted);margin-top:4px}
-.actions{gap:8px}
-.btn{background:#fff;color:#294a70;border:1px solid #cbd7e6;border-radius:9px;padding:8px 12px;font-weight:650;box-shadow:0 1px 2px rgba(20,40,65,.035)}
-.btn:hover{background:#f4f7fc;border-color:#9db5d5;color:#164f9e}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 3px 8px rgba(36,99,197,.18)}
-.btn.primary:hover{background:#194f9f}
-#globalSearchPanel{
- background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px 17px;
- margin:0 0 15px;box-shadow:var(--shadow)
-}
-.global-search-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
-.global-search-head strong{display:block;color:var(--navy);font-size:14px;font-weight:750}
-.global-search-head .muted{display:block;font-size:11px;margin-top:2px}
-.global-search-head kbd{background:#f4f6fa;border:1px solid #dce4ef;border-radius:6px;padding:3px 7px;color:#708198;font-size:10px}
-.global-search-row{display:grid;grid-template-columns:minmax(0,1fr) 185px auto;gap:8px}
-.search,.select{background:#fff;color:var(--text);border:1px solid #d4deea;border-radius:9px;padding:10px 12px;min-height:40px}
-.search:focus,.select:focus,.date-input:focus{outline:3px solid rgba(36,99,197,.13);border-color:#7fa3dc}
-.kpis{gap:12px;margin:0 0 16px}
-.kpi{
- position:relative;overflow:hidden;background:#fff;border:1px solid var(--line);border-radius:13px;
- padding:15px 16px;box-shadow:var(--shadow);min-height:104px
-}
-.kpi:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:#8aabd9}
-.kpi:nth-child(2):before{background:#2d9a75}.kpi:nth-child(3):before{background:#d18b2c}.kpi:nth-child(4):before{background:#6c79c5}
-.kpi .label{color:#708198;font-size:10px;letter-spacing:.075em;font-weight:800}
-.kpi strong{font-size:28px;line-height:1.2;color:var(--navy);letter-spacing:-.04em;margin:6px 0}
-.kpi .hint{font-size:11px;color:#77879b}
-.grid2{gap:14px;margin-bottom:15px}
-.panel{
- background:#fff;border:1px solid var(--line);border-radius:14px;padding:17px 18px;
- margin-bottom:15px;box-shadow:var(--shadow)
-}
-.panelhead{padding-bottom:11px;margin-bottom:12px;border-bottom:1px solid #edf1f6}
-.panel h3,.panelhead h3{font-size:14px;font-weight:780;letter-spacing:-.01em;color:#1b385b}
-.panelhead .muted{font-size:11px}
-.feedrow{padding:12px 0;border-top:1px solid #edf1f6}
-.feedrow strong{font-size:13px;color:#213d5e;line-height:1.5}
-.feedrow p{color:#62758b;font-size:12px;line-height:1.6}
-#criticalTop{
- background:linear-gradient(110deg,#fff 0%,#fffafa 100%);border:1px solid #efd4d7;
- border-radius:14px;padding:16px 17px;margin:0 0 15px;box-shadow:0 5px 18px rgba(160,45,55,.045)
-}
-#criticalTop h3{display:flex;align-items:center;gap:8px;color:#a12634;font-size:15px;font-weight:800;margin:0 0 12px}
-.critical-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.critical-item{background:#fff;border:1px solid #f0dfe1;border-left:4px solid #c94b56;border-radius:10px;padding:12px}
-.critical-item strong{font-size:12px;color:#772b34;line-height:1.5}
-.critical-item p{font-size:11px;line-height:1.55;color:#5d6674}
-.tag{font-size:10px;line-height:1.45;font-weight:700;padding:4px 8px;border-radius:6px;margin:2px 4px 2px 0}
-.tag.neutral{background:#f1f4f8;color:#53677e;border-color:#e3e9f0}
-.tag.blue{background:#eaf1ff;color:#24549a;border-color:#d8e5fb}
-.tag.red{background:#fdebed;color:#a32331;border-color:#f7d3d7}
-.tag.amber{background:#fff4df;color:#805300;border-color:#f1e1bd}
-.tag.green{background:#e7f6ed;color:#176b47;border-color:#cdebd9}
-.intel-card{
- background:#fff;border:1px solid #e1e8f1;border-radius:12px;padding:16px 17px;
- margin:0 0 11px;box-shadow:0 2px 8px rgba(23,45,75,.035)
-}
-.intel-card:first-child{border-top:1px solid #e1e8f1}
-.intel-card:hover{border-color:#cbd9eb;box-shadow:0 5px 14px rgba(23,45,75,.06)}
-.card-title-row{gap:14px}
-.card-title-row h4{font-size:14px;line-height:1.55;color:#173452;font-weight:780;margin:0 0 8px}
-.label-row{gap:5px;margin:6px 0 11px}
-.intel-card .meta{font-size:11px;color:#708198;line-height:1.5}
-.technology-context{background:#f6f9fd;border:1px solid #e7edf5;border-left:3px solid #7da4d7;border-radius:8px;padding:10px 12px}
-.description-block{border-left-color:#d5e0ed;margin:12px 0;padding-left:12px}
-.field-label{font-size:10px;color:#6c7f95;letter-spacing:.075em}
-.description-block p{font-size:12px;line-height:1.7;color:#40556d}
-.card-footer{border-top:1px solid #edf1f6;color:#6a7d93;padding-top:11px}
-.card-footer a{color:#1c5bad}
-.tablewrap,.brief .tablebox{border:1px solid #e2e9f1;border-radius:10px;background:#fff}
-table{font-size:12px}
-th{background:#f3f6fa;color:#52677f;font-size:10px;font-weight:800;letter-spacing:.06em}
-th,td{border-bottom:1px solid #e8edf3;padding:11px 10px}
-td{color:#30465f;line-height:1.55}
-tbody tr:hover{background:#f8faff}
-.health{border-bottom:1px solid #edf1f6;color:#435a73;padding:9px 0}
-.status{font-weight:750}
-.ok{color:#18764d;background:#e7f6ed}.bad{color:#b42332;background:#fdebed}
-.brief{max-width:none;color:#30465f}
-.brief h1{font-size:25px;color:var(--navy);letter-spacing:-.025em}
-.brief h2{font-size:18px;color:#173e68;border-bottom:1px solid #dce5f0;padding-bottom:9px;margin:26px 0 12px}
-.brief h3{font-size:15px;color:#176b83;margin:20px 0 8px}
-.brief p,.brief li{font-size:13px;line-height:1.75;color:#40556d}
-.brief blockquote{background:#fff8e8;border-left:3px solid #d49a27;border-radius:0 9px 9px 0}
-.brief pre,.query pre{background:#f5f8fc;border:1px solid #e0e8f2;color:#203c5c;border-radius:9px}
-.datebar{background:linear-gradient(100deg,#f4f7fd,#edf3fc);border:1px solid #dce6f3;border-radius:12px}
-.date-icon{background:#fff;border-color:#dce5f0;color:#245da7}
-.date-label strong{color:var(--navy)}
-.date-arrow,.date-chip{background:#fff;border-color:#d0dceb;color:#24517f;border-radius:9px}
-.querygrid{gap:13px}
-.query{background:#fff;border:1px solid #dfe7f0;border-radius:12px;padding:15px;box-shadow:0 3px 10px rgba(23,45,75,.035)}
-.query h4{font-size:13px;color:#1c3d61;line-height:1.55}
-.query .path{color:#71839a}
-.query .qactions .btn,.copy{border-radius:8px}
-.notice{background:#fff8e8;border:1px solid #f0dfb8;color:#73551d;border-radius:10px}
-.global-results{border-color:#e4eaf2;border-radius:9px}
-.global-result{padding:12px;border-bottom:1px solid #edf1f6}
-.global-result strong{color:#1b3c60;font-size:12px}
-.global-result small{color:#708198}
-.empty{color:#74859a;padding:28px 18px}
-.foot{color:#8190a3;padding:22px 0 5px}
-@media(max-width:1100px){
- .layout{grid-template-columns:1fr;gap:12px}
- .side{position:sticky;top:0;display:block;padding:7px;overflow-x:auto}
- .side-nav{flex-direction:row;min-width:max-content}
- .nav{width:auto;white-space:nowrap;padding:9px 11px}
- .sidefoot{display:none}
-}
-@media(max-width:760px){
- .shell{padding:10px 10px 22px}
- .top{padding:13px 14px;border-radius:13px;margin-bottom:12px}
- .top .brand h1{font-size:16px;line-height:1.35}
- .top .mark{width:38px;height:38px}
- .live{font-size:9px;padding:6px 8px}
- .headline{padding:3px 2px 12px;gap:10px}
- .headline h2{font-size:21px}
- .actions{width:100%}
- #globalSearchPanel{padding:12px;margin-bottom:12px}
- .global-search-row{grid-template-columns:1fr}
- .global-search-head{align-items:flex-start}
- .kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
- .kpi{padding:12px;min-height:92px}
- .kpi strong{font-size:23px}
- .grid2{grid-template-columns:1fr}
- .panel{padding:13px;margin-bottom:11px}
- .panelhead{align-items:flex-start;flex-direction:column}
- .critical-list{grid-template-columns:1fr}
- .intel-card{padding:13px 12px;margin-bottom:9px}
- .card-title-row{align-items:flex-start}
- .card-title-row h4{font-size:13px}
- .brief table{min-width:900px}
- .toolbar{align-items:stretch}
- .toolbar .search,.toolbar .select{width:100%;min-width:0}
- .datebar{align-items:flex-start;flex-direction:column}
- .date-actions{width:100%;gap:6px}
- .date-input-wrap{flex:1;justify-content:space-between}
-}
-@media(max-width:390px){
- .shell{padding:8px}
- .kpis{gap:6px}
- .kpi .label{font-size:9px}
- .nav{padding:8px 9px;font-size:12px}
- .top .brand h1{font-size:14px}
-}
-
-
-/* Enterprise command-centre design system — UI only; existing markup and behaviour retained. */
-
-html{background:var(--bg);color-scheme:dark;scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:14px;line-height:1.55;letter-spacing:.005em}
-.shell{max-width:1880px;padding:22px 26px;margin:0 auto}
-.top{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:15px 20px;margin:0 0 16px;background:#0d1b2c;border:1px solid #243951;border-radius:12px;box-shadow:var(--shadow)}
-.brand{display:flex;align-items:center;gap:14px;min-width:0}
-.mark{width:42px;height:42px;flex:0 0 42px;border:1px solid #315477;border-radius:10px;background:#142c46;color:#9bc7ff;font-size:22px}
-.brand h1{margin:0;color:#f2f6fc;font-size:18px;font-weight:720;line-height:1.3;letter-spacing:.005em}
-.top .sub{margin-top:3px;color:#93a8c0}
-.eyebrow{color:#79b6ff;font-size:9px;letter-spacing:1.7px}
-.live{border:1px solid #285943;background:#10291f;color:#76ddb0;padding:7px 10px;font-size:10px;font-weight:750;letter-spacing:.07em}
-.dot{box-shadow:0 0 0 3px rgba(82,201,148,.12)}
-.layout{display:grid;grid-template-columns:226px minmax(0,1fr);gap:18px;align-items:start}
-.side{position:sticky;top:14px;z-index:12;display:block;height:max-content;padding:10px;background:#0d1b2c;border:1px solid #243951;border-radius:12px;box-shadow:var(--shadow)}
-.side-nav{display:flex;flex-direction:column;gap:4px}
-.side>small{margin:8px 10px 10px;color:#7188a2;font-size:9px;letter-spacing:1.4px}
-.nav{width:100%;min-height:42px;display:flex;align-items:center;gap:11px;margin:0;padding:10px 11px;border:1px solid transparent;border-radius:8px;background:transparent;color:#aebed0;font-size:12px;font-weight:580;text-align:left;white-space:normal;transition:background .16s ease,border-color .16s ease,color .16s ease}
-.nav b{width:19px;flex:0 0 19px;color:#829bb7;font-size:15px;text-align:center}
-.nav:hover{background:#142940;color:#f1f6fc}
-.nav.active{background:#183454;border-color:#2b527d;color:#fff;box-shadow:inset 3px 0 #72b2ff}
-.nav.active b{color:#8fc2ff}
-.sidefoot{margin-top:12px;padding:12px 10px 4px;border-top:1px solid #263950;color:#8195ad;font-size:10px;line-height:1.7}
-.sidefoot strong{color:#d3dfed}
-.main{min-width:0}
-.headline{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 14px;padding:14px 17px;background:#0d1b2c;border:1px solid #243951;border-radius:11px}
-.headline h2{margin:0;color:#f1f5fb;font-size:20px;font-weight:720;letter-spacing:-.02em;line-height:1.3}
-.headline p{margin:4px 0 0;color:#91a4ba;font-size:11px}
-.actions,.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.btn,.date-chip,.date-arrow,.copy{min-height:36px;border:1px solid #344b65;border-radius:7px;background:#14263b;color:#d8e4f2;padding:8px 11px;font-size:11px;font-weight:650;line-height:1.3;cursor:pointer;transition:background .15s ease,border-color .15s ease,color .15s ease}
-.btn:hover,.date-chip:hover,.date-arrow:hover,.copy:hover{background:#1b3654;border-color:#5c8ec5;color:#fff}
-.btn.primary{background:#1d4e83;border-color:#3978b7;color:#fff}
-.btn.primary:hover{background:#28649f;border-color:#76b5fa}
-.btn:disabled,.date-chip:disabled,.date-arrow:disabled{opacity:.42;cursor:not-allowed}
-.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 14px}
-.kpi{position:relative;min-width:0;padding:14px 15px;background:#101f32;border:1px solid #2a4058;border-radius:10px;box-shadow:none;overflow:hidden}
-.kpi:before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:#467db5}
-.kpi:nth-child(2):before{background:#42b88a}.kpi:nth-child(3):before{background:#e0a34b}.kpi:nth-child(4):before{background:#7d8ee5}
-.kpi .label{display:block;color:#9aacc0;font-size:9px;font-weight:750;letter-spacing:.1em}
-.kpi strong{display:block;margin:7px 0 2px;color:#f3f7fc;font-size:27px;font-weight:730;line-height:1.1;font-variant-numeric:tabular-nums}
-.kpi .hint{color:#8296ad;font-size:10px;line-height:1.4}
-.view{display:none;margin:0 0 14px}.view.active{display:block}
-.panel{min-width:0;margin:0 0 13px;padding:16px;background:#101e30;border:1px solid #263b53;border-radius:11px;box-shadow:none}
-.panelhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px;padding:0 0 10px;border-bottom:1px solid #263950}
-.panelhead h3,.panel h3{margin:0;color:#e7eef7;font-size:13px;font-weight:720;letter-spacing:.005em}
-.panelhead .muted{font-size:10px}
-.muted,.sub{color:#98a9bd;font-size:11px}
-.grid2{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(270px,.85fr);gap:13px;margin:0 0 13px}
-.grid2>.panel{height:100%;margin:0}
-#assessment{color:#c5d2e1;font-size:12px;line-height:1.65}
-#assessment p{margin:6px 0}
-#criticalTop{margin:0 0 13px;padding:14px 15px;background:#171d2a;border:1px solid #70404b;border-left:3px solid #f06b76;border-radius:10px;box-shadow:none}
-#criticalTop h3{margin:0 0 11px;color:#ff9ba3;font-size:13px;font-weight:760}
-.critical-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
-.critical-item{min-width:0;padding:11px;background:#1b202d;border:1px solid #513640;border-left:3px solid #e65c69;border-radius:7px}
-.critical-item strong{display:block;color:#ffe4e6;font-size:12px;line-height:1.45;overflow-wrap:anywhere}
-.critical-item p{margin:6px 0 0;color:#c4b5bc;font-size:11px;line-height:1.5}
-.global-search-panel{margin:0 0 14px;padding:13px 15px;background:#0d1b2c;border:1px solid #263b53;border-radius:11px;box-shadow:none}
-.global-search-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 9px}
-.global-search-head strong{display:block;color:#e9f0f8;font-size:12px;font-weight:720}
-.global-search-head .muted{display:block;margin-top:2px;color:#91a4ba;font-size:10px}
-.global-search-head kbd{border:1px solid #344b65;border-radius:5px;background:#15283d;color:#9fb2c9;padding:4px 7px;font:10px ui-monospace,SFMono-Regular,Consolas,monospace}
-.global-search-row{display:flex;align-items:center;gap:8px}
-.search,.select,.date-input-wrap{min-height:38px;border:1px solid #344b65;border-radius:7px;background:#091726;color:#e3ebf5;padding:9px 11px;font-size:11px}
-.search{min-width:170px;flex:1}
-.search::placeholder{color:#7589a1;opacity:1}
-.select{min-width:135px;color:#dce6f1}
-select option{background:#102035;color:#e5edf7}
-.search:hover,.select:hover,.date-input-wrap:hover{border-color:#557696}
-.toolbar{margin:12px 0}
-.toolbar .search{min-width:190px}
-.global-results{max-height:420px;overflow:auto;margin-top:7px}
-.global-result{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 9px;border:0;border-top:1px solid #263950;background:transparent;color:#dce8f5;text-align:left;cursor:pointer}
-.global-result:hover{background:#142940}
-.global-result strong{color:#e8f0fa;font-size:11px}
-.global-result small{display:block;margin-top:3px;color:#91a4ba;font-size:10px}
-.global-result-summary{padding:9px 2px 5px;color:#91a4ba;font-size:10px}
-.feedrow,.threat{padding:12px 0;border-top:1px solid #273b52}
-.feedrow:first-child,.threat:first-child{border-top:0}
-.feedrow strong,.threat h4{color:#e7eef7;font-size:12px;font-weight:700;line-height:1.5}
-.feedrow p,.threat p{margin:5px 0;color:#bac8d8;font-size:11px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
-.meta{display:flex;gap:8px 12px;flex-wrap:wrap;color:#8da2ba;font-size:10px;line-height:1.5}
-.tag{display:inline-flex;align-items:center;max-width:100%;margin:2px 4px 2px 0;padding:3px 7px;border:1px solid #334b65;border-radius:5px;background:#182c43;color:#b9cee5;font-size:9px;font-weight:700;line-height:1.35;overflow-wrap:anywhere}
-.tag.red,.tag.critical{background:#3a202b;border-color:#75404a;color:#ff9aa3}
-.tag.amber,.tag.high{background:#382b1b;border-color:#73542e;color:#f4c47d}
-.tag.medium{background:#3a331e;border-color:#71602d;color:#f2d47a}
-.tag.green,.tag.low,.tag.verified{background:#173329;border-color:#315e4a;color:#82ddb0}
-.tag.blue,.tag.info{background:#172d47;border-color:#355c86;color:#9cc8ff}
-.tag.neutral{background:#1b2a3c;border-color:#34485e;color:#b1c0d1}
-.status,.ok,.bad{display:inline-flex;align-items:center;gap:5px;border-radius:5px;padding:3px 7px;font-size:9px;font-weight:750}
-.ok{background:#173329;color:#82ddb0}.bad{background:#3a202b;color:#ff9aa3}
-.notice{margin:10px 0;padding:10px 12px;background:#2a251b;border:1px solid #66502b;border-left:3px solid #d7a34e;border-radius:7px;color:#e9cf9e;font-size:11px;line-height:1.55}
-.empty{padding:24px 14px;color:#91a4ba;text-align:center;font-size:11px}
-.tablewrap,.table-wrap,.brief .tablebox{max-width:100%;overflow:auto;border:1px solid #293e56;border-radius:8px}
-table{width:100%;border-collapse:separate;border-spacing:0;font-size:11px}
-th,td{padding:10px 11px;border-bottom:1px solid #273b52;text-align:left;vertical-align:top}
-th{position:sticky;top:0;z-index:1;background:#172a40;color:#a9bdd3;font-size:9px;font-weight:760;letter-spacing:.075em;text-transform:uppercase;line-height:1.4;white-space:normal}
-td{background:#101e30;color:#c8d4e2;font-size:11px;line-height:1.55;overflow-wrap:anywhere}
-tbody tr:last-child td{border-bottom:0}
-tbody tr:hover td{background:#15283d}
-td a{color:#86baff}
-td .tag{white-space:normal}
-.health{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;padding:8px 0;border-bottom:1px solid #273b52;color:#c8d4e2;font-size:11px}
-.foot{padding:18px 0;color:#71859d;font-size:9px;letter-spacing:.06em;text-align:center}
-.brief{max-width:none;color:#d0dbe8}
-.brief h1{margin:0 0 12px;color:#f1f5fb;font-size:23px;line-height:1.3;font-weight:740;letter-spacing:-.02em}
-.brief h2{margin:25px 0 10px;padding:0 0 8px;border-bottom:1px solid #344b65;color:#a9d0ff;font-size:17px;line-height:1.4;font-weight:730}
-.brief h3{margin:18px 0 7px;color:#79c8d8;font-size:14px;line-height:1.45;font-weight:720}
-.brief h4{margin:13px 0 5px;color:#dce7f3;font-size:12px;font-weight:720}
-.brief p,.brief li{color:#c2cfdd;font-size:12px;line-height:1.65}
-.brief p{margin:7px 0}
-.brief ul,.brief ol{padding-left:21px;margin:7px 0 12px}
-.brief li{margin:4px 0}
-.brief strong{color:#edf3fa;font-weight:700}
-.brief a{color:#8dbdff;text-decoration:underline;text-decoration-color:#46658a;text-underline-offset:2px}
-.brief blockquote{margin:12px 0;padding:10px 13px;background:#29251c;border:1px solid #5a482a;border-left:3px solid #d7a34e;border-radius:0 7px 7px 0}
-.brief blockquote p{margin:0;color:#e6d5b4}
-.brief hr{height:1px;margin:19px 0;border:0;background:#2b4058}
-.brief table{min-width:760px;margin:10px 0 16px;font-size:11px}
-.brief th{background:#192e46}
-.brief td{min-width:115px;max-width:360px;padding:9px 10px;color:#c9d5e2}
-.brief pre,.query pre{max-width:100%;overflow:auto;white-space:pre;background:#07111e;border:1px solid #2b425d;border-radius:8px;padding:13px;color:#d6e8ff;font:11px/1.6 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;tab-size:4}
-.brief code,.query code{font-family:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;color:#a9d3ff}
-.brief :not(pre)>code{padding:2px 5px;background:#1b3048;border:1px solid #314b68;border-radius:4px;font-size:.92em;overflow-wrap:anywhere}
-.codehead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0 4px;color:#9db5ce;font-size:10px;font-weight:700}
-.copy{min-height:28px;padding:5px 8px;background:#183653;border-color:#365d83;color:#b9d9ff;font-size:10px}
-.querygrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.query,.query-card{min-width:0;padding:14px;background:#0d1b2c;border:1px solid #2a4058;border-radius:9px;box-shadow:none}
-.query h4,.query-card h4{margin:0 0 6px;color:#e5edf7;font-size:12px;line-height:1.5;font-weight:720;overflow-wrap:anywhere}
-.query .path{color:#839ab3;font-size:9px;overflow-wrap:anywhere}
-.query-details{margin-top:9px;padding-top:8px;border-top:1px solid #293e56}
-.query-details summary,.detail-expander summary{padding:5px 0;color:#8dbdff;font-size:10px;font-weight:720;cursor:pointer}
-.query pre{max-height:440px}
-.query .qactions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
-.technology-group{margin:15px 0 22px}
-.technology-heading{display:flex;align-items:center;gap:10px;margin:0 0 11px;padding:0 0 9px;border-bottom:1px solid #2c425b}
-.technology-heading h3{margin:0;color:#b7d6f7;font-size:14px}
-.intel-card{margin:0;padding:15px 14px;background:#0d1b2c;border:1px solid #2a4058;border-radius:9px;box-shadow:none}
-.intel-card+.intel-card{margin-top:9px}
-.card-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-.card-title-row h4{margin:0 0 6px;color:#edf3fa;font-size:13px;line-height:1.45;font-weight:730;overflow-wrap:anywhere}
-.intel-card .meta{margin:6px 0 9px;color:#8fa5bd}
-.label-row{display:flex;align-items:center;flex-wrap:wrap;gap:4px 5px;margin:7px 0 9px}
-.description-block{margin:9px 0 11px;padding:0 0 0 10px;border-left:2px solid #3b5f85}
-.field-label{display:block;margin:0 0 3px;color:#8ea5be;font-size:9px;font-weight:760;letter-spacing:.09em;text-transform:uppercase}
-.description-block p{margin:0;color:#c4d1df;font-size:11px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
-.technology-context{margin:8px 0;padding:9px 10px;background:#14263b;border:1px solid #2b4059;border-left:2px solid #4b87c3;border-radius:6px}
-.technology-context .description-block{margin:5px 0 0;border:0;padding:0}
-.remediation-panel{margin:9px 0;padding:9px 11px;background:#142a22;border:1px solid #315b47;border-left:3px solid #49b783;border-radius:7px}
-.remediation-panel p{margin:0;color:#c3e3d2;font-size:11px;line-height:1.55}
-.remediation-panel.no-fix,.remediation-panel.remediation-amber{background:#2a251b;border-color:#66502b;border-left-color:#d5a34f}
-.remediation-panel.no-fix p,.remediation-panel.remediation-amber p{color:#ead7b3}
-.remediation-panel.remediation-red{background:#301e27;border-color:#69404b;border-left-color:#e56a78}
-.remediation-panel.remediation-red p{color:#f2cbd0}
-.remediation-panel.remediation-green{background:#142a22;border-color:#315b47;border-left-color:#49b783}
-.remediation-evidence{margin-top:8px;padding-top:7px;border-top:1px solid #344a42;color:#9eb9ac;font-size:10px}
-.card-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px;padding-top:9px;border-top:1px solid #273b52;color:#9aadc2;font-size:10px}
-.card-footer a{color:#8dbdff;font-weight:700}
-.cell-description{min-width:150px;max-width:420px;margin:5px 0;color:#c0cede;font-size:11px;line-height:1.55;white-space:normal;overflow-wrap:anywhere}
-.datebar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 13px;padding:12px 13px;background:#14263b;border:1px solid #2c4561;border-radius:9px}
-.date-current{display:flex;align-items:center;gap:11px;min-width:0}
-.date-icon{width:37px;height:37px;display:grid;place-items:center;border:1px solid #385675;border-radius:8px;background:#1a3552;color:#9bc8ff;font-size:19px}
-.date-label{display:flex;flex-direction:column;gap:2px;min-width:0}
-.date-label strong{color:#edf4fc;font-size:15px;line-height:1.3}
-.date-label span{color:#91a6bd;font-size:10px}
-.date-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.date-arrow{width:36px;height:36px;padding:0;font-size:20px}
-.date-chip{min-height:34px;padding:7px 10px}
-.date-chip:disabled{background:#1d4167;border-color:#4779aa;color:#d9eaff;opacity:1}
-.date-input-wrap{display:flex;align-items:center;gap:7px;padding:5px 8px;color:#9db1c8;font-size:10px}
-.date-input{width:132px;min-width:0;border:0;outline:0;background:transparent;color:#e3edf8;color-scheme:dark;font:inherit;font-size:11px}
-.date-input::-webkit-calendar-picker-indicator{cursor:pointer;filter:invert(.8)}
-#kevTable td:first-child,#sourceTable td:first-child{font-weight:700;color:#e2ebf5}
-#kevTable td:nth-child(2),#sourceTable td:nth-child(n+4){font-variant-numeric:tabular-nums}
-#kevFilterCount{margin:8px 0}
-#businessSummary{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-#businessSummary .kpi{padding:11px}
-#businessSummary .kpi strong{font-size:21px}
-:focus-visible{outline:2px solid #8fc2ff!important;outline-offset:3px!important;border-radius:5px}
-button,a,input,select,summary{touch-action:manipulation}
-button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid #8fc2ff;outline-offset:3px}
-a{color:#8dbdff}
-a:hover{color:#b8d7ff}
-button{font-family:inherit}
-img,svg,canvas,video{max-width:100%}
-.shell,.main,.panel,.kpi,.query,.query-card,.intel-card{min-width:0}
-.tablewrap table{min-width:0}
-@media(hover:hover){
- .panel:not(.headline):hover,.kpi:hover{border-color:#38536f}
- .intel-card:hover,.query-card:hover,.query:hover{border-color:#45688d}
-}
-@media(max-width:1120px){
- .layout{grid-template-columns:1fr;gap:12px}
- .side{position:sticky;top:0;display:block;padding:7px;overflow-x:auto;white-space:nowrap}
- .side-nav{display:flex;flex-direction:row;gap:5px;width:max-content;min-width:100%}
- .nav{width:auto;min-height:40px;flex:0 0 auto;padding:9px 11px;white-space:nowrap}
- .nav.active{box-shadow:inset 0 -2px #72b2ff}
- .sidefoot{display:none}
- .grid2{grid-template-columns:minmax(0,1fr) minmax(240px,.8fr)}
-}
-@media(max-width:760px){
- .shell{padding:10px}
- .top{min-height:62px;padding:11px 13px}
- .brand{gap:10px}
- .mark{width:36px;height:36px;flex-basis:36px;font-size:19px}
- .brand h1{font-size:14px;line-height:1.35}
- .live{padding:6px 8px;font-size:9px}
- .headline{align-items:flex-start;flex-direction:column;padding:12px}
- .headline h2{font-size:18px}
- .actions{width:100%}
- .kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
- .kpi{padding:11px}
- .kpi strong{font-size:23px}
- .grid2{grid-template-columns:1fr;gap:10px}
- .panel{padding:12px;margin-bottom:10px}
- .panelhead{align-items:flex-start}
- .critical-list{grid-template-columns:repeat(2,minmax(0,1fr))}
- .toolbar{align-items:stretch;gap:7px}
- .toolbar .search,.toolbar .select{width:100%;min-width:0;flex:1 1 100%}
- .global-search-panel{padding:11px}
- .global-search-row{align-items:stretch;flex-direction:column}
- .global-search-row .search,.global-search-row .select,.global-search-row .btn{width:100%;min-width:0}
- .global-search-head{align-items:flex-start}
- .querygrid{grid-template-columns:1fr}
- .datebar{align-items:flex-start;flex-direction:column}
- .date-actions{width:100%}
- .date-chip{flex:1 1 auto}
- .date-input-wrap{flex:1 1 100%;justify-content:space-between}
- .date-input{width:145px}
- .brief h1{font-size:20px}
- .brief h2{font-size:16px;margin-top:20px}
- .brief p,.brief li{font-size:12px}
- .brief table{min-width:680px}
- .tablewrap table{min-width:760px}
- .card-title-row{align-items:flex-start;flex-direction:column;gap:4px}
- .card-title-row>.tag{white-space:normal}
- .intel-card{padding:12px 10px}
- .card-footer{align-items:flex-start;flex-direction:column}
- #businessSummary{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
-@media(max-width:420px){
- .shell{padding:7px}
- .top{padding:10px}
- .brand h1{max-width:230px;font-size:12px}
- .live{font-size:8px}
- .critical-list{grid-template-columns:1fr}
- .kpi .label{font-size:8px}
- .kpi strong{font-size:21px}
- .btn{padding:8px 9px}
- .brief pre,.query pre{font-size:10px;padding:10px}
-}
-@media(prefers-reduced-motion:reduce){
- *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
-}
-
-
-/* High-contrast light command-centre theme */
-
-body{background:#f4f7fb!important;color:#172b45!important}
-.top{background:#102d56!important;border:1px solid #294b75!important;color:#fff!important}
-.side{background:#fff!important;border:1px solid #cbd5e1!important;box-shadow:0 2px 10px rgba(15,35,60,.06)!important}
-.nav{color:#263d59!important}.nav b{color:#174ea6!important}.nav.active,.nav:hover{background:#e8f0ff!important;color:#103f86!important}
-.headline,.panel,.kpi,.query,.query-card,.intel-card{background:#fff!important;border-color:#cbd5e1!important;color:#172b45!important;box-shadow:0 2px 8px rgba(15,35,60,.045)!important}
-.headline h2,.panel h3,.kpi strong,.intel-title{color:#102d56!important}
-.kpi .label,.kpi .hint,.muted,.sub{color:#52657c!important}
-.feedrow strong,.threat h4,.feedrow p,.threat p,.meta,.cell-description{color:#334b65!important}
-.search,.select,.date-input-wrap,.date-input{background:#fff!important;color:#172b45!important;border-color:#9aabc0!important}
-.search::placeholder{color:#64748b!important}select option{background:#fff;color:#172b45}
-.btn{background:#fff!important;color:#17427b!important;border-color:#9aabc0!important}.btn.primary{background:#174ea6!important;color:#fff!important;border-color:#174ea6!important}
-.tag,.tag.neutral{background:#edf2f7!important;border-color:#cbd5e1!important;color:#334b65!important}.tag.red,.tag.critical{background:#feecee!important;border-color:#f2c4cb!important;color:#981b2a!important}.tag.amber,.tag.high,.tag.medium{background:#fff3d8!important;border-color:#ead39e!important;color:#704500!important}.tag.green,.tag.low,.tag.verified{background:#e5f5eb!important;border-color:#b9dfc8!important;color:#145c39!important}.tag.blue,.tag.info{background:#eaf2ff!important;border-color:#c8daf7!important;color:#174b91!important}
-th{background:#eaf0f7!important;color:#344b65!important}td{background:#fff!important;color:#263b54!important;border-color:#dce4ed!important}tbody tr:hover td{background:#f4f8fd!important}
-.brief,.brief p,.brief li{color:#263b54!important}.brief h1,.brief h2,.brief h3,.brief h4{color:#102d56!important}.brief h2{border-color:#cbd5e1!important}.brief pre,.query pre{background:#f1f5f9!important;border-color:#cbd5e1!important;color:#17324f!important}.brief code,.query code{color:#174b91!important}
-.global-search-panel{background:#edf3fa!important;border-color:#cbd5e1!important}.global-search-head strong,.global-result strong{color:#102d56!important}.global-search-head .muted,.global-result small,.global-result-summary{color:#52657c!important}.global-result{color:#263b54!important;border-color:#dce4ed!important}.global-result:hover{background:#eaf2ff!important}
-.technology-context{background:#f1f6fc!important;border-color:#d4dfeb!important;border-left-color:#174ea6!important}.field-label{color:#52657c!important}.description-block p{color:#263b54!important}.description-block{border-left-color:#b7c9dc!important}
-.remediation-panel{background:#eaf6ef!important;border-color:#b9dfc8!important}.remediation-panel p{color:#174b32!important}.remediation-panel.no-fix,.remediation-panel.remediation-amber{background:#fff5df!important;border-color:#ead39e!important}.remediation-panel.no-fix p,.remediation-panel.remediation-amber p{color:#674500!important}.remediation-panel.remediation-red{background:#feedef!important;border-color:#f0c4ca!important}.remediation-panel.remediation-red p{color:#84202c!important}
-.card-section{margin:12px 0 0;padding:0}.card-section h5{margin:0 0 6px;color:#173a5d;font-size:11px;font-weight:800;letter-spacing:.045em}.card-section p{margin:0;color:#263b54;font-size:12px;line-height:1.65;overflow-wrap:anywhere}.card-section .description-block{margin:6px 0;padding-left:10px}.card-section .field-label{font-size:9px}.intel-card{padding:16px!important;border-radius:11px!important}.intel-title{margin:0 0 8px;font-size:14px;line-height:1.5;overflow-wrap:anywhere}.label-row{margin:4px 0 10px}.source-links{display:flex;flex-wrap:wrap;gap:8px 16px}.source-links a{color:#174ea6!important;font-size:11px;font-weight:700;text-decoration:underline;text-underline-offset:2px}.sources-section{padding-top:10px;border-top:1px solid #dce4ed}.remediation-panel{padding:10px 12px!important}.remediation-panel h5{color:inherit}.notice{background:#fff5df!important;color:#674500!important;border-color:#ead39e!important}
-#criticalTop{background:#fff!important;border-color:#e7b9c0!important}#criticalTop h3{color:#981b2a!important}.critical-item{background:#fff8f8!important;border-color:#efcdd1!important}.critical-item strong{color:#84202c!important}.critical-item p{color:#334b65!important}
-.datebar{background:#edf3fa!important;border-color:#cbd5e1!important}.date-label strong{color:#102d56!important}.date-label span{color:#52657c!important}.date-icon{background:#fff!important;color:#174ea6!important;border-color:#cbd5e1!important}.date-arrow,.date-chip{background:#fff!important;color:#17427b!important;border-color:#9aabc0!important}.date-chip:disabled{background:#e8f0ff!important;color:#174ea6!important;border-color:#8ba9d6!important}
-.health{color:#263b54!important;border-color:#dce4ed!important}.empty{color:#52657c!important}.foot{color:#64748b!important}
-:focus-visible{outline-color:#174ea6!important}
-@media(prefers-color-scheme:dark){}
-
-
-/* Overview critical-vulnerability cards: scoped presentation-only refinement. */
-#criticalTop .critical-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:stretch}
-#criticalTop .critical-item{display:flex;flex-direction:column;gap:9px;min-width:0;padding:16px;background:#fff;border:1px solid #dce5f0;border-left:3px solid #c94b56;border-radius:12px;box-shadow:0 2px 8px rgba(23,45,75,.035)}
-#criticalTop .critical-card-heading{display:flex;flex-direction:column;gap:7px}
-#criticalTop .critical-item strong{font-size:14px;line-height:1.45;color:#173452;overflow-wrap:anywhere}
-#criticalTop .critical-item .label-row{display:flex;flex-wrap:wrap;gap:5px;margin:0}
-#criticalTop .critical-product,#criticalTop .critical-dates{margin:0;color:#61758c;font-size:11px;line-height:1.5}
-#criticalTop .critical-dates span{padding:0 3px;color:#9aa9b9}
-#criticalTop .critical-item .technology-context{margin:2px 0;padding:10px 12px}
-#criticalTop .critical-item .description-block{margin:7px 0}
-#criticalTop .critical-item .description-block p{font-size:12px;line-height:1.6}
-#criticalTop .critical-item .technical-details{margin:0}
-#criticalTop .critical-item .technical-details p{font-size:12px;line-height:1.6}
-#criticalTop .critical-remediation{padding:10px 12px;background:#f8fafc;border:1px solid #e6edf4;border-radius:9px}
-#criticalTop .critical-remediation h5,#criticalTop .critical-sources h5{margin:0 0 6px;color:#52677d;font-size:10px;letter-spacing:.07em;text-transform:uppercase}
-#criticalTop .critical-remediation p{margin:0;color:#52677d;font-size:12px;line-height:1.6}
-#criticalTop .critical-evidence{padding-top:8px;border-top:1px solid #e8edf3}
-#criticalTop .critical-evidence summary{cursor:pointer;color:#24549a;font-size:11px;font-weight:700;line-height:1.5}
-#criticalTop .critical-evidence[open] summary{margin-bottom:9px}
-#criticalTop .critical-sources{margin-top:auto;padding-top:8px;border-top:1px solid #edf1f5}
-#criticalTop .critical-sources .source-links{display:flex;flex-wrap:wrap;gap:8px;font-size:11px}
-#criticalTop .critical-sources a{font-weight:700}
-@media(max-width:760px){#criticalTop .critical-list{grid-template-columns:1fr;gap:10px}#criticalTop .critical-item{padding:14px}}
-
-/* Global typography and text-contrast correction — text styling only. */
-/* Consistent readable text across every dashboard tab. */
-#view-overview,#view-briefing,#view-threats,#view-business,#view-kev,#view-queries,#view-sources{color:#172b45}
-#view-overview h1,#view-overview h2,#view-overview h3,#view-overview h4,#view-overview h5,#view-overview h6,
-#view-briefing h1,#view-briefing h2,#view-briefing h3,#view-briefing h4,#view-briefing h5,#view-briefing h6,
-#view-threats h1,#view-threats h2,#view-threats h3,#view-threats h4,#view-threats h5,#view-threats h6,
-#view-business h1,#view-business h2,#view-business h3,#view-business h4,#view-business h5,#view-business h6,
-#view-kev h1,#view-kev h2,#view-kev h3,#view-kev h4,#view-kev h5,#view-kev h6,
-#view-queries h1,#view-queries h2,#view-queries h3,#view-queries h4,#view-queries h5,#view-queries h6,
-#view-sources h1,#view-sources h2,#view-sources h3,#view-sources h4,#view-sources h5,#view-sources h6{color:#102d50;font-weight:750}
-#view-overview p,#view-overview li,#view-briefing p,#view-briefing li,
-#view-threats p,#view-threats li,#view-business p,#view-business li,
-#view-kev p,#view-kev li,#view-queries p,#view-queries li,
-#view-sources p,#view-sources li{color:#263b54}
-#view-overview .muted,#view-overview .sub,#view-overview .meta,#view-overview .hint,
-#view-briefing .muted,#view-briefing .sub,#view-briefing .meta,#view-briefing .hint,
-#view-threats .muted,#view-threats .sub,#view-threats .meta,#view-threats .hint,
-#view-business .muted,#view-business .sub,#view-business .meta,#view-business .hint,
-#view-kev .muted,#view-kev .sub,#view-kev .meta,#view-kev .hint,
-#view-queries .muted,#view-queries .sub,#view-queries .meta,#view-queries .hint,
-#view-sources .muted,#view-sources .sub,#view-sources .meta,#view-sources .hint{color:#455b73!important}
-#view-overview .field-label,#view-briefing .field-label,#view-threats .field-label,
-#view-business .field-label,#view-kev .field-label,#view-queries .field-label,#view-sources .field-label{color:#40566f!important;font-size:11px;font-weight:800}
-#view-overview .cell-description,#view-threats .cell-description,#view-business .cell-description,
-#view-kev .cell-description,#view-queries .cell-description,#view-sources .cell-description{color:#334a63!important;font-size:13px;line-height:1.65}
-#view-overview .intel-title,#view-threats .intel-title,#view-business .intel-title{color:#102d50!important;font-size:18px!important;font-weight:780;line-height:1.4}
-#view-overview .intel-card .meta,#view-threats .intel-card .meta,#view-business .intel-card .meta{color:#455b73!important;font-size:12px!important}
-#view-overview .description-block p,#view-threats .description-block p,#view-business .description-block p{color:#263b54!important;font-size:14px;line-height:1.65}
-#view-overview .technology-context h5,#view-threats .technology-context h5,#view-business .technology-context h5{color:#173a5d!important;font-size:13px}
-#view-overview .card-section h5,#view-threats .card-section h5,#view-business .card-section h5,#view-kev .card-section h5{color:#173a5d!important;font-size:12px}
-#view-overview .remediation-panel p,#view-threats .remediation-panel p,#view-business .remediation-panel p{font-size:13px;line-height:1.6}
-#view-overview .source-links a,#view-threats .source-links a,#view-business .source-links a{font-size:12px}
-#view-overview .panelhead h3,#view-overview .panel h3,#view-threats .panelhead h3,#view-business .panelhead h3,
-#view-kev .panelhead h3,#view-queries .panelhead h3,#view-sources .panelhead h3{font-size:16px!important;color:#102d50!important;font-weight:780}
-#view-overview .kpi .label,#view-overview .kpi .hint,#view-business .kpi .label,#view-business .kpi .hint{color:#455b73!important;font-size:11px}
-#view-overview .feedrow strong,#view-overview .threat h4,#view-overview .feedrow p,#view-overview .threat p{color:#263b54!important}
-#view-overview .critical-product,#view-overview .critical-dates,#view-overview .critical-remediation p{color:#40566f!important;font-size:13px}
-#view-overview .critical-remediation h5,#view-overview .critical-sources h5{color:#344b65!important;font-size:11px}
-#view-overview .critical-evidence summary{color:#174b91!important;font-size:12px}
-#view-queries .query-card h4,#view-queries .query h4{color:#102d50!important;font-size:16px!important;font-weight:750;line-height:1.45}
-#view-queries .technology-heading h3{color:#173a5d!important;font-size:17px}
-#view-queries .query-details summary,#view-queries details summary{color:#174b91!important;font-size:13px}
-#view-queries .path{color:#455b73!important;font-size:12px}
-#view-briefing .brief h1{font-size:26px!important;line-height:1.3}
-#view-briefing .brief h2{font-size:21px!important;line-height:1.4}
-#view-briefing .brief h3{font-size:17px!important;line-height:1.45}
-#view-briefing .brief h4{font-size:15px!important}
-#view-briefing .brief p,#view-briefing .brief li{color:#263b54!important;font-size:14px!important;line-height:1.7}
-#view-briefing .brief th{color:#344b65!important;font-size:12px}
-#view-briefing .brief td{color:#263b54!important;font-size:13px}
-#view-kev table th,#view-sources table th{color:#344b65!important;font-size:12px}
-#view-kev table td,#view-sources table td{color:#263b54!important;font-size:13px}
-#view-kev .kev-title{color:#102d50!important;font-size:15px;font-weight:750}
-#view-kev .meta,#view-sources .meta{color:#455b73!important;font-size:12px}
-#view-sources .health{color:#263b54!important;font-size:13px}
-#view-sources .health .status{font-size:11px}
-#view-overview .empty,#view-briefing .empty,#view-threats .empty,#view-business .empty,#view-kev .empty,#view-queries .empty,#view-sources .empty{color:#455b73!important;font-size:14px}
-#view-overview a,#view-briefing a,#view-threats a,#view-business a,#view-kev a,#view-queries a,#view-sources a{ text-underline-offset:2px }
-/* Keep status-chip semantics and code-block syntax colours intact. */
-#view-overview .tag,#view-threats .tag,#view-business .tag,#view-kev .tag,#view-queries .tag,#view-sources .tag,
-#view-overview .status,#view-sources .status{font-weight:700}
-#view-briefing pre,#view-queries pre,#view-briefing code,#view-queries code{font-family:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace}
-@media(max-width:760px){
- #view-overview .intel-title,#view-threats .intel-title,#view-business .intel-title{font-size:16px!important}
- #view-queries .query-card h4,#view-queries .query h4{font-size:15px!important}
- #view-briefing .brief h1{font-size:23px!important}
- #view-briefing .brief h2{font-size:19px!important}
- #view-briefing .brief h3{font-size:16px!important}
- #view-briefing .brief p,#view-briefing .brief li{font-size:13px!important}
-}
-
-</style></head><body><div class="shell">
+\n/* Remediation evidence states: colour indicates verification state, not vulnerability severity. */\n.remediation-panel.remediation-green{background:#eef8f1;border-color:#c6e6d0;border-left-color:#23834d}.remediation-panel.remediation-amber{background:#fff8e8;border-color:#f0dfb5;border-left-color:#bd861c}.remediation-panel.remediation-red{background:#fff0f0;border-color:#f0caca;border-left-color:#bd3945}.remediation-evidence{border-top:1px solid #e8edf3;padding-top:7px;margin-top:7px;font-size:11px;color:#607287}.remediation-evidence p{margin:3px 0}.critical-item .remediation-status{display:inline-block;margin:3px 0}\n</style></head><body><div class="shell">
 <header class="top"><div class="brand"><div class="mark">⌁</div><div><h1>Global Cyber Intelligence Command Center</h1></div></div><div class="live"><i class="dot"></i><span id="connection">CONNECTING</span></div></header>
 <div class="layout"><aside class="side"><nav class="side-nav" aria-label="Primary navigation"><button type="button" class="nav active" data-view="overview" aria-current="page"><b>◫</b> Overview</button><button type="button" class="nav" data-view="briefing"><b>▤</b> Daily briefing</button><button type="button" class="nav" data-view="threats"><b>⌕</b> New intelligence</button><button type="button" class="nav" data-view="business"><b>▥</b> Cyber business & market</button><button type="button" class="nav" data-view="kev"><b>⚠</b> CISA KEV watch</button><button type="button" class="nav" data-view="queries"><b>⌘</b> Detection queries</button><button type="button" class="nav" data-view="sources"><b>◉</b> Source health</button></nav><div class="sidefoot">SOURCE OF TRUTH<br><strong>GitHub repository</strong><br>Full content rendered here · Read-only</div></aside>
 <main class="main"><section class="headline"><div><h2 id="pageTitle">Operational overview</h2><p id="updated">Loading latest repository content…</p></div><div class="actions"><button class="btn" id="refresh">↻ Refresh</button><a class="btn primary" href="https://github.com/shakib316/global-cyber-intelligence-command-center" target="_blank" rel="noopener">Repository ↗</a></div></section>
@@ -736,7 +120,7 @@ async function fetchWithRetry(url,options={},maxAttempts=3){
  if(lastError)throw lastError;
  throw new Error("Request failed after bounded retries");
 }
-const $=id=>document.getElementById(id);let DATA=null,ALL=[],QUERIES=[],BUSINESS=[],REPORT_PATHS=[],KEV=[],LATEST_POINTER=null,dashboardLoadPromise=null,kevLoadPromise=null,kevLoaded=false,threatPage=0,businessPage=0,kevPage=0,queriesLoaded=false,globalQueryLoadPromise=null;const PAGE_SIZE=15,BUSINESS_PAGE_SIZE=12,KEV_PAGE_SIZE=25;
+const $=id=>document.getElementById(id);let DATA=null,ALL=[],QUERIES=[],BUSINESS=[],REPORT_PATHS=[],KEV=[],threatPage=0,businessPage=0,kevPage=0,queriesLoaded=false,globalQueryLoadPromise=null;const PAGE_SIZE=15,BUSINESS_PAGE_SIZE=12,KEV_PAGE_SIZE=25;
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const safeUrl=u=>{try{const x=new URL(u);return x.protocol==="https:"?x.href:"#"}catch{return "#"}};
 const fmt=d=>{if(!d)return "Date unavailable";const x=new Date(d);return isNaN(x)?"Date unavailable":x.toLocaleString("en-IN",{timeZone:"Asia/Kolkata",dateStyle:"medium",timeStyle:"short"})+" IST"};
@@ -759,49 +143,35 @@ function conciseExcerpt(value,limit=900){
  return cut.slice(0,boundary>limit*.55?boundary+1:limit).trim()+" …";
 }
 const descriptionBlock=(label,value)=>{const clean=cleanCopy(value);return clean?'<div class="description-block"><span class="field-label">'+esc(label)+'</span><p>'+esc(clean)+'</p></div>':""};
-const TECHNOLOGY_CONTEXT_FALLBACK="Technology details could not be independently verified from the available sources.";
-function contextField(value){const v=cleanCopy(value||"");return v||TECHNOLOGY_CONTEXT_FALLBACK;}
-function technologyContextBlock(x){
- const c=x?.technology_context&&typeof x.technology_context==="object"?x.technology_context:{};
- return '<section class="card-section technology-context"><h5>Technology background</h5><div class="description-block"><span class="field-label">What is it?</span><p>'+esc(contextField(c.what_is_it))+'</p></div><div class="description-block"><span class="field-label">What does it do?</span><p>'+esc(contextField(c.what_it_does))+'</p></div></section>';
-}
-function businessContextBlock(x){
- const c=x?.business_context&&typeof x.business_context==="object"?x.business_context:{};
- return '<section class="card-section technology-context business-context"><h5>Company / product background</h5><div class="description-block"><span class="field-label">What is it?</span><p>'+esc(contextField(c.what_is_it))+'</p></div><div class="description-block"><span class="field-label">What does it do?</span><p>'+esc(contextField(c.what_it_does))+'</p></div></section>';
-}
-function technicalDetailsBlock(value){
- const clean=cleanCopy(value);
- if(!clean)return '<section class="card-section"><h5>Technical details</h5><p>Technical details were not established from the available source.</p></section>';
- const sentences=clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[clean];
- const lines=sentences.slice(0,4).map(x=>x.trim()).filter(Boolean);
- return '<section class="card-section technical-details"><h5>Technical details</h5><p>'+lines.map(line=>esc(line)).join("<br>")+'</p></section>';
-}
-function sourceLinksBlock(x){
- const candidates=[{url:x?.canonical_url||x?.url,label:x?.source||"Original source"},...(x?.vendor_remediation||[]).map(v=>({url:v.source_url,label:v.source_label||"Vendor advisory"})),...((x?.remediation_evidence?.evidence_sources||[]).map(u=>({url:u,label:"Evidence source"})))];
- const seen=new Set(),links=[];
- for(const item of candidates){if(typeof item.url!=="string"||!item.url.startsWith("https://")||seen.has(item.url))continue;seen.add(item.url);links.push('<a href="'+safeUrl(item.url)+'" target="_blank" rel="noopener">'+esc(item.label)+' ↗</a>');if(links.length===3)break;}
- return '<section class="card-section sources-section"><h5>Sources</h5><div class="source-links">'+(links.length?links.join(""):"Source links unavailable.")+'</div></section>';
-}
 const remediationBlock=(x,kind="threat")=>{
- if(kind==="business")return '<section class="card-section remediation-panel no-fix"><h5>Remediation status</h5><p>Not applicable — business and market intelligence, not a vulnerability.</p></section>';
+ if(kind==="business")return '<div class="remediation-panel no-fix"><span class="field-label">ACTION / OUTCOME</span><p>Not applicable — business or market development, not a vulnerability.</p></div>';
  const raw=String(x.remediation_guidance||x.fix_guidance||x.remediation||x.fix||x.requiredAction||"").trim();
  const evidence=x.remediation_evidence||{};
- const candidates=(evidence.candidate_fixed_releases||[]).filter(v=>v&&typeof v.version==="string");
- const generic=/apply mitigations? in accordance with|follow (?:the )?vendor|consult (?:the )?vendor|apply (?:the )?latest updates?|patch (?:all )?affected systems?|keep (?:your )?systems? up to date/i.test(raw);
+ const vendorSources=(x.vendor_remediation||[]).filter(v=>Array.isArray(v.guidance)&&v.guidance.length&&typeof v.source_url==="string"&&v.source_url.startsWith("https://"));
+ const candidates=(evidence.candidate_fixed_releases||[]).filter(v=>v&&typeof v.version==="string"&&typeof v.source_url==="string"&&v.source_url.startsWith("https://"));
+ const generic=/apply mitigations? in accordance with|apply mitigations? per (?:the )?vendor|follow (?:the )?vendor (?:instructions|guidance|recommendations)|consult (?:the )?vendor|contact (?:the )?vendor|refer to (?:the )?(?:vendor|security) advisory|apply (?:the )?latest (?:security )?updates?|apply patches? to (?:all )?affected systems?|patch (?:all )?affected systems?|keep (?:your )?systems? up to date|install (?:the )?latest updates?|update to (?:the )?latest version/i.test(raw);
  const concrete=/\b(?:version\s*v?\d|v\d+\.\d|fixed in\s+\S+|KB\d{4,}|build\s*\d|hotfix\s*\S+|disable\s+[^.]{2,}|block\s+[^.]{2,}|remove\s+[^.]{2,}|rotate\s+[^.]{2,}|isolate\s+[^.]{2,})/i.test(raw);
  const actionable=/\b(?:upgrade|update|install|apply|deploy|replace|disable|block|restrict|remove|uninstall|revoke|rotate|reset|isolate|configure|rollback|patch)\b/i.test(raw);
  const explicit=raw&&!generic&&concrete&&actionable?raw:"";
  const noFix=evidence.state==="source_reports_no_fix";
  const verified=evidence.analyst_verified===true&&(evidence.state==="verified_fixed_version"||evidence.state==="verified_vendor_mitigation");
- let state="Not established",detail="No specific fix was verified in the retrieved material. This does not mean that no fix exists; check the vendor advisory.";
- if(verified){state=evidence.state==="verified_fixed_version"?"Fix verified":"Mitigation verified";detail=evidence.verification_note||("Analyst-verified remediation evidence"+(evidence.fixed_version?": "+evidence.fixed_version:"")+".");}
- else if(noFix){state="Vendor reports no fix";detail="The reviewed source explicitly reports that no fix is available. Follow documented containment guidance and monitor the vendor advisory.";}
- else if(candidates.length){state="Candidate release — verify";detail="A possible fixed release was extracted but has not been analyst-verified. Confirm product and branch applicability before deployment.";}
- else if(explicit){state="Specific action — verify";detail=explicit+" Source-derived guidance; confirm affected branch/build before deployment.";}
- else if(evidence.state==="source_reports_workaround_portal"){state="Workaround — portal access";detail="The source references a workaround requiring vendor-portal access. Obtain and validate the exact procedure from the vendor.";}
- const tone=verified?"green":noFix?"red":"amber";
- return '<section class="card-section remediation-panel remediation-'+tone+'"><h5>Remediation status · '+esc(state)+'</h5><p>'+esc(detail)+'</p></section>';
+ let state="NOT ESTABLISHED",tone="amber",detail="No specific fix identified in retrieved source text. This does not establish that no fix exists. Check the linked vendor advisory and confirm the exact product, branch and build.";
+ if(verified){state=evidence.state==="verified_fixed_version"?"FIX VERIFIED":"MITIGATION VERIFIED";tone="green";detail=evidence.verification_note||("Analyst-verified remediation evidence"+(evidence.fixed_version?": "+evidence.fixed_version:"")+". Confirm the deployed asset is on the applicable fixed build.");}
+ else if(noFix){state="VENDOR REPORTS NO FIX";tone="red";detail="The reviewed source explicitly reports that no fix is available. Apply the documented containment guidance, monitor the vendor advisory and reassess when an update is released.";}
+ else if(candidates.length){state="CANDIDATE RELEASE · VERIFY";tone="amber";detail="A possible fixed release was extracted from source material, but product/branch applicability has not been analyst-verified. Do not mark remediated until confirmed against the vendor advisory and deployed package.";}
+ else if(explicit||vendorSources.length){state="SPECIFIC ACTION · VERIFY";tone="amber";detail=explicit||vendorSources.map(v=>v.guidance.join(" ")).join(" ");detail+=" Evidence is source-derived but not analyst-verified; confirm affected branch/build and deployment before treating as fixed.";}
+ else if(evidence.state==="source_reports_workaround_portal"){state="WORKAROUND · PORTAL ACCESS";tone="amber";detail="The source references a workaround whose instructions require vendor-portal access. Obtain and validate the exact procedure from the vendor before applying it.";}
+ const fixed=evidence.fixed_version?'<p><strong>Verified fixed release:</strong> '+esc(evidence.fixed_version)+'</p>':"";
+ const candidateHtml=candidates.map(v=>'<div class="description-block"><span class="field-label">CANDIDATE RELEASE · NOT VERIFIED</span><p><strong>'+esc(v.version)+'</strong> — '+esc(v.statement||"Release wording extracted from source.")+'</p><p><a href="'+safeUrl(v.source_url)+'" target="_blank" rel="noopener">'+esc(v.source_label||"Open source")+' ↗</a> · Confirm product/branch applicability.</p></div>').join("");
+ const affected=x.affected_versions||x.affectedProducts||x.affected_products||"";
+ const affectedHtml=affected?'<div class="description-block"><span class="field-label">AFFECTED PRODUCT / VERSION</span><p>'+esc(typeof affected==="string"?affected:JSON.stringify(affected))+'</p></div>':"";
+ const sources=[...(evidence.evidence_sources||[]),...vendorSources.map(v=>v.source_url)].filter((u,i,a)=>typeof u==="string"&&u.startsWith("https://")&&a.indexOf(u)===i).slice(0,5);
+ const meta='<div class="remediation-evidence"><span class="field-label">EVIDENCE · '+esc(evidence.checked_at||"check date not supplied")+'</span><p>'+esc(evidence.verification_note||"Automated extraction is not analyst verification.")+'</p>'+(sources.length?'<p>'+sources.map((u,i)=>'<a href="'+safeUrl(u)+'" target="_blank" rel="noopener">Evidence '+(i+1)+' ↗</a>').join(" · ")+'</p>':"")+'</div>';
+ const vendorHtml=vendorSources.map(v=>'<div class="description-block"><span class="field-label">LINKED VENDOR ADVISORY · REVIEW REQUIRED</span><p>'+esc(v.guidance.join(" "))+'</p><a href="'+safeUrl(v.source_url)+'" target="_blank" rel="noopener">'+esc(v.source_label||"Open vendor advisory")+' ↗</a></div>').join("");
+ return '<div class="remediation-panel remediation-'+tone+'"><span class="field-label">REMEDIATION STATUS · '+state+'</span><p>'+esc(detail)+'</p>'+fixed+'</div>'+affectedHtml+candidateHtml+meta+vendorHtml;
 };
+function fullDetailsBlock(label,value){if(!value||value.length<500)return descriptionBlock(label,value);return '<details class="detail-expander"><summary>'+esc(label)+' · view full source-derived details</summary><div class="description-block"><p>'+esc(value)+'</p></div></details>'}
+
 const headerValue=(content,key)=>{const line=content.split("\n").find(x=>new RegExp("^//\\s*"+key+"\\s*:","i").test(x));return line?line.slice(line.indexOf(":")+1).trim():""};
 
 function inlineMd(s){let x=esc(s);x=x.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,(m,t,u)=>'<a href="'+safeUrl(u)+'" target="_blank" rel="noopener">'+t+'</a>');x=x.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/\*([^*]+)\*/g,"<em>$1</em>").replace(/`([^`]+)`/g,"<code>$1</code>");return x}
@@ -861,6 +231,7 @@ function kevAction(v){
  if(raw && !generic && actionable && concrete) return {text:raw,specific:(v.remediation_evidence?.analyst_verified===true&&["verified_fixed_version","verified_vendor_mitigation"].includes(v.remediation_evidence?.state))};
  return {text:"No product/version-specific patch, command, configuration change or workaround is provided in this CISA KEV record. The catalogue action is general guidance, not a verified fix. Check the linked vendor advisory for the current fixed release or workaround; this report has not independently verified one.",specific:false};
 }
+function actionTextSpecific(v){const raw=String(v.requiredAction||"").trim();return /\b(?:upgrade|update|install|apply|deploy|replace|disable|block|restrict|remove|uninstall|revoke|rotate|reset|isolate|configure|rollback|patch)\b/i.test(raw)&&/\b(?:version\s*v?\d|v\d+\.\d|fixed in\s+\S+|KB\d{4,}|build\s*\d|hotfix\s*\S+)\b/i.test(raw)}
 function kevStatus(v){const e=v.remediation_evidence||{};if(e.analyst_verified===true&&e.state==="verified_fixed_version")return "Fixed release verified by analyst";if(e.analyst_verified===true&&e.state==="verified_vendor_mitigation")return "Vendor mitigation verified by analyst";if(e.state==="source_reports_no_fix")return "Vendor reports no fix available";if(e.state==="source_reports_workaround_portal")return "Workaround requires vendor portal";if((v.vendor_remediation||[]).length)return "Vendor guidance extracted · verification pending";return "No product/version-specific fix verified"}
 function kevEvidenceState(v){
  const e=v.remediation_evidence||{};
@@ -899,38 +270,18 @@ function cvssOverview(v){
  if(!Number.isFinite(score)||score<0||score>10)return '<p class="cell-description"><strong>CVSS:</strong> invalid evidence value; not displayed</p>';
  return '<p class="cell-description"><strong>CVSS '+esc(m.version||"")+' technical severity:</strong> '+score.toFixed(1)+'/10 · '+esc(m.severity||"severity not stated")+' · '+esc(m.vector||"vector not supplied")+' · source '+esc(m.source||"not stated")+' ('+esc(m.source_type||"type not stated")+') · NVD status '+esc(m.nvd_status||"not stated")+' · updated '+esc(m.nvd_last_modified||"date not stated")+' · <a href="'+safeUrl(m.source_url)+'" target="_blank" rel="noopener">NVD source ↗</a></p>';
 }
-function criticalVulnCard(v,a=kevAction(v)){
- const score=v.cvss&&Number.isFinite(Number(v.cvss.base_score))?Number(v.cvss.base_score).toFixed(1):"";
- const severity=v.cvss?.severity||"";
- const labels=(score?tag("CVSS "+score+" · "+severity,score>=9?"red":score>=7?"amber":"neutral"):"")+tag("CISA KEV","red")+tag(kevStatus(v),a.specific?"green":"amber");
- const links=kevEvidenceLinks(v).filter(u=>typeof u==="string"&&u.startsWith("https://")).slice(0,3);
- const sourceLinks=links.length?links.map((u,i)=>'<a href="'+safeUrl(u)+'" target="_blank" rel="noopener">Source '+(i+1)+' ↗</a>').join(" · "):'<a href="https://nvd.nist.gov/vuln/detail/'+encodeURIComponent(v.cveID)+'" target="_blank" rel="noopener">NVD ↗</a> · <a href="https://www.cve.org/CVERecord?id='+encodeURIComponent(v.cveID)+'" target="_blank" rel="noopener">CVE record ↗</a>';
- const summary=cleanCopy(v.shortDescription||"Technical details are not established in the available CISA KEV description.");
- const secondary='<details class="critical-evidence"><summary>Additional technical evidence · CVSS, EPSS & verification ledger</summary>'+cveVerificationBlock(v.cve_verification)+cvssOverview(v)+epssOverview(v)+kevEvidenceHtml(v)+'<p class="cell-description"><strong>Deployment:</strong> Not verified by the KEV catalogue; confirm against asset and patch-management telemetry.</p></details>';
- return '<article class="critical-item"><div class="critical-card-heading"><a href="https://www.cve.org/CVERecord?id='+encodeURIComponent(v.cveID)+'" target="_blank" rel="noopener"><strong>'+esc(v.cveID)+' · '+esc(v.vulnerabilityName||"Vulnerability title unavailable")+'</strong></a><div class="label-row">'+labels+'</div></div><p class="critical-product">'+esc(v.vendorProject||"Vendor not stated")+' / '+esc(v.product||"Product not stated")+'</p><p class="critical-dates">Added '+esc(v.dateAdded||"date not stated")+' <span>·</span> Due '+esc(v.dueDate||"not stated")+'</p>'+technologyContextBlock(v)+technicalDetailsBlock(summary)+'<section class="card-section critical-remediation"><h5>Remediation status</h5><div class="label-row">'+tag(kevStatus(v),action.specific?"green":"amber")+'</div><p>'+esc(a.text)+'</p></section>'+secondary+'<section class="card-section critical-sources"><h5>Sources</h5><div class="source-links">'+sourceLinks+'</div></section></article>';
-}
-function kevHtml(v){const evidenceLinks=kevEvidenceLinks(v),action=kevAction(v),due=v.dueDate?tag("Due "+v.dueDate,"amber"):tag("No due date stated"),title=v.vulnerabilityName||"Vulnerability title not supplied by CISA KEV",ransomware=v.knownRansomwareCampaignUse||"Not stated",cwes=(v.cwes||[]).map(c=>tag(c,"neutral")).join(""),vendorLinks=(action.sources||[]).map(x=>'<p class="cell-description"><strong>Linked vendor guidance:</strong> '+esc(x.guidance.join(" "))+' <a href="'+safeUrl(x.source_url)+'" target="_blank" rel="noopener">Open advisory ↗</a></p>').join("");return '<tr><td><a href="https://www.cve.org/CVERecord?id='+encodeURIComponent(v.cveID)+'" target="_blank" rel="noopener"><strong>'+esc(v.cveID)+'</strong></a><div class="label-row">'+tag(v.vendorProject||"Vendor unknown")+' '+tag(v.product||"Product unknown")+' '+tag("Ransomware use: "+ransomware,ransomware==="Known"?"red":"neutral")+' '+cwes+'</div>'+'</td><td>'+tag("Added "+(v.dateAdded||"date unknown"))+'<br>'+due+'</td><td><strong class="kev-title">'+esc(title)+'</strong><p class="cell-description">'+esc(v.shortDescription||"No additional description supplied by CISA KEV.")+'</p>'+technologyContextBlock(v)+cveVerificationBlock(v.cve_verification)+kevPublicSignal(v)+'<a href="https://nvd.nist.gov/vuln/detail/'+encodeURIComponent(v.cveID)+'" target="_blank" rel="noopener">NVD details ↗</a></td><td>'+tag(kevStatus(v),action.specific?"green":"amber")+'<p class="cell-description">'+esc(action.text)+'</p>'+vendorLinks+kevEvidenceHtml(v)+'<p class="cell-description"><strong>Deployment:</strong> Not verified by the KEV catalogue; confirm against asset and patch-management telemetry.</p><div class="label-row">'+evidenceLinks.map((url,i)=>'<a href="'+safeUrl(url)+'" target="_blank" rel="noopener">Evidence '+(i+1)+' ↗</a>').join(" · ")+'</div></td></tr>'}
+function kevHtml(v){const evidenceLinks=kevEvidenceLinks(v),action=kevAction(v),due=v.dueDate?tag("Due "+v.dueDate,"amber"):tag("No due date stated"),title=v.vulnerabilityName||"Vulnerability title not supplied by CISA KEV",ransomware=v.knownRansomwareCampaignUse||"Not stated",cwes=(v.cwes||[]).map(c=>tag(c,"neutral")).join(""),vendorLinks=(action.sources||[]).map(x=>'<p class="cell-description"><strong>Linked vendor guidance:</strong> '+esc(x.guidance.join(" "))+' <a href="'+safeUrl(x.source_url)+'" target="_blank" rel="noopener">Open advisory ↗</a></p>').join("");return '<tr><td><a href="https://www.cve.org/CVERecord?id='+encodeURIComponent(v.cveID)+'" target="_blank" rel="noopener"><strong>'+esc(v.cveID)+'</strong></a><div class="label-row">'+tag(v.vendorProject||"Vendor unknown")+' '+tag(v.product||"Product unknown")+' '+tag("Ransomware use: "+ransomware,ransomware==="Known"?"red":"neutral")+' '+cwes+'</div>'+'</td><td>'+tag("Added "+(v.dateAdded||"date unknown"))+'<br>'+due+'</td><td><strong class="kev-title">'+esc(title)+'</strong><p class="cell-description">'+esc(v.shortDescription||"No additional description supplied by CISA KEV.")+'</p>'+kevPublicSignal(v)+'<a href="https://nvd.nist.gov/vuln/detail/'+encodeURIComponent(v.cveID)+'" target="_blank" rel="noopener">NVD details ↗</a></td><td>'+tag(kevStatus(v),action.specific?"green":"amber")+'<p class="cell-description">'+esc(action.text)+'</p>'+vendorLinks+kevEvidenceHtml(v)+'<p class="cell-description"><strong>Deployment:</strong> Not verified by the KEV catalogue; confirm against asset and patch-management telemetry.</p><div class="label-row">'+evidenceLinks.map((url,i)=>'<a href="'+safeUrl(url)+'" target="_blank" rel="noopener">Evidence '+(i+1)+' ↗</a>').join(" · ")+'</div></td></tr>'}
 function filteredKev(){const q=$("kevSearch").value.trim().toLowerCase(),vendor=$("kevVendor").value,due=$("kevDueFilter").value,today=new Date();today.setHours(0,0,0,0);const limit=new Date(today);limit.setDate(limit.getDate()+30);return KEV.filter(v=>{const hay=[v.cveID,v.vulnerabilityName,v.shortDescription,v.vendorProject,v.product,v.requiredAction,(v.cwes||[]).join(" "),v.knownRansomwareCampaignUse].join(" ").toLowerCase();if(q&&!hay.includes(q))return false;if(vendor&&v.vendorProject!==vendor)return false;if(due==="nodue"&&v.dueDate)return false;if(due==="overdue"&&(!v.dueDate||new Date(v.dueDate)>=today))return false;if(due==="upcoming"&&(!v.dueDate||new Date(v.dueDate)<today||new Date(v.dueDate)>limit))return false;return true})}
-function renderKev(){if(!kevLoaded){$("kevFilterCount").textContent="Loading the full CISA KEV catalogue…";$("kevTable").innerHTML='<tr><td colspan="4">The full catalogue is loaded when this section is opened.</td></tr>';return}const list=filteredKev(),pages=Math.max(1,Math.ceil(list.length/KEV_PAGE_SIZE));kevPage=Math.min(kevPage,pages-1);$("kevFilterCount").textContent=list.length.toLocaleString()+" matching vulnerabilities · "+KEV.length.toLocaleString()+" total";$("kevPage").textContent="Page "+(kevPage+1)+" of "+pages;$("kevPrev").disabled=kevPage===0;$("kevNext").disabled=kevPage>=pages-1;$("kevTable").innerHTML=list.slice(kevPage*KEV_PAGE_SIZE,(kevPage+1)*KEV_PAGE_SIZE).map(kevHtml).join("")||'<tr><td colspan="4">No vulnerabilities match these filters.</td></tr>'}
-function cveTag(c){const v=KEV.find(k=>k.cveID===c);const title=v&&v.vulnerabilityName?v.vulnerabilityName:"";return '<a class="tag amber cve-tag" href="https://nvd.nist.gov/vuln/detail/'+encodeURIComponent(c)+'" target="_blank" rel="noopener" title="'+esc(title||c)+'">'+esc(c)+(title?' · '+esc(title):'')+'</a>'}
-
-function cveVerificationBlock(records){
- if(!Array.isArray(records)||!records.length)return "";
- const rows=records.map(r=>{
-  const f=r.fields||{},cell=k=>{const x=f[k]||{};const val=x.value;let shown=val==null?"Not established":typeof val==="object"?JSON.stringify(val):String(val);if(k==="cvss"&&val&&typeof val==="object")shown="CVSS "+(val.version||"")+" "+val.base_score+"/10 ("+(val.severity||"severity not stated")+")";if(k==="kev_status"&&val==null)shown="Not checked";return '<td>'+esc(shown)+'<br><strong>'+esc(x.status||"Unverified")+'</strong><br><small>'+esc(x.source||"Source not recorded")+'</small>'+(x.source_url?'<br><a href="'+safeUrl(x.source_url)+'" target="_blank" rel="noopener">Source ↗</a>':"")+'</td>'};
-  return '<tr><td><strong>'+esc(r.product||"Product not verified")+'</strong><br>'+esc(r.cve||"CVE unavailable")+'<br>'+esc(r.title||"Official title unverified")+(r.mapping_flag?'<p class="cell-description"><strong>PRODUCT MAPPING FLAG:</strong> '+esc(r.mapping_flag)+'</p>':"")+'</td>'+["cvss","kev_status","affected_versions","fix_or_mitigation"].map(cell).join("")+'</tr>';
- }).join("");
- return '<details class="description-block"><summary><strong>CVE evidence & verification ledger</strong> · '+records.length+' CVE record(s)</summary><div class="table-wrap"><table><thead><tr><th>Product / CVE</th><th>CVSS</th><th>KEV status</th><th>Affected versions</th><th>Fix / mitigation</th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="cell-description">Verified (source) means the named source explicitly supplies the field. Unverified means not established by retrieved primary evidence; it is not a negative finding. CVSS technical severity and KEV exploitation status remain separate.</p></details>';
-}
+function renderKev(){const list=filteredKev(),pages=Math.max(1,Math.ceil(list.length/KEV_PAGE_SIZE));kevPage=Math.min(kevPage,pages-1);$("kevFilterCount").textContent=list.length.toLocaleString()+" matching vulnerabilities · "+KEV.length.toLocaleString()+" total";$("kevPage").textContent="Page "+(kevPage+1)+" of "+pages;$("kevPrev").disabled=kevPage===0;$("kevNext").disabled=kevPage>=pages-1;$("kevTable").innerHTML=list.slice(kevPage*KEV_PAGE_SIZE,(kevPage+1)*KEV_PAGE_SIZE).map(kevHtml).join("")||'<tr><td colspan="4">No vulnerabilities match these filters.</td></tr>'}
+function cveTag(c){const v=KEV.find(k=>k.cveID===c);const title=v&&v.vulnerabilityName?v.vulnerabilityName:"";return '<a class="tag amber cve-tag" href="https://nvd.nist.gov/vuln/detail/'+encodeURIComponent(c)+'" target="_blank" rel="noopener" title="'+esc(title||c)+'">'+esc(c)+(title?' · '+esc(title.slice(0,75)):'')+'</a>'}
 function itemHtml(x){
- const sev=priorityLabel(x.priority),cves=(x.cves||[]).slice(0,3).map(c=>cveTag(c)).join(""),topics=(x.topics||[]).slice(0,2).map(t=>tag(humanize(t),"blue")).join("");
- const details=cleanCopy(x.technical_summary||x.details||x.summary||"");
- return '<article class="threat intel-card"><h4 class="intel-title">'+esc(x.title)+'</h4><div class="label-row">'+tag(sev,severityClass(sev))+cves+topics+'</div>'+technologyContextBlock(x)+technicalDetailsBlock(conciseExcerpt(details,650))+remediationBlock(x,"threat")+sourceLinksBlock(x)+'</article>';
+ const cves=(x.cves||[]).map(c=>cveTag(c)).join(""),sev=priorityLabel(x.priority),details=cleanCopy(x.details||x.summary||"No technical detail was included in the collected feed record.");
+ const iocs=(DATA?.ioc_candidates||[]).filter(i=>i.source_url===x.url);
+ return '<article class="threat intel-card"><div class="card-title-row"><h4>'+esc(x.title)+'</h4>'+tag(sev,severityClass(sev))+'</div><div class="label-row">'+tag(x.source||"Source unavailable")+' '+tag(fmt(x.published),"neutral")+' '+cves+'</div>'+descriptionBlock("What happened / technical details",conciseExcerpt(details,900)) +fullDetailsBlock("Additional technical context",details.length>900?details.slice(conciseExcerpt(details,900).replace(/ …$/,"").length):"") +remediationBlock(x,"threat")+(iocs.length?descriptionBlock("Related IOC candidates",iocs.slice(0,12).map(i=>i.type+": "+(i.defanged_value||i.value)+" · "+i.confidence).join("\n")):"")+'<div class="card-footer"><a href="'+safeUrl(x.canonical_url||x.url)+'" target="_blank" rel="noopener">Source ↗</a></div></article>';
 }
 function globalSearch(){
  const q=$("globalSearch").value.trim().toLowerCase(),scope=$("globalScope").value,box=$("globalResults");
  if(!q){box.innerHTML="";return}
- if((scope==="all"||scope==="kev")&&!kevLoaded&&!kevLoadPromise)loadKevCatalog().then(()=>globalSearch()).catch(()=>{});
  const out=[],add=(kind,title,detail,view,search)=>out.push({kind,title,detail,view,search});
  if(scope==="all"||scope==="threats")ALL.filter(x=>[x.title,x.source,x.summary,x.details,x.remediation_guidance,(x.cves||[]).join(" "),(x.topics||[]).join(" ")].join(" ").toLowerCase().includes(q)).slice(0,8).forEach(x=>add("Threat intelligence",x.title,(x.source||"Source")+" · "+(x.cves||[]).join(", "),"threats",x.title));
  if(scope==="all"||scope==="kev")KEV.filter(x=>[x.cveID,x.vulnerabilityName,x.shortDescription,x.vendorProject,x.product,x.requiredAction,(x.cwes||[]).join(" "),x.knownRansomwareCampaignUse].join(" ").toLowerCase().includes(q)).slice(0,10).forEach(x=>add("CVE / KEV",x.cveID+" · "+(x.vulnerabilityName||"Title unavailable"),(x.vendorProject||"Vendor unknown")+" / "+(x.product||"Product unknown"),"kev",x.cveID));
@@ -939,15 +290,20 @@ function globalSearch(){
  if((scope==="all"||scope==="queries")&&!queriesLoaded&&!globalQueryLoadPromise){globalQueryLoadPromise=loadQueries().then(()=>{globalQueryLoadPromise=null;globalSearch()}).catch(()=>{globalQueryLoadPromise=null})}
  box.innerHTML=out.length?'<div class="global-result-summary">'+out.length+' matches shown · select a result to open its section</div>'+out.slice(0,24).map(x=>'<button class="global-result" type="button" data-global-view="'+x.view+'" data-global-search="'+esc(x.search)+'"><span>'+tag(x.kind,"blue")+' <strong>'+esc(x.title)+'</strong><small>'+esc(x.detail)+'</small></span><span aria-hidden="true">↗</span></button>').join(""):'<div class="empty">No matches found in the selected scope.</div>';
 }
-function openGlobalResult(view,term){showView(view);if(view==="threats"){$("threatSearch").value=term;threatPage=0;renderThreats()}else if(view==="kev"){loadKevCatalog().then(()=>{$("kevSearch").value=term;kevPage=0;renderKev()}).catch(()=>{})}else if(view==="business"){$("businessSearch").value=term;businessPage=0;renderBusiness()}else if(view==="queries"){loadQueries().then(()=>{$("querySearch").value=term;renderQueries()})}$("globalResults").innerHTML=""}
+function openGlobalResult(view,term){showView(view);if(view==="threats"){$("threatSearch").value=term;threatPage=0;renderThreats()}else if(view==="kev"){$("kevSearch").value=term;kevPage=0;renderKev()}else if(view==="business"){$("businessSearch").value=term;businessPage=0;renderBusiness()}else if(view==="queries"){loadQueries().then(()=>{$("querySearch").value=term;renderQueries()})}$("globalResults").innerHTML=""}
 
 document.addEventListener("click",e=>{const technique=e.target.closest("[data-jump-technique]");if(technique){showView("queries");loadQueries().then(()=>{$("querySearch").value=technique.dataset.jumpTechnique;renderQueries()});}});
-function showView(name){document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="view-"+name));document.querySelectorAll(".nav").forEach(n=>{const active=n.dataset.view===name;n.classList.toggle("active",active);if(active)n.setAttribute("aria-current","page");else n.removeAttribute("aria-current")});const titles={overview:"Operational overview",briefing:"Complete daily threat briefing",threats:"New intelligence feed",kev:"CISA KEV watch",business:"Cyber business & market",queries:"Detection query library",sources:"Source health"};$("pageTitle").textContent=titles[name]||"Overview";if(name==="kev"&&!kevLoaded)loadKevCatalog().catch(()=>{});if(name==="briefing"&&currentReportPath&&$("briefingContent").dataset.loaded!=="true")loadReportPath(currentReportPath).catch(()=>{})}
+function showView(name){document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="view-"+name));document.querySelectorAll(".nav").forEach(n=>{const active=n.dataset.view===name;n.classList.toggle("active",active);if(active)n.setAttribute("aria-current","page");else n.removeAttribute("aria-current")});const titles={overview:"Operational overview",briefing:"Complete daily threat briefing",threats:"New intelligence feed",kev:"CISA KEV watch",business:"Cyber business & market",queries:"Detection query library",sources:"Source health"};$("pageTitle").textContent=titles[name]||"Overview";if(name==="briefing"&&currentReportPath&&$("briefingContent").dataset.loaded!=="true")loadReportPath(currentReportPath).catch(()=>{})}
 document.querySelectorAll(".nav").forEach(n=>n.addEventListener("click",()=>{showView(n.dataset.view);if(n.dataset.view==="queries")loadQueries();}));document.querySelectorAll("[data-open]").forEach(b=>b.addEventListener("click",()=>{showView(b.dataset.open);if(b.dataset.open==="queries")loadQueries();}));
 document.addEventListener("click",async e=>{const b=e.target.closest("[data-copy]");if(!b)return;const el=document.querySelector('[data-code="'+b.dataset.copy+'"] code');if(!el)return;try{await navigator.clipboard.writeText(el.textContent);b.textContent="Copied"}catch{b.textContent="Select code to copy"}});
+function businessSignificance(x){
+ const c=x.category||"Company & market updates";
+ const checks={"M&A":"Confirm whether discussions, a definitive agreement or a completed transaction are being reported; verify deal value, regulatory approvals, conditions and expected closing date.","Funding & investment":"Verify funding amount, round, investors and intended use of proceeds.","Partnerships":"Verify the products covered, commercial scope and rollout timeline.","Products & launches":"Verify availability, supported regions, pricing and release date.","Leadership":"Verify the incoming executive's role and effective date.","Financial results":"Verify reporting period, reported figures and forward guidance.","Workforce & restructuring":"Verify affected teams, locations, timing and confirmed employee impact.","Regulation & policy":"Verify the regulator's original notice, affected entities and compliance deadline.","Law enforcement & operations":"Verify the agency's official announcement, operation scope, jurisdictions, arrests or disruptions and named targets.","Cyber incidents & breaches":"Verify affected systems, incident timeline, data exposure, confirmed impact and recovery status."};
+ return checks[c]||"Confirm the announcement with the company or regulator and check the source for specific dates, figures and affected parties.";
+}
 function businessCard(x){
- const details=cleanCopy(x.details||x.summary||"");
- return '<article class="threat intel-card"><h4 class="intel-title">'+esc(x.title)+'</h4><div class="label-row">'+tag(humanize(x.category||"Market update"),"blue")+'</div>'+businessContextBlock(x)+technicalDetailsBlock(conciseExcerpt(details,650))+remediationBlock(x,"business")+sourceLinksBlock(x)+'</article>';
+ const details=cleanCopy(x.details||x.summary||"No additional context was included in the collected feed record.");
+ return '<article class="threat intel-card"><div class="card-title-row"><h4>'+esc(x.title)+'</h4>'+tag(humanize(x.category||"Market update"),"blue")+'</div><div class="meta">'+esc(x.publisher||"Publisher unavailable")+' · '+esc(fmt(x.published))+'</div>'+descriptionBlock("What happened",conciseExcerpt(details,1100))+descriptionBlock("What to verify next",businessSignificance(x))+(x.enrichment_status!=="enriched"?descriptionBlock("Source limitation",x.business_context_note||"Only the feed headline or snippet was available; business details have not been independently established."):"")+fullDetailsBlock("More from the source",details.length>1100?details.slice(conciseExcerpt(details,1100).replace(/ …$/,"").length):"")+'<div class="card-footer"><a href="'+safeUrl(x.canonical_url||x.url)+'" target="_blank" rel="noopener">Source ↗</a></div></article>'
 }
 function renderBusiness(){const q=$("businessSearch").value.toLowerCase(),cat=$("businessCategory").value,status=$("businessStatus").value,detail=$("businessDetail").value;const list=BUSINESS.filter(x=>(!cat||x.category===cat)&&(!status||x.deal_status===status)&&(!detail||(detail==="enriched"?x.enrichment_status==="enriched":x.enrichment_status!=="enriched"))&&(!q||[x.title,x.summary,x.details,x.publisher,(x.companies||[]).join(" ")].join(" ").toLowerCase().includes(q)));const enriched=list.filter(x=>x.enrichment_status==="enriched").length;const newest=BUSINESS.map(x=>x.published).filter(Boolean).sort().pop();const collected=DATA?.retrieved_at_ist||DATA?.retrieved_at||"timestamp unavailable";const bh=(DATA?.source_health||[]).filter(x=>x.stream==="business");const bhOk=bh.filter(x=>x.status==="success").length;const freshness="Collected "+collected+" · newest event "+fmt(newest)+" · business feeds "+bhOk+"/"+bh.length+" healthy";$("businessCount").textContent=list.length+" of "+BUSINESS.length+" developments · "+freshness+" · "+enriched+" full-page / "+(list.length-enriched)+" feed-only";const counts={};BUSINESS.forEach(x=>counts[x.category]=(counts[x.category]||0)+1);$("businessSummary").innerHTML=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([k,v])=>'<div class="kpi"><span class="label">'+esc(k.toUpperCase())+'</span><strong>'+v+'</strong><span class="hint">Collected developments</span></div>').join("");const pages=Math.max(1,Math.ceil(list.length/BUSINESS_PAGE_SIZE));businessPage=Math.min(businessPage,pages-1);const rows=list.slice(businessPage*BUSINESS_PAGE_SIZE,(businessPage+1)*BUSINESS_PAGE_SIZE);$("businessPage").textContent="Page "+(businessPage+1)+" of "+pages;$("businessPrev").disabled=businessPage===0;$("businessNext").disabled=businessPage>=pages-1;$("businessList").innerHTML=rows.length?rows.map(businessCard).join(""):'<div class="empty">No business developments match these filters. Check source health or broaden the search.</div>'}
 function renderThreats(){if(!DATA)return;const q=$("threatSearch").value.toLowerCase(),topic=$("topicFilter").value,source=$("sourceFilter").value,priority=$("priorityFilter").value;const list=ALL.filter(x=>(!topic||(x.topics||[]).includes(topic))&&(!source||x.source===source)&&(!priority||String(x.priority||"").toLowerCase().includes(priority))&&(!q||[x.title,x.source,x.summary,x.details,x.remediation_guidance,(x.cves||[]).join(" "),(x.topics||[]).join(" ")].join(" ").toLowerCase().includes(q)));$("threatCount").textContent=list.length+" of "+ALL.length+" items";const pages=Math.max(1,Math.ceil(list.length/PAGE_SIZE));threatPage=Math.min(threatPage,pages-1);const rows=list.slice(threatPage*PAGE_SIZE,(threatPage+1)*PAGE_SIZE);$("threatPage").textContent="Page "+(threatPage+1)+" of "+pages;$("threatPrev").disabled=threatPage===0;$("threatNext").disabled=threatPage>=pages-1;$("threatList").innerHTML=rows.length?rows.map(itemHtml).join(""):'<div class="empty">No matching intelligence items.</div>'}
@@ -975,65 +331,13 @@ function reportIso(path){const m=path.match(/(?:reports|intel\/daily)\/(\d{4})\/
 function reportLabel(path){const d=reportIso(path);if(!d)return path;return new Date(d+"T12:00:00+05:30").toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric",timeZone:"Asia/Kolkata"})+" · IST"}
 function syncReportControls(){const i=REPORT_PATHS.indexOf(currentReportPath),oldest=REPORT_PATHS.length-1;$("prevReport").disabled=i<0||i>=oldest;$("nextReport").disabled=i<=0;$("latestReport").disabled=i===0;$("oldestReport").disabled=i<0||i===oldest;$("reportPicker").value=reportIso(currentReportPath);$("reportPicker").min=REPORT_PATHS.length?reportIso(REPORT_PATHS[oldest]):"";$("reportPicker").max=REPORT_PATHS.length?reportIso(REPORT_PATHS[0]):"";$("reportHint").textContent=i===0?"Latest published report":i===oldest?"Oldest available report":"Archive · "+(i+1)+" of "+REPORT_PATHS.length+" available reports · "+(oldest+1)+" total"}
 async function loadReportPath(path){if(currentReportPath===path&&$("briefingContent").dataset.loaded==="true")return;$("reportHint").textContent="Loading report…";$("briefingContent").innerHTML='<div class="empty">Loading selected report…</div>';try{const r=await fetchWithRetry("https://raw.githubusercontent.com/"+OWNER+"/"+REPO+"/"+BRANCH+"/"+path,{cache:"force-cache"});if(!r.ok)throw new Error("Report unavailable: "+r.status);const md=await r.text();$("briefingContent").innerHTML=markdown(prepareBriefing(md));$("briefingContent").dataset.loaded="true";currentReportPath=path;$("reportDate").textContent=reportLabel(path);$("briefDate").textContent=reportLabel(path);$("assessment").textContent=md.split("\n").find(x=>x.startsWith("**Assessment:**"))?.replace("**Assessment:**","").trim()||"Full briefing is available.";syncReportControls()}catch(e){$("reportHint").textContent=e.message;$("briefingContent").innerHTML='<div class="empty">'+esc(e.message)+'</div>';throw e}}
-async function fetchRepoAsset(path,options={}){
- const clean=String(path||"").replace(/^\/+/, "");
- if(!clean||clean.split("/").some(part=>part===".."))throw new Error("Invalid repository asset path");
- const urls=["./"+clean+"?ts="+Date.now(),"https://raw.githubusercontent.com/"+OWNER+"/"+REPO+"/"+BRANCH+"/"+clean];
- let lastError;
- for(const url of urls){
-  try{const response=await fetchWithRetry(url,{...options,cache:options.cache||"no-store"});if(response.ok)return response;lastError=new Error("Repository asset request failed ("+response.status+"): "+clean);}
-  catch(error){lastError=error;}
- }
- throw lastError||new Error("Repository asset unavailable: "+clean);
-}
-
-function normalizeDashboardData(raw){
- const isRecord=value=>!!value&&typeof value==="object"&&!Array.isArray(value);
- const asArray=value=>Array.isArray(value)?value:[];
- const records=value=>asArray(value).filter(isRecord);
- const normalizeRefs=value=>records(value).map(ref=>({...ref,guidance:asArray(ref.guidance).filter(x=>typeof x==="string"),candidate_fixed_releases:records(ref.candidate_fixed_releases)}));
- const normalizeEvidence=value=>{const e=isRecord(value)?value:{};return {...e,evidence_sources:asArray(e.evidence_sources).filter(x=>typeof x==="string"),candidate_fixed_releases:records(e.candidate_fixed_releases)}};
- const normalizeLedger=value=>records(value).map(row=>({...row,fields:isRecord(row.fields)?row.fields:{}}));
- if(!isRecord(raw))throw new Error("Snapshot root must be a JSON object");
- for(const key of ["items","business_items","source_health"])if(!Array.isArray(raw[key]))throw new Error("Snapshot schema error: "+key+" must be an array");if(raw.cisa_kev_catalog!==undefined&&!Array.isArray(raw.cisa_kev_catalog))throw new Error("Snapshot schema error: cisa_kev_catalog must be an array when present");
- const items=records(raw.items).map(item=>({...item,topics:asArray(item.topics),cves:asArray(item.cves),vendor_remediation:normalizeRefs(item.vendor_remediation),remediation_evidence:normalizeEvidence(item.remediation_evidence),cve_verification:normalizeLedger(item.cve_verification)}));
- const business_items=records(raw.business_items).map(item=>({...item,companies:asArray(item.companies).filter(x=>typeof x==="string"),vendor_remediation:normalizeRefs(item.vendor_remediation),remediation_evidence:normalizeEvidence(item.remediation_evidence)}));
- const normalizeKev=item=>({...item,cwes:asArray(item.cwes),epss_scores:records(item.epss_scores),vendor_remediation:normalizeRefs(item.vendor_remediation),remediation_evidence:normalizeEvidence(item.remediation_evidence),cve_verification:normalizeLedger(item.cve_verification),technology_context:isRecord(item.technology_context)?item.technology_context:{}});
- const cisa_kev_catalog=records(raw.cisa_kev_catalog).map(normalizeKev);
- return {...raw,items,business_items,cisa_kev_catalog,cisa_kev_added_last_7_days:records(raw.cisa_kev_added_last_7_days).map(normalizeKev),source_health:records(raw.source_health),errors:asArray(raw.errors).map(x=>String(x))};
-}
-function renderSafely(label,targetId,callback){
- try{callback();return true}
- catch(error){console.error("Dashboard component failed: "+label,error);const target=$(targetId);if(target)target.innerHTML='<div class="empty">'+esc(label+" could not be rendered: "+(error?.message||"unexpected error"))+'</div>';return false}
-}
-function populateKevVendors(){const vendors=[...new Set(KEV.map(v=>v.vendorProject).filter(Boolean))].sort();$("kevVendor").innerHTML='<option value="">All vendors</option>'+vendors.map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join("");}
-async function loadKevCatalog(){
- if(kevLoaded)return KEV;
- if(kevLoadPromise)return kevLoadPromise;
- if(!DATA&&dashboardLoadPromise)return dashboardLoadPromise.then(()=>{if(!DATA)throw new Error("Dashboard data is not ready");return loadKevCatalog()});
- if(!LATEST_POINTER)throw new Error("Latest repository pointer is unavailable");
- if(!LATEST_POINTER.kev_catalog){
-  if(Array.isArray(DATA?.cisa_kev_catalog)&&DATA.cisa_kev_catalog.length){KEV=DATA.cisa_kev_catalog.slice().sort((a,b)=>(b.dateAdded||"").localeCompare(a.dateAdded||""));kevLoaded=true;populateKevVendors();renderSafely("CISA KEV catalogue","kevTable",renderKev);return KEV;}
-  throw new Error("The latest repository pointer does not reference a CISA KEV catalogue file");
- }
- if(typeof LATEST_POINTER.kev_catalog!=="string"||!/^kev-catalogs\/\d{4}\/\d{2}\/\d{2}\.json$/.test(LATEST_POINTER.kev_catalog))throw new Error("Invalid CISA KEV catalogue path in latest pointer");
- kevLoadPromise=(async()=>{
-  const response=await fetchRepoAsset("intel/"+LATEST_POINTER.kev_catalog,{cache:"no-store"});
-  if(!response.ok)throw new Error("Cannot read full CISA KEV catalogue ("+response.status+")");
-  const payload=await response.json(),records=Array.isArray(payload)?payload:payload?.cisa_kev_catalog;
-  if(!Array.isArray(records))throw new Error("CISA KEV catalogue file has an invalid structure");
-  KEV=normalizeDashboardData({items:[],business_items:[],source_health:[],cisa_kev_catalog:records}).cisa_kev_catalog.sort((a,b)=>(b.dateAdded||"").localeCompare(a.dateAdded||""));
-  kevLoaded=true;populateKevVendors();renderSafely("CISA KEV catalogue","kevTable",renderKev);return KEV;
- })().catch(error=>{$("kevFilterCount").textContent="CISA KEV catalogue unavailable: "+error.message;$("kevTable").innerHTML='<tr><td colspan="4">'+esc(error.message)+'</td></tr>';throw error}).finally(()=>{kevLoadPromise=null});
- return kevLoadPromise;
-}
-async function load(){ let loadStage="reading latest pointer";$("connection").textContent="SYNCING REPOSITORY…";try{const p=await fetchRepoAsset("intel/latest.json",{cache:"no-store"});if(!p.ok)throw new Error("Cannot read intel/latest.json ("+p.status+")");const pointer=await p.json();if(!pointer||typeof pointer.snapshot!=="string"||!/^snapshots\/\d{4}\/\d{2}\/\d{2}\.json$/.test(pointer.snapshot))throw new Error("Invalid snapshot pointer in intel/latest.json");LATEST_POINTER=pointer;loadStage="downloading intelligence snapshot";const snap=await fetchRepoAsset("intel/"+pointer.snapshot,{cache:"no-store"});if(!snap.ok)throw new Error("Cannot read intelligence snapshot ("+snap.status+")");loadStage="parsing and normalizing intelligence snapshot";DATA=normalizeDashboardData(await snap.json());ALL=DATA.items;BUSINESS=DATA.business_items;$("connection").textContent="REPOSITORY CONNECTED";$("updated").textContent="Snapshot "+(DATA.date_ist||DATA.date_utc)+" · retrieved "+(DATA.retrieved_at_ist||fmt(DATA.retrieved_at))+" · rolling "+DATA.window_hours+"h";
+async function load(){ $("connection").textContent="SYNCING REPOSITORY…";try{const p=await fetchWithRetry("./intel/latest.json?ts="+Date.now(),{cache:"no-store"});if(!p.ok)throw new Error("Cannot read intel/latest.json ("+p.status+")");const pointer=await p.json();const snap=await fetchWithRetry("./intel/"+pointer.snapshot+"?ts="+Date.now(),{cache:"no-store"});if(!snap.ok)throw new Error("Cannot read intelligence snapshot ("+snap.status+")");DATA=await snap.json();ALL=DATA.items||[];BUSINESS=DATA.business_items||[];$("connection").textContent="REPOSITORY CONNECTED";$("updated").textContent="Snapshot "+(DATA.date_ist||DATA.date_utc)+" · retrieved "+(DATA.retrieved_at_ist||fmt(DATA.retrieved_at))+" · rolling "+DATA.window_hours+"h";
 $("kItems").textContent=ALL.length.toLocaleString();$("kSources").textContent=(DATA.successful_sources||0)+"/"+(DATA.total_sources||0);$("kSourceHint").textContent=(DATA.errors||[]).length+" collection issue(s)";$("kKev").textContent=(DATA.cisa_kev_added_last_7_days||[]).length;
 const priority=ALL.filter(x=>(x.topics||[]).some(t=>["active_exploitation","ransomware","apt_intrusion","ai_threat","malware_botnet","cloud"].includes(t))).slice(0,7);$("priorityFeed").innerHTML=priority.length?priority.map(itemHtml).join(""):'<div class="empty">No priority topic matches.</div>';$("assessment").textContent=priority.length?priority[0].title+" — "+(priority[0].summary||"Priority intelligence is available in the feed."):"No priority-tagged threat was identified in the current collection window; review the full intelligence feed and source health.";
 const sources=DATA.source_health||[];$("healthSummary").textContent=(DATA.successful_sources||0)+" / "+sources.length+" healthy";$("healthPreview").innerHTML=sources.slice(0,9).map(s=>'<div class="health"><span>'+esc(s.source)+'</span><span class="status '+(s.status==="success"?"ok":"bad")+'">'+esc(s.status)+' · '+esc(s.records)+'</span></div>').join("");
-KEV=DATA.cisa_kev_catalog.length?DATA.cisa_kev_catalog.slice().sort((a,b)=>(b.dateAdded||"").localeCompare(a.dateAdded||"")):(DATA.cisa_kev_added_last_7_days||[]).slice();kevLoaded=DATA.cisa_kev_catalog.length>0;const kev=DATA.cisa_kev_added_last_7_days||[];populateKevVendors();
-$("criticalVulnList").innerHTML=kev.length?kev.slice(0,9).map(v=>{const a=kevAction(v);return criticalVulnCard(v,a)}).join(""):'<div class="muted">No new CISA KEV additions in the last 7 days. Review the daily briefing for critical vulnerabilities outside KEV.</div>';
-$("kevPreview").innerHTML=kev.slice(0,6).map(v=>{const a=kevAction(v);return '<div class="feedrow"><strong>'+esc(v.cveID)+' · '+esc(v.vulnerabilityName)+'</strong><p>'+esc(v.vendorProject)+' / '+esc(v.product)+' · added '+esc(v.dateAdded)+' · due '+esc(v.dueDate||"not stated") +'</p>'+technologyContextBlock(v)+cveVerificationBlock(v.cve_verification)+'<p><strong>Fix status:</strong> '+esc(a.text)+'</p></div>'}).join("")||'<div class="empty">No recent KEV additions.</div>';if(kevLoaded)renderSafely("CISA KEV catalogue","kevTable",renderKev);else $("kevFilterCount").textContent="Open CISA KEV to load the full catalogue."; 
+KEV=(DATA.cisa_kev_catalog||DATA.cisa_kev_added_last_7_days||[]).slice().sort((a,b)=>(b.dateAdded||"").localeCompare(a.dateAdded||""));const kev=DATA.cisa_kev_added_last_7_days||[];$("kevVendor").innerHTML='<option value="">All vendors</option>'+[...new Set(KEV.map(v=>v.vendorProject).filter(Boolean))].sort().map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join("");
+$("criticalVulnList").innerHTML=kev.length?kev.slice(0,9).map(v=>{const a=kevAction(v),links=kevEvidenceLinks(v);return '<article class="critical-item"><a href="https://www.cve.org/CVERecord?id='+encodeURIComponent(v.cveID)+'" target="_blank" rel="noopener"><strong>'+esc(v.cveID)+' · '+esc(v.vulnerabilityName)+'</strong></a><p>'+esc(v.vendorProject)+' / '+esc(v.product)+'</p><p>Added '+esc(v.dateAdded)+' · due '+esc(v.dueDate||"not stated")+'</p><p>'+tag(kevStatus(v),a.specific?"green":"amber")+'</p><p class="cell-description">'+esc(a.text)+'</p>'+cvssOverview(v)+epssOverview(v)+'<p class="cell-description">'+links.map((u,i)=>'<a href="'+safeUrl(u)+'" target="_blank" rel="noopener">Evidence '+(i+1)+' ↗</a>').join(" · ")+'</p></article>'}).join(""):'<div class="muted">No new CISA KEV additions in the last 7 days. Review the daily briefing for critical vulnerabilities outside KEV.</div>';
+$("kevPreview").innerHTML=kev.slice(0,6).map(v=>{const a=kevAction(v);return '<div class="feedrow"><strong>'+esc(v.cveID)+' · '+esc(v.vulnerabilityName)+'</strong><p>'+esc(v.vendorProject)+' / '+esc(v.product)+' · added '+esc(v.dateAdded)+' · due '+esc(v.dueDate||"not stated") +'</p><p><strong>Fix status:</strong> '+esc(a.text)+'</p></div>'}).join("")||'<div class="empty">No recent KEV additions.</div>';renderKev();
 const sourceState=s=>s.health_state||(s.status==="success"?(Number(s.records)>0?"successful":"empty_but_healthy"):s.status==="failed"?"failed":s.status);
 const healthySources=sources.filter(s=>["successful","empty_but_healthy"].includes(sourceState(s))).length;
 const partialSources=sources.filter(s=>sourceState(s)==="partially_successful").length;
@@ -1047,12 +351,12 @@ $("sourceTable").innerHTML=sources.map(s=>{
  const resultClass=s.collection_result==="success_with_records"||s.collection_result==="success_empty"?"green":s.collection_result==="failed"?"red":s.collection_result==="disabled_excluded"?"":"amber";
  return '<tr><td>'+esc(s.source)+'</td><td><span class="status '+badgeClass+'">'+esc(humanize(state))+'</span></td><td>'+tag(humanize(s.collection_result||"legacy status"),resultClass)+'</td><td>'+esc(s.records)+'</td><td>'+esc(fmt(s.last_success_at))+'</td><td>'+esc(fmt(s.last_attempt_at))+'</td><td>'+esc(s.duration_ms==null?"unknown":s.duration_ms+" ms")+'</td><td>'+esc(s.consecutive_failures==null?"unknown":s.consecutive_failures)+'</td><td><a href="'+safeUrl(s.url)+'" target="_blank" rel="noopener">Feed ↗</a>'+(s.error?'<br><span class="muted">'+esc(s.error)+'</span>':"")+'</td></tr>';
 }).join("");$("errors").textContent=(DATA.errors||[]).length?"Collection notes: "+DATA.errors.join(" · "):"No collection errors recorded.";
-const topics=[...new Set(ALL.flatMap(x=>x.topics||[]))].sort(),srcs=[...new Set(ALL.map(x=>x.source))].sort();$("topicFilter").innerHTML='<option value="">All topics</option>'+topics.map(t=>'<option value="'+esc(t)+'">'+esc(t)+'</option>').join("");$("sourceFilter").innerHTML='<option value="">All sources</option>'+srcs.map(s=>'<option value="'+esc(s)+'">'+esc(s)+'</option>').join("");renderSafely("Threat intelligence","threatList",renderThreats);const cats=[...new Set(BUSINESS.map(x=>x.category).filter(Boolean))].sort();$("businessCategory").innerHTML='<option value="">All developments</option>'+cats.map(c=>'<option value="'+esc(c)+'">'+esc(c)+'</option>').join("");renderSafely("Cyber business","businessList",renderBusiness);
-loadStage="discovering historical reports";let reportArchiveError=null;try{const tree=await fetchWithRetry(API+"/git/trees/"+BRANCH+"?recursive=1",{cache:"no-store"});if(tree.ok){const t=await tree.json();const reportFiles=(t.tree||[]).filter(x=>x.type==="blob"&&/^(reports|intel\/daily)\/\d{4}\/\d{2}\/\d{2}\.md$/.test(x.path)).map(x=>x.path);const byDate=new Map();reportFiles.forEach(path=>{const d=reportIso(path);if(!d)return;const old=byDate.get(d);if(!old||path.startsWith("reports/"))byDate.set(d,path)});REPORT_PATHS=[...byDate.values()].sort((a,b)=>reportIso(b).localeCompare(reportIso(a)));}else{reportArchiveError=new Error("GitHub report archive lookup returned HTTP "+tree.status)}}catch(error){reportArchiveError=error;console.warn("Report archive index unavailable; using latest report pointer",error)}if(!REPORT_PATHS.length&&pointer.report){const latestPath=pointer.report.startsWith("daily/")?"intel/"+pointer.report:pointer.report;REPORT_PATHS=[latestPath]}if(REPORT_PATHS.length){currentReportPath=REPORT_PATHS[0];$("reportDate").textContent=reportLabel(currentReportPath);$("briefDate").textContent=reportLabel(currentReportPath);$("reportHint").textContent=reportArchiveError?"Latest report ready · archive list temporarily unavailable":"Latest report ready · loads when you open the briefing";syncReportControls()}else{$("reportDate").textContent="No reports available";$("reportHint").textContent="No daily reports found in the repository"}if(document.getElementById("view-kev")?.classList.contains("active")&&!kevLoaded)loadKevCatalog().catch(()=>{});
-}catch(e){const hasLoadedData=!!DATA&&Array.isArray(DATA.items);$("connection").textContent=hasLoadedData?"REPOSITORY CONNECTED":"DATA UNAVAILABLE";$("assessment").textContent=(hasLoadedData?"Dashboard data loaded, but "+loadStage+" failed: ":"Repository data could not be loaded while "+loadStage+": ")+e.message;if(!hasLoadedData)$("briefingContent").innerHTML='<div class="empty">'+esc(e.message)+'</div>';console.error("Global Cyber Intelligence dashboard load failed",e)}}
+const topics=[...new Set(ALL.flatMap(x=>x.topics||[]))].sort(),srcs=[...new Set(ALL.map(x=>x.source))].sort();$("topicFilter").innerHTML='<option value="">All topics</option>'+topics.map(t=>'<option value="'+esc(t)+'">'+esc(t)+'</option>').join("");$("sourceFilter").innerHTML='<option value="">All sources</option>'+srcs.map(s=>'<option value="'+esc(s)+'">'+esc(s)+'</option>').join("");renderThreats();const cats=[...new Set(BUSINESS.map(x=>x.category).filter(Boolean))].sort();$("businessCategory").innerHTML='<option value="">All developments</option>'+cats.map(c=>'<option value="'+esc(c)+'">'+esc(c)+'</option>').join("");renderBusiness();
+const tree=await fetchWithRetry(API+"/git/trees/"+BRANCH+"?recursive=1",{cache:"no-store"});if(tree.ok){const t=await tree.json();const reportFiles=(t.tree||[]).filter(x=>x.type==="blob"&&/^(reports|intel\/daily)\/\d{4}\/\d{2}\/\d{2}\.md$/.test(x.path)).map(x=>x.path);const byDate=new Map();reportFiles.forEach(path=>{const d=reportIso(path);if(!d)return;const old=byDate.get(d);if(!old||path.startsWith("reports/"))byDate.set(d,path)});REPORT_PATHS=[...byDate.values()].sort((a,b)=>reportIso(b).localeCompare(reportIso(a)));if(REPORT_PATHS.length){currentReportPath=REPORT_PATHS[0];$("reportDate").textContent=reportLabel(currentReportPath);$("briefDate").textContent=reportLabel(currentReportPath);$("reportHint").textContent="Latest report ready · loads when you open the briefing";syncReportControls()}else if(pointer.report){const latestPath=pointer.report.startsWith("daily/")?"intel/"+pointer.report:pointer.report;REPORT_PATHS=[latestPath];currentReportPath=latestPath;$("reportDate").textContent=reportLabel(latestPath);$("briefDate").textContent=reportLabel(latestPath);$("reportHint").textContent="Latest report ready · loads when you open the briefing";syncReportControls()}else{$("reportDate").textContent="No reports available";$("reportHint").textContent="No daily reports found in the repository"}}else if(pointer.report){const latestPath=pointer.report.startsWith("daily/")?"intel/"+pointer.report:pointer.report;REPORT_PATHS=[latestPath];currentReportPath=latestPath;$("reportDate").textContent=reportLabel(latestPath);$("briefDate").textContent=reportLabel(latestPath);$("reportHint").textContent="Latest report ready · loads when you open the briefing";syncReportControls()}
+}catch(e){$("connection").textContent="DATA UNAVAILABLE";$("assessment").textContent=e.message;$("briefingContent").innerHTML='<div class="empty">'+esc(e.message)+'</div>'}}
 ["businessSearch","businessCategory","businessStatus","businessDetail"].forEach(id=>$(id).addEventListener(id==="businessSearch"?"input":"change",()=>{businessPage=0;renderBusiness()}));$("businessClear").addEventListener("click",()=>{$("businessSearch").value="";$("businessCategory").value="";$("businessStatus").value="";$("businessDetail").value="";businessPage=0;renderBusiness()});$("threatPrev").addEventListener("click",()=>{threatPage=Math.max(0,threatPage-1);renderThreats()});$("threatNext").addEventListener("click",()=>{threatPage++;renderThreats()});$("businessPrev").addEventListener("click",()=>{businessPage=Math.max(0,businessPage-1);renderBusiness()});$("businessNext").addEventListener("click",()=>{businessPage++;renderBusiness()});["threatSearch","topicFilter","sourceFilter","priorityFilter"].forEach(id=>$(id).addEventListener(id==="threatSearch"?"input":"change",()=>{threatPage=0;renderThreats()}));$("threatClear").addEventListener("click",()=>{$("threatSearch").value="";$("topicFilter").value="";$("sourceFilter").value="";$("priorityFilter").value="";threatPage=0;renderThreats()});$("kevPrev").addEventListener("click",()=>{kevPage=Math.max(0,kevPage-1);renderKev()});$("kevNext").addEventListener("click",()=>{kevPage++;renderKev()});["kevSearch","kevVendor","kevDueFilter"].forEach(id=>$(id).addEventListener(id==="kevSearch"?"input":"change",()=>{kevPage=0;renderKev()}));$("kevClear").addEventListener("click",()=>{$("kevSearch").value="";$("kevVendor").value="";$("kevDueFilter").value="";kevPage=0;renderKev()});$("globalSearch").addEventListener("input",globalSearch);$("globalScope").addEventListener("change",globalSearch);$("globalClear").addEventListener("click",()=>{$("globalSearch").value="";$("globalResults").innerHTML="";$("globalScope").value="all";$("globalSearch").focus()});$("globalResults").addEventListener("click",e=>{const b=e.target.closest("[data-global-view]");if(b)openGlobalResult(b.dataset.globalView,b.dataset.globalSearch)});document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();$("globalSearch").focus();$("globalSearch").select()}if(e.key==="Escape")$("globalResults").innerHTML=""});["querySearch","queryLang"].forEach(id=>$(id).addEventListener(id==="querySearch"?"input":"change",renderQueries));async function chooseReport(path){if(!path||!REPORT_PATHS.includes(path))return;try{await loadReportPath(path);showView("briefing")}catch(e){$("reportHint").textContent=e.message}}
 $("reportPicker").addEventListener("change",()=>{const d=$("reportPicker").value;if(!d)return;const path=REPORT_PATHS.find(p=>reportIso(p)===d);if(!path){$("reportHint").textContent="No published report for "+d+". Choose a date between "+$("reportPicker").min+" and "+$("reportPicker").max+" with an available archive.";return}chooseReport(path)});
 $("prevReport").addEventListener("click",()=>{const i=REPORT_PATHS.indexOf(currentReportPath);if(i>=0&&i<REPORT_PATHS.length-1)chooseReport(REPORT_PATHS[i+1])});
 $("nextReport").addEventListener("click",()=>{const i=REPORT_PATHS.indexOf(currentReportPath);if(i>0)chooseReport(REPORT_PATHS[i-1])});
-$("latestReport").addEventListener("click",()=>chooseReport(REPORT_PATHS[0]));$("oldestReport").addEventListener("click",()=>chooseReport(REPORT_PATHS[REPORT_PATHS.length-1]));$("refresh").addEventListener("click",()=>{dashboardLoadPromise=load()});dashboardLoadPromise=load();
+$("latestReport").addEventListener("click",()=>chooseReport(REPORT_PATHS[0]));$("oldestReport").addEventListener("click",()=>chooseReport(REPORT_PATHS[REPORT_PATHS.length-1]));$("refresh").addEventListener("click",load);load();
 </script></body></html>

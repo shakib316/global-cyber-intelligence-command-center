@@ -274,7 +274,7 @@ def record_source_health(state,source,url,status,records,started,error=None,stre
 def save_source_health_state(state):
     path=ROOT/"intel/source-health-state.json"
     path.parent.mkdir(parents=True,exist_ok=True)
-    path.write_text(json.dumps({"schema_version":1,"updated_at":STAMP,"sources":state},ensure_ascii=False,separators=(",",":"))+"\n",encoding="utf-8")
+    path.write_text(json.dumps({"schema_version":1,"updated_at":STAMP,"sources":state},indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
 
 def lname(t): return t.rsplit("}",1)[-1].lower()
 def child(n,names):
@@ -341,7 +341,7 @@ class ArticleText(HTMLParser):
         self.links=[];self.anchor=None
     def handle_starttag(self,tag,attrs):
         a=dict(attrs);t=tag.lower()
-        if t in ("script","style","noscript","svg","nav","footer","header","aside","form","button","dialog"):self.skip+=1
+        if t in ("script","style","noscript","svg","nav","footer","header","aside","form"):self.skip+=1
         if t=="meta" and (a.get("name","").lower() in ("description","og:description") or a.get("property","").lower()=="og:description"):
             value=a.get("content","").strip()
             if value:self.meta.append(value)
@@ -349,7 +349,7 @@ class ArticleText(HTMLParser):
         if t in ("p","li"):self.capture=True;self.buf=[]
     def handle_endtag(self,tag):
         t=tag.lower()
-        if t in ("script","style","noscript","svg","nav","footer","header","aside","form","button","dialog"):self.skip=max(0,self.skip-1)
+        if t in ("script","style","noscript","svg","nav","footer","header","aside","form"):self.skip=max(0,self.skip-1)
         if t=="a" and self.anchor is not None:
             link=self.anchor;self.anchor=None;link["text"]=re.sub(r"\s+"," ",link["text"]).strip()
             if link["href"]:self.links.append(link)
@@ -376,200 +376,19 @@ def is_promotional_text(value):
     return bool(PROMOTIONAL_TEXT.search(str(value or "").strip()))
 
 
-# Common page chrome, form confirmations and consent text are not article evidence.
-BOILERPLATE_TEXT = re.compile(
-    r"thank you for (?:contacting us|getting in touch|your (?:message|request))|"
-    r"member of our team will be in touch|thank you for (?:signing up|subscribing)|"
-    r"newsletter|unsubscribe|your preferences have been successfully updated|"
-    r"close notification|accept all cookies|manage (?:your )?cookies|"
-    r"cookie preferences|privacy preferences|subscribe to our|sign up for our|"
-    r"already have an account|create an account|log in to continue|"
-    r"share this (?:article|story|page)|related (?:articles|stories)|"
-    r"read more stories|advertisement|sponsored content|"
-    r"all rights reserved|©\s*\d{4}|javascript is required",
-    re.I,
-)
-
-
-def is_boilerplate_text(value):
-    """Identify common non-editorial page text; false positives are deliberately avoided."""
-    text = re.sub(r"\s+", " ", str(value or "")).strip()
-    return bool(text and (is_promotional_text(text) or BOILERPLATE_TEXT.search(text)))
-
-
-def clean_extracted_text(value):
-    """Remove obvious page chrome while preserving source wording and paragraph order."""
-    kept = []
-    for raw in re.split(r"\n+", str(value or "")):
-        part = re.sub(r"\s+", " ", html.unescape(raw)).strip()
-        if len(part) < 35 or is_boilerplate_text(part):
-            continue
-        if part not in kept:
-            kept.append(part)
-    return "\n\n".join(kept)
-
-
-def build_technical_summary(value, max_sentences=4, max_chars=1100):
-    """Create a short source-only excerpt; this is extraction, not generative paraphrasing."""
-    cleaned = clean_extracted_text(value)
-    if not cleaned:
-        return ""
-    sentences = [re.sub(r"\s+", " ", s).strip() for s in re.split(r"(?<=[.!?])\s+", cleaned)]
-    selected = []
-    for sentence in sentences:
-        if len(sentence) < 45 or is_boilerplate_text(sentence):
-            continue
-        if sentence not in selected:
-            selected.append(sentence)
-        if len(selected) >= max_sentences:
-            break
-    summary = " ".join(selected)
-    return summary[:max_chars].rsplit(" ", 1)[0] if len(summary) > max_chars else summary
-
-
 def normalize_story_text(value):
     return re.sub(r"[^a-z0-9]+"," ",str(value or "").lower()).strip()
 
-
-# Curated, deliberately conservative plain-English descriptions. Add entries only
-# when the technology's purpose is clear from reliable product documentation.
-TECHNOLOGY_GLOSSARY = [
-    (r"\b1password\b", "1Password", "A password manager.", "It securely stores passwords, passkeys, software licences and other sensitive information so people and teams can access them without reusing passwords."),
-    (r"\bdrupal\b", "Drupal", "A content management system (CMS) for websites.", "It helps organisations create, manage and publish website content."),
-    (r"\blibpcap\b", "libpcap", "A software library for capturing network packets.", "It lets network and security tools read traffic seen by a network interface for monitoring, troubleshooting or analysis."),
-    (r"\bopenssl\b", "OpenSSL", "A widely used software toolkit for cryptography and secure connections.", "It provides encryption, certificate and TLS functions used by many applications."),
-    (r"\bopenSSH\b", "OpenSSH", "A set of tools for secure remote login and file transfer.", "It provides encrypted SSH connections used to administer systems and move files."),
-    (r"\bwordpress\b", "WordPress", "A content management system (CMS) used to build websites.", "It lets site owners publish pages, posts and manage website features through themes and plugins."),
-    (r"\bjoomla\b", "Joomla", "A content management system (CMS) for websites.", "It helps users build and manage websites and online applications."),
-    (r"\bapache(?: http server)?\b", "Apache HTTP Server", "Web-server software.", "It receives web requests and delivers websites and web applications to visitors."),
-    (r"\bnginx\b", "NGINX", "Web-server and reverse-proxy software.", "It serves websites and can route traffic to application servers, balance load and handle TLS connections."),
-    (r"\bfortios\b|\bfortigate\b", "Fortinet FortiOS / FortiGate", "Network security software used in Fortinet firewalls.", "It controls network traffic and provides firewall, VPN and other security functions."),
-    (r"\bpan-os\b|\bpalo alto networks firewall\b", "Palo Alto Networks PAN-OS", "The operating system used by Palo Alto Networks firewalls.", "It controls firewall policy, network traffic inspection and security services."),
-    (r"\bcisco ios xe\b", "Cisco IOS XE", "The operating system used by many Cisco network devices.", "It manages routing, switching and network-device features."),
-    (r"\bvmware vcenter\b|\bvcenter server\b", "VMware vCenter Server", "A management platform for VMware virtual infrastructure.", "It lets administrators centrally manage virtual machines, hosts and clusters."),
-    (r"\bkubernetes\b|\bk8s\b", "Kubernetes", "A platform for managing containerised applications.", "It deploys, scales and maintains applications running in containers across groups of servers."),
-    (r"\bdocker\b", "Docker", "A platform and toolset for building and running software containers.", "It packages applications with their dependencies so they can run consistently across environments."),
-    (r"\bnuget\b|\.net(?:\s+(?:sdk|runtime|framework))?", "NuGet / .NET", "NuGet is the package manager for the .NET ecosystem.", "It manages third-party packages and dependencies in .NET applications. Malicious packages can abuse this mechanism to deliver malware."),
-    (r"\bwindows\b", "Microsoft Windows", "A desktop and server operating system.", "It runs applications and manages devices, users, files and system services."),
-    (r"\bexchange server\b|\bmicrosoft exchange\b", "Microsoft Exchange Server", "Email and calendaring server software.", "It provides organisations with email, calendars, contacts and related collaboration services."),
-    (r"\bsharepoint\b", "Microsoft SharePoint", "A collaboration and document-management platform.", "It helps organisations store, share and manage documents, intranet pages and team information."),
-    (r"\bactive directory\b", "Microsoft Active Directory", "A directory service for managing users, computers and access in Windows environments.", "It centralises authentication, identity information and access policies."),
-    (r"\bentra(?: id)?\b", "Microsoft Entra ID", "Microsoft's cloud identity and access-management service.", "It manages sign-ins and access to cloud applications and services."),
-    (r"\bchrome\b", "Google Chrome", "A web browser.", "It lets people access websites and run web applications."),
-    (r"\bfirefox\b", "Mozilla Firefox", "A web browser.", "It lets people access websites and run web applications."),
-    (r"\blinux kernel\b|\bkernel\b", "Linux kernel", "The core of the Linux operating system.", "It manages hardware, memory, processes and communication between software and devices."),
-    (r"\bubuntu\b|\busn-\d{4}-\d+\b", "Ubuntu Linux", "A Linux operating system distributed by Canonical.", "It runs servers, desktops and cloud workloads. USN numbers identify Ubuntu Security Notices describing security updates."),
-    (r"\bglibc\b", "GNU C Library (glibc)", "A core library used by many Linux programs.", "It provides common functions that applications use to interact with the operating system."),
-    (r"\bsystemd\b", "systemd", "A system and service manager used by many Linux distributions.", "It starts and manages system services and other parts of the operating system."),
-    (r"\blibxml2\b", "libxml2", "A software library for processing XML documents.", "It lets applications parse, read and work with XML data."),
-    (r"\blibssh\b", "libssh", "A software library for implementing SSH connections.", "It lets applications communicate securely with remote systems using SSH."),
-    (r"\bphp\b", "PHP", "A programming language commonly used for websites and web applications.", "It runs server-side application code that generates pages and handles web requests."),
-    (r"\bpostgres(?:ql)?\b", "PostgreSQL", "An open-source relational database.", "It stores structured application data and lets software query and update that data."),
-    (r"\bmysql\b", "MySQL", "A relational database system.", "It stores structured data used by websites and business applications."),
-    (r"\bredis\b", "Redis", "An in-memory data store.", "Applications commonly use it for caching, fast lookups, queues and temporary data."),
-    (r"\bsamba\b", "Samba", "Software that provides Windows-compatible file and print sharing on Linux and Unix systems.", "It lets systems share files and services over a network."),
-    (r"\bwireshark\b", "Wireshark", "A network protocol analysis tool.", "It captures and displays network traffic so engineers can troubleshoot or investigate communications."),
-    (r"\btcpdump\b", "tcpdump", "A command-line network packet capture tool.", "It captures network traffic for troubleshooting and security analysis."),
-    (r"\b1password\b", "1Password", "A password manager.", "It securely stores passwords, passkeys and other sensitive information for individuals and teams."),
-    (r"\bsplunk\b", "Splunk", "A platform for collecting, searching and analysing machine-generated data.", "Security and IT teams use it to investigate logs, monitor systems and build alerts and dashboards."),
-    (r"\bcrowdstrike\b", "CrowdStrike", "A cybersecurity company best known for endpoint protection and threat detection products.", "Its security platform helps organisations monitor endpoints and investigate threats."),
-    (r"\bzscaler\b", "Zscaler", "A cloud security company providing secure access and web protection services.", "Its services inspect and control user access to internet and private applications."),
-    (r"\bfortinet\b", "Fortinet", "A cybersecurity company that makes network security products.", "Its portfolio includes firewalls, secure networking and endpoint security tools."),
-    (r"\bcisco\b", "Cisco", "A technology company that makes networking and cybersecurity products.", "Its products connect networks and provide routing, switching and security capabilities."),
-    (r"\bpalo alto networks\b", "Palo Alto Networks", "A cybersecurity company providing network, cloud and security operations products.", "Its platforms help organisations protect networks, cloud workloads and endpoints."),
-    (r"\bmicrosoft\b", "Microsoft", "A technology company that makes operating systems, cloud services and business software.", "Its products include Windows, Microsoft 365, Azure and identity/security services."),
-    (r"\bgoogle\b|\bmandiant\b", "Google / Google Cloud", "A technology company providing internet, cloud and security services.", "Its security products and research help organisations protect cloud services, identities and workloads."),
-    (r"\bcloudflare\b", "Cloudflare", "A company providing internet infrastructure and security services.", "Its services help protect and deliver websites, applications and network traffic."),
-    (r"\bakamai\b", "Akamai", "An internet infrastructure and security company.", "Its services help deliver web content and protect websites and applications."),
-]
-
-def technology_context_consistency(title="", summary="", details="", vendor="", product="", context=None):
-    """Flag a broad glossary match when a more specific technology is named."""
-    context = context if isinstance(context, dict) else {}
-    evidence = " ".join(str(x or "") for x in (title, summary, details, vendor, product)).lower()
-    name = str(context.get("name", "")).lower()
-    explanation = (str(context.get("what_is_it", "")) + " " + str(context.get("what_it_does", ""))).lower()
-    specific = (
-        (r"\bnuget\b|\.net", "nuget"),
-        (r"\blibpcap\b", "libpcap"),
-        (r"\bopenssl\b", "openssl"),
-        (r"\bkubernetes\b|\bk8s\b", "kubernetes"),
-        (r"\bdocker\b", "docker"),
-        (r"\bdrupal\b", "drupal"),
-    )
-    for pattern, expected in specific:
-        if re.search(pattern, evidence, re.I) and expected not in name and expected not in explanation:
-            return {"valid": False, "reason": "Specific technology '" + expected + "' conflicts with generic context '" + (name or "unnamed") + "'."}
-    if re.search(r"\b(?:nuget|\.net|libpcap|openssl|kubernetes|docker|drupal)\b", evidence, re.I):
-        if "desktop and server operating system" in explanation or "manages devices, users, files and system services" in explanation:
-            return {"valid": False, "reason": "Generic operating-system explanation conflicts with a specifically named technology."}
-    return {"valid": True, "reason": "No deterministic technology-context conflict detected."}
-
-
-def describe_technology(title="", summary="", details="", vendor="", product="", companies=None):
-    """Return short plain-English context without guessing when identification is weak."""
-    text_blob = " ".join(str(x or "") for x in (title, summary, details, vendor, product, *(companies or [])))
-    # Prefer the explicit KEV product/vendor field, then the advisory text.
-    explicit = " ".join(str(x or "") for x in (product, vendor, *(companies or [])))
-    haystacks = [explicit, text_blob] if explicit.strip() else [text_blob]
-    for pattern, name, what, purpose in TECHNOLOGY_GLOSSARY:
-        if any(re.search(pattern, hay, re.I) for hay in haystacks):
-            context = {"status": "identified", "name": name, "what_is_it": what, "what_it_does": purpose, "basis": "curated technology glossary"}
-            usn = re.search(r"\bUSN-\d{4}-\d+\b", text_blob, re.I)
-            if usn:
-                context["identifier_note"] = usn.group(0).upper() + " is an Ubuntu Security Notice identifier; it points to an Ubuntu security update/advisory, not a separate product."
-            consistency = technology_context_consistency(title, summary, details, vendor, product, context)
-            if not consistency["valid"]:
-                return {"status": "limited", "name": "Technology not confidently identified",
-                    "what_is_it": "Technology details could not be independently verified from the available sources.",
-                    "what_it_does": "Technology details could not be independently verified from the available sources.",
-                    "basis": "semantic consistency check failed: " + consistency["reason"]}
-            return context
-    candidate = str(product or "").strip() or str(vendor or "").strip()
-    if candidate:
-        return {"status": "limited", "name": candidate[:120],
-            "what_is_it": "Technology details could not be independently verified from the available sources.",
-            "what_it_does": "Technology details could not be independently verified from the available sources.",
-            "basis": "source product/vendor field; role not independently identified"}
-    usn = re.search(r"\bUSN-\d{4}-\d+\b", text_blob, re.I)
-    if usn:
-        return {"status": "limited", "name": usn.group(0).upper(),
-            "what_is_it": "An Ubuntu Security Notice (USN) is Canonical's identifier for a security advisory affecting Ubuntu software.",
-            "what_it_does": "It tells Ubuntu users which package or system component has a security issue and where to find the related update guidance.",
-            "basis": "identifier format"}
-    return {"status": "not_identified", "name": "Technology not confidently identified",
-        "what_is_it": "Technology details could not be independently verified from the available sources.",
-        "what_it_does": "Technology details could not be independently verified from the available sources.",
-        "basis": "insufficient source evidence"}
-
-def describe_business_context(title="", summary="", details="", companies=None):
-    """Keep business/company context separate from threat technology classification.
-
-    Only describe a product when a specific technology is named and matched by
-    the curated glossary. Company names alone are not enough to infer product
-    purpose or business role.
-    """
-    evidence = " ".join(str(x or "") for x in (title, summary, details))
-    context = describe_technology(title, summary, details)
-    broad_company_names = {"microsoft", "google / google cloud", "fortinet", "cisco",
-                           "palo alto networks", "crowdstrike", "zscaler", "cloudflare", "akamai"}
-    if context.get("status") == "identified" and context.get("name", "").lower() not in broad_company_names:
-        return context
-    return {"status": "not_identified", "name": "Company or product not confidently identified",
-            "what_is_it": "Technology details could not be independently verified from the available sources.",
-            "what_it_does": "Technology details could not be independently verified from the available sources.",
-            "basis": "business story does not establish a specific product role"}
-    
 def enrich_page(url,title=""):
     """Fetch readable article text plus candidate security/advisory links."""
     try:
         if not isinstance(url,str) or not url.startswith("https://"):return {"status":"not_attempted","details":"","references":[]}
         raw,charset,resolved=request_url(url,{"User-Agent":UA,"Accept":"text/html,application/xhtml+xml"},timeout=8,max_bytes=1_500_000)
         parser=ArticleText();parser.feed(raw.decode(charset,errors="replace"))
-        title_norm=normalize_story_text(title);parts=parser.meta[:1]+parser.paragraphs[:30];cleaned=[]
+        title_norm=normalize_story_text(title);parts=parser.meta[:1]+parser.paragraphs[:18];cleaned=[]
         for part in parts:
             part=re.sub(r"\s+"," ",part).strip();norm=normalize_story_text(part)
-            if not part or is_boilerplate_text(part):continue
+            if not part or is_promotional_text(part):continue
             if title_norm and norm and difflib.SequenceMatcher(None,norm,title_norm).ratio()>=0.94:continue
             if re.search(r"comprehensive up-to-date news coverage|aggregated from sources all over the world by google news|identify and remediate systems affected by this advisory|for more details on how to apply this update|refer to the cve page\\(s\\) listed in the references section",part,re.I):continue
             if len(part)>45 and part not in cleaned:cleaned.append(part)
@@ -580,7 +399,7 @@ def enrich_page(url,title=""):
             if not href.startswith("https://") or not host or host==base_host:continue
             if re.search(r"security|advisory|bulletin|CVE-\d{4}-|patch|release notes|fixed version|vulnerability|hotfix",label+" "+href,re.I):
                 if href not in [x["url"] for x in references]:references.append({"label":label[:180] or "Vendor/security reference","url":href})
-        return {"status":"enriched" if len(text_value)>=250 else "limited","details":text_value[:9000],"technical_summary":build_technical_summary(text_value),"resolved_url":resolved,"references":references[:8]}
+        return {"status":"enriched" if len(text_value)>=250 else "limited","details":text_value[:9000],"resolved_url":resolved,"references":references[:8]}
     except Exception as exc:return {"status":"fetch_failed","details":"","references":[],"error":type(exc).__name__}
 
 def extract_specific_remediation(text_value):
@@ -669,14 +488,11 @@ def enrich_records(records,max_workers=10):
             item=futures[future]
             try:result=future.result()
             except Exception:result={"status":"fetch_failed","details":"","references":[]}
-            feed_summary=clean_extracted_text(item.get("summary","").strip());page_details=clean_extracted_text(result.get("details","").strip())
-            item["summary"]=feed_summary
-            item["details"]=page_details if len(page_details)>len(feed_summary) else (feed_summary or "No relevant technical description was extracted from the feed or retrieved page. Review the linked primary advisory.")
-            item["technical_summary"]=build_technical_summary(item["details"]) or "A concise technical summary could not be extracted from the reviewed source text; consult the linked advisory."
+            feed_summary=item.get("summary","").strip();page_details=result.get("details","").strip()
+            item["details"]=page_details if len(page_details)>len(feed_summary) else (feed_summary or "No description was exposed by the feed or retrieved source page. Review the linked advisory for authoritative details.")
             resolved=result.get("resolved_url","")
             if resolved.startswith("https://") and urlparse(resolved).netloc.lower() not in ("news.google.com","www.google.com"):item["canonical_url"]=resolved
             item["enrichment_status"]=result.get("status","unknown");item["enriched_at"]=STAMP
-            if result.get("technical_summary"):item["technical_summary"]=build_technical_summary(result["technical_summary"])
             if "category" in item:
                 title_norm=normalize_story_text(item.get("title",""))
                 details_norm=normalize_story_text(item.get("details",""))
@@ -958,57 +774,6 @@ def extract_iocs(s,source,url):
              "confidence":"candidate near explicit IOC wording; verify against primary source"}
             for record in found.values()]
 
-
-def attach_cve_verification(records, kev_records=None):
-    """Attach field-level evidence, using a dated primary-source correction register where reviewed."""
-    kev_by_id={str(x.get("cveID","")).upper():x for x in (kev_records or [])}
-    override_path=ROOT/"intel/cve-verification-overrides.json"
-    try:
-        overrides=json.loads(override_path.read_text(encoding="utf-8")).get("records",{}) if override_path.exists() else {}
-    except (OSError,ValueError):
-        overrides={}
-    for record in records:
-        cve_ids=record.get("cves") or ([record.get("cveID")] if record.get("cveID") else [])
-        ledger=[]
-        for raw_id in cve_ids:
-            cve=str(raw_id or "").upper()
-            if not CVE.fullmatch(cve): continue
-            kev=kev_by_id.get(cve)
-            override=overrides.get(cve,{})
-            nvd=kev or record if str(record.get("cveID","")).upper()==cve else kev or {}
-            cisa_url="https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
-            nvd_url="https://nvd.nist.gov/vuln/detail/"+cve
-            vendor_urls=[]
-            if kev:
-                vendor_urls=[u.rstrip(".,)") for u in re.findall(r"https://[^\\s,;<>]+",str(kev.get("notes") or ""))]
-                vendor_urls += [x.get("source_url") for x in kev.get("vendor_remediation",[]) if x.get("source_url")]
-            if override.get("vendor_url"): vendor_urls.insert(0,override["vendor_url"])
-            vendor_urls=list(dict.fromkeys(u for u in vendor_urls if isinstance(u,str) and u.startswith("https://")))
-            metric=nvd.get("cvss") if isinstance(nvd.get("cvss"),dict) else None
-            if override.get("cvss"):
-                o=override["cvss"]
-                metric={"version":o.get("version"),"base_score":o.get("score"),"severity":o.get("severity"),
-                    "source":o.get("source"),"source_type":"Vendor/CNA primary advisory","vector":o.get("vector"),
-                    "source_url":o.get("source_url") or override.get("vendor_url") or nvd_url}
-            title=override.get("title") or (kev or {}).get("vulnerabilityName") or record.get("nvd_title") or None
-            product=override.get("product") or ("/".join(str((kev or {}).get(k) or "").strip() for k in ("vendorProject","product") if (kev or {}).get(k)) or None)
-            official_source=override.get("vendor_url") or (cisa_url if kev else nvd_url)
-            fields={
-                "cve_id":{"value":cve,"status":"Verified (source)","source":"CISA KEV / source CVE identifier","source_url":cisa_url if kev else record.get("url")},
-                "official_title":{"value":title,"status":"Verified (source)" if title and (kev or override) else "Unverified","source":"Vendor advisory CVE-specific title" if override else ("CISA KEV vulnerabilityName" if title and kev else "No authoritative title retrieved"),"source_url":official_source},
-                "product":{"value":product,"status":"Verified (source)" if product and (kev or override) else "Unverified","source":"CVE-specific vendor advisory" if override else ("CISA KEV vendorProject/product" if product and kev else "No authoritative product mapping retrieved"),"source_url":official_source},
-                "cvss":{"value":metric,"status":"Verified (source)" if metric else "Unverified","source":override.get("cvss",{}).get("source") if override else ("NVD CVE API metric" if metric else "NVD score not retrieved / not available"),"source_url":metric.get("source_url") if metric else nvd_url},
-                "kev_status":{"value":"Known exploited (CISA KEV)" if kev else ("Not listed in checked CISA KEV snapshot" if kev_records is not None else "Not checked"),"status":"Verified (source)" if kev_records is not None else "Unverified","source":"CISA KEV catalogue snapshot" if kev_records is not None else "CISA KEV not checked","source_url":cisa_url},
-                "affected_versions":{"value":override.get("affected_versions"),"status":"Verified (source)" if override.get("affected_versions") else "Unverified","source":"CVE-specific vendor advisory" if override.get("affected_versions") else "Exact affected-version ranges not established; not inferred from KEV listing","source_url":override.get("vendor_url") or nvd_url},
-                "fix_or_mitigation":{"value":override.get("fix") or ((kev or {}).get("vendor_remediation") or None),"status":"Verified (source)" if override.get("fix") else "Unverified","source":"CVE-specific vendor advisory" if override.get("fix") else ("Automated extraction from CISA-linked vendor references; analyst applicability review required" if vendor_urls else "No vendor fix statement retrieved; this is not proof no patch exists"),"source_url":override.get("vendor_url") or (vendor_urls[0] if vendor_urls else cisa_url)}
-            }
-            ledger.append({"cve":cve,"product":product,"title":title,"fields":fields,
-                "sources":{"CISA_KEV":cisa_url,"NVD":nvd_url,"vendor_advisories":vendor_urls},
-                "mapping_flag":override.get("mapping_flag"),
-                "verification_note":"Each field has independent evidence status. Automated extraction is not analyst verification."})
-        record["cve_verification"]=ledger
-    return records
-
 def main():
     health=[];errors=[];entries=[];business_entries=[];kev={};success=0;health_state=load_source_health_state()
     # ACSC is intentionally excluded after persistent upstream timeouts; remove its stale failure from health.
@@ -1081,11 +846,6 @@ def main():
     # Retrieve article-level context and follow only explicitly linked security references.
     enrich_records(items)
     enrich_records(business_items)
-    # Add consistent plain-English context to every threat and business record.
-    for x in items:
-        x["technology_context"] = describe_technology(x.get("title"), x.get("summary"), x.get("details"))
-    for x in business_items:
-        x["business_context"] = describe_business_context(x.get("title"), x.get("summary"), x.get("details"), x.get("companies"))
     # CVEs must be extracted after full-page retrieval; feed snippets alone are incomplete.
     for item in items:
         item["cves"]=extract_cves(item.get("title"),item.get("summary"),item.get("details"),
@@ -1098,17 +858,15 @@ def main():
             item["cves"]=sorted(set(item["cves"])|evidence_cves)
             item["cve_extraction_recovered"]=sorted(missing_cves)
         item["cve_count"]=len(item["cves"])
+    for x in items:
+        body=x.get("title","")+" "+x.get("summary","")+" "+x.get("details","")
+        x["attack_techniques"]=sorted(set(re.findall(r"\bT\d{4}(?:\.\d{3})?\b",body,re.I)))
     vulns=kev.get("vulnerabilities",[]) if kev else []
-    for v in vulns:
-        v["technology_context"] = describe_technology(v.get("vulnerabilityName"), v.get("shortDescription"), v.get("notes"), v.get("vendorProject"), v.get("product"))
     recentkev=sorted([v for v in vulns if v.get("dateAdded","")>=(NOW_IST.date()-dt.timedelta(days=7)).isoformat()],key=lambda x:x.get("dateAdded",""),reverse=True)
     enrich_kev_records(recentkev[:40])
     attach_kev_remediation_evidence(recentkev[:40])
     epss_enrichment=enrich_epss(recentkev[:40]+items)
     cvss_enrichment=enrich_nvd_cvss(recentkev[:20])
-    attach_cve_verification(vulns, vulns)
-    attach_cve_verification(recentkev, vulns)
-    attach_cve_verification(items, vulns)
     iocmap={}
     for x in items:
         for v in extract_iocs(x["title"]+" "+x["summary"]+" "+x.get("details",""),x["source"],x["url"]):
@@ -1122,17 +880,15 @@ def main():
     good=sum(x["status"]=="success" for x in health)
     report=Path("intel/daily")/DAY[:4]/DAY[5:7]/(DAY[8:10]+".md")
     snapshot=Path("intel/snapshots")/DAY[:4]/DAY[5:7]/(DAY[8:10]+".json")
-    kev_catalog_path=Path("intel/kev-catalogs")/DAY[:4]/DAY[5:7]/(DAY[8:10]+".json")
-    (ROOT/report).parent.mkdir(parents=True,exist_ok=True);(ROOT/snapshot).parent.mkdir(parents=True,exist_ok=True);(ROOT/kev_catalog_path).parent.mkdir(parents=True,exist_ok=True)
-    data={"date_utc":DAY_UTC,"date_ist":DAY,"retrieved_at":STAMP,"retrieved_at_ist":STAMP_IST,"technology_context_version":1,"business_context_version":1,"window_hours":72,"source_health":health,"successful_sources":good,"total_sources":len(health),
-        "errors":errors,"business_items":business_items,"business_feed_count":len(business_items),"business_window_hours":168,"cisa_kev_catalog_count":len(vulns),"cisa_kev_added_last_7_days":recentkev,"items":items,"epss_enrichment":epss_enrichment,"cvss_enrichment":cvss_enrichment,
+    (ROOT/report).parent.mkdir(parents=True,exist_ok=True);(ROOT/snapshot).parent.mkdir(parents=True,exist_ok=True)
+    data={"date_utc":DAY_UTC,"date_ist":DAY,"retrieved_at":STAMP,"retrieved_at_ist":STAMP_IST,"window_hours":72,"source_health":health,"successful_sources":good,"total_sources":len(health),
+        "errors":errors,"business_items":business_items,"business_feed_count":len(business_items),"business_window_hours":168,"cisa_kev_catalog_count":len(vulns),"cisa_kev_catalog":vulns,"cisa_kev_added_last_7_days":recentkev,"items":items,"epss_enrichment":epss_enrichment,"cvss_enrichment":cvss_enrichment,
         "ioc_candidates":iocs,"ioc_policy":"Candidate extraction only near explicit IOC wording. Verify against original report and local context.",
         "limitations":["Public feeds are not exhaustive and can fail or change format.","CERT-In is an official index scrape, not an RSS feed; open advisory pages to confirm details.",
         "Authenticated/paid feeds are not configured.","A CVE listing or IOC match is not proof of compromise.","No automatic response actions."]}
-    (ROOT/kev_catalog_path).write_text(json.dumps({"date_utc":DAY_UTC,"date_ist":DAY,"retrieved_at":STAMP,"cisa_kev_catalog":vulns},ensure_ascii=False,separators=(",",":"))+"\n",encoding="utf-8")
-    (ROOT/snapshot).write_text(json.dumps(data,ensure_ascii=False,separators=(",",":"))+"\n",encoding="utf-8")
-    latest={"date_utc":DAY_UTC,"date_ist":DAY,"retrieved_at":STAMP,"retrieved_at_ist":STAMP_IST,"snapshot":f"snapshots/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.json","kev_catalog":f"kev-catalogs/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.json","report":f"daily/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.md"}
-    (ROOT/"intel/latest.json").write_text(json.dumps(latest,separators=(",",":"))+"\n",encoding="utf-8")
+    (ROOT/snapshot).write_text(json.dumps(data,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
+    latest={"date_utc":DAY_UTC,"date_ist":DAY,"retrieved_at":STAMP,"retrieved_at_ist":STAMP_IST,"snapshot":f"snapshots/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.json","report":f"daily/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.md"}
+    (ROOT/"intel/latest.json").write_text(json.dumps(latest,indent=2)+"\n",encoding="utf-8")
     lines=[f"# Global Cyber Threat Radar — Automated Snapshot — {DAY} IST","",f"- Retrieved: {STAMP_IST} (UTC: {STAMP})","- Coverage: last 72 hours + undated CERT-In index entries",
         f"- Feed health: {good}/{len(health)}",f"- Advisory/research items: {len(items)}",f"- CISA KEV catalog: {len(vulns)}",f"- KEV additions last 7 days: {len(recentkev)}",f"- IOC candidates: {len(iocs)}",
         "","## Feed health","","| Source | Status | Result | Records | Last successful collection (UTC) | Last attempt (UTC) | Duration (ms) | Consecutive failures |","|---|---|---|---:|---|---|---:|---:|"]
@@ -1142,19 +898,8 @@ def main():
         for v in recentkev[:40]:
             lines.append(f"- **{v.get('cveID','CVE unavailable')} — {v.get('vulnerabilityName','Name unavailable')}** | {v.get('vendorProject','unknown')} / {v.get('product','unknown')} | added {v.get('dateAdded','unknown')} | due {v.get('dueDate','not stated')} | [CISA record]({v.get('notes','https://www.cisa.gov/known-exploited-vulnerabilities-catalog')})")
             lines.append("  - Fix / remediation: "+kev_remediation_text(v))
-            tc=v.get("technology_context",{}); lines.append("  - What is it? "+tc.get("what_is_it","Technology context not available.")); lines.append("  - What does it do? "+tc.get("what_it_does","Check the linked source for product purpose."))
-            if tc.get("identifier_note"): lines.append("  - Identifier context: "+tc["identifier_note"])
             lines.append("  - EPSS context: "+format_epss_context(v)+" — FIRST.org; not an asset-specific risk score")
             lines.append("  - CVSS context: "+format_cvss_context(v)+" — NVD technical severity, not an asset-specific risk score")
-            for ledger in v.get("cve_verification", []):
-                fields=ledger.get("fields",{})
-                lines.append("  - CVE evidence ledger: "+str(ledger.get("cve"))+" | Product: "+str(ledger.get("product") or "Unverified")+" | Official title: "+str(ledger.get("title") or "Unverified"))
-                for key,label in (("cvss","CVSS"),("kev_status","KEV status"),("affected_versions","Affected versions"),("fix_or_mitigation","Fix / mitigation")):
-                    field=fields.get(key,{})
-                    value=field.get("value")
-                    if isinstance(value,dict): value="CVSS "+str(value.get("version"))+" "+str(value.get("base_score"))+"/10 ("+str(value.get("severity") or "severity not stated")+")"
-                    elif value is None: value="Not established"
-                    lines.append("    - "+label+": "+str(value)+" — "+str(field.get("status","Unverified"))+"; source: "+str(field.get("source","not recorded"))+"; "+str(field.get("source_url") or "no source URL"))
             for ref in v.get("vendor_remediation",[]):
                 lines.append("  - Vendor evidence: ["+str(ref.get("source_label") or "Vendor advisory")+"]("+str(ref.get("source_url") or "")+") — analyst review required")
     else:lines.append("- No additions returned, or the feed failed; check source health.")
@@ -1162,10 +907,8 @@ def main():
     if items:
         for x in items[:100]:lines += [f"### {x['title']}",f"- Source: {x['source']} | Published: {x.get('published') or 'date not exposed in index'} | Detail enrichment: {x.get('enrichment_status','feed summary only')}",
             f"- CVEs: {', '.join(x['cves']) or 'none extracted'} | Topic signals: {', '.join(x['topics']) or 'analyst review required'}",
-            f"- Summary: {x.get('technical_summary') or 'A concise technical summary could not be extracted; review the linked source.'}",
+            f"- Summary: {x.get('summary','')[:900]}",
             f"- Technical details: {x.get('details') or x.get('summary','')[:900]}",
-            f"- What is it? {x.get('technology_context',{}).get('what_is_it','Technology details could not be independently verified from the available sources.')}",
-            f"- What does it do? {x.get('technology_context',{}).get('what_it_does','Technology details could not be independently verified from the available sources.')}",
             f"- Fix / remediation: {x.get('remediation_guidance') or x.get('remediation_status') or 'Fix status unknown; check the linked vendor advisory for updates.'}",
             f"- EPSS context: {format_epss_context(x)} — FIRST.org; not an asset-specific risk score",
             f"- [Open source item]({x['url']})",""]
@@ -1179,7 +922,7 @@ def main():
         lines += ["- Feed issues: "+"; ".join(x["source"]+" — "+str(x.get("error") or "unavailable") for x in failed_business)]
     if business_items:
         for x in business_items[:60]:
-            lines += ["### "+x["title"],"- Category: "+x["category"]+" | Deal stage: "+x["deal_status"]+" | Publisher: "+x["publisher"]+" | Published: "+(x.get("published") or "unknown")+" | Detail enrichment: "+x.get("enrichment_status","feed summary only"),"- Summary: "+x.get("summary","")[:900],"- Business background / implications: "+(x.get("details") or x.get("summary",""))[:2500],"- Company / product background: "+x.get("business_context",{}).get("what_is_it","Technology details could not be independently verified from the available sources."),"- What does it do? "+x.get("business_context",{}).get("what_it_does","Technology details could not be independently verified from the available sources."),"- Action: Not applicable as a vulnerability fix; verify deal stage and material claims against company announcements or filings.","- Evidence: [Original report]("+x["url"]+")",""]
+            lines += ["### "+x["title"],"- Category: "+x["category"]+" | Deal stage: "+x["deal_status"]+" | Publisher: "+x["publisher"]+" | Published: "+(x.get("published") or "unknown")+" | Detail enrichment: "+x.get("enrichment_status","feed summary only"),"- Summary: "+x.get("summary","")[:900],"- Business background / implications: "+(x.get("details") or x.get("summary",""))[:2500],"- Action: Not applicable as a vulnerability fix; verify deal stage and material claims against company announcements or filings.","- Evidence: [Original report]("+x["url"]+")",""]
     else:lines.append("- No business items collected; check business feed health.")
     lines += ["","## IOC candidates — analyst verification required",""]
     if iocs:

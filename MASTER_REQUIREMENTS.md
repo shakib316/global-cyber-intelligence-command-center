@@ -146,119 +146,12 @@ This section is mandatory in every daily intelligence cycle, even when no materi
 
 ## 5. Intelligence collection and evidence rules
 
-### Plain-English technology explanations — global requirement
-
-Every threat, vulnerability, advisory, KEV record and relevant business/market item must include a short plain-English explanation of the named product, service, platform, library, operating-system component or company whenever it can be identified from reliable evidence. This applies across Overview, Daily Briefing, New Intelligence, Cyber Business, CISA KEV, generated daily artifacts and future intelligence feeds.
-
-Use these consistent prompts:
-- **What is it?** Identify the technology in everyday language (for example, Drupal is a website content-management system; 1Password is a password manager; libpcap is a library used to capture network traffic).
-- **What does it do?** Explain its practical purpose in one short sentence.
-- **Why does it matter here?** Connect the affected or exploited technology to the specific vulnerability, incident or business development where the source supports that connection.
-
-Rules:
-- Assume the reader may not recognise product names, package names, acronyms or advisory identifiers. Explain unfamiliar terms on first use.
-- Keep the explanation concise, ideally one or two short sentences per field; do not turn cards into product documentation.
-- Prefer a curated, source-backed glossary and product/vendor fields from primary advisories. Preserve the exact technical product/component name.
-- Explain advisory identifiers separately from the affected technology (for example, a USN is an Ubuntu Security Notice identifier; libpcap is the affected software library).
-- Never infer a product's purpose from its name alone. If the role cannot be established, explicitly say the source does not provide enough information and link the source.
-- Do not confuse a vendor/company with its specific affected product. Use a company background only for business items and a product explanation for vulnerabilities.
-- Apply the same wording and fields to the dashboard UI and generated Markdown snapshots/reports. Do not omit the explanation simply because an item came from a different feed.
-- Keep source provenance and uncertainty. Automated glossary matching is contextual assistance, not independent verification of vulnerability impact or asset exposure.
-
-### Technology-background accuracy — permanent data-quality gate
-
-**Website-wide implementation requirements:** The collector is the single source of truth for threat `technology_context`. Browser rendering must never infer or guess technology context from headlines. Missing context must use the exact safe fallback in both fields. Business/market stories must use a separate `business_context` schema and renderer; company mentions alone do not establish a product's purpose. Daily Markdown reports and snapshots must preserve the same separation. Validators must check all generated threat, KEV and business records and the dashboard renderers. Historical snapshots are not silently rewritten; only newly collected records use the new schema.
-
-
-Mandatory for every threat, vulnerability, advisory, KEV record and relevant business/market item in the collector, snapshot, dashboard and generated reports.
-
-**Required output structure:** exactly two fields:
-- **What is it?** Concisely identify the actual affected technology, product, package, service or ecosystem.
-- **What does it do?** Concisely explain its purpose and how it relates to the reported threat, only where supported by reliable evidence.
-
-**Identification and evidence**
-1. Identify the actual technology from the primary advisory, vendor documentation, original researcher report or other reliable source. Use the exact affected product/component/package, not merely a vendor name, broad operating system or unrelated technology mentioned in passing.
-2. Cross-check descriptions against primary sources, vendor advisories and original security research. Preserve evidence URLs and distinguish source-confirmed facts from inference.
-3. Evaluate headline, category, affected product/vendor, source summary/details and proposed background together. They must be semantically consistent.
-4. Specificity precedence: an explicitly named package, library, framework, service or product takes precedence over a broad platform/OS mention. A NuGet/.NET package campaign must not inherit a generic Windows OS description merely because Windows is the payload target.
-5. Never infer purpose from a name, category, vendor, URL or incidental keyword. Never use a generic OS/company glossary entry as fallback for an unrelated package, library, framework or service.
-6. If the technology or role cannot be confidently identified, use this exact safe fallback: **"Technology details could not be independently verified from the available sources."** Do not fabricate explanations; mark context limited/unverified and retain source links.
-7. Automated glossary matching is not source verification. A keyword match alone does not prove that technology is affected.
-8. Do not silently rewrite historical records. Review historical corrections through an explicit evidence-backed migration and impact summary.
-
-**Automated quality gate**
-- Check semantic consistency across headline, category, affected product, Technology Background and threat description.
-- Reject or flag generic descriptions that conflict with a more specific named technology, including Windows/Linux descriptions attached to unrelated packages or cloud services.
-- Regression-test NuGet/.NET malware, Windows vulnerabilities, Linux vulnerabilities, network security appliances, cloud security incidents, phishing and supply-chain attacks.
-- Test correct identification and safe fallback. Static checks are not proof of source verification.
-- Run existing dashboard, collector, frontend-security and detection-query validation. Do not declare complete until applicable checks pass.
-
-**Required regression example**
-Headline: "13 Malicious NuGet Packages Turn Fake .NET Job Assessments Into Malware Delivery Traps"
-
-Expected technology: NuGet / .NET.
-- What is it? "NuGet is the package manager for the .NET ecosystem."
-- What does it do? "It manages third-party packages and dependencies in .NET applications. Malicious packages can abuse this mechanism to deliver malware."
-
-Reject the unrelated description: "A desktop and server operating system" / "It runs applications and manages devices, users, files and system services."
-
-### Global source extraction, summary and data-quality standard — mandatory
-
-Apply to every collected advisory, vulnerability, threat-research item and relevant business story, across every configured feed and every dashboard/report surface. This is a collector-wide rule, not a source-specific exception.
-
-**1. Clean extraction**
-- Extract editorial/article content only. Exclude navigation, headers/footers, forms, cookie/consent banners, newsletter prompts, sign-up/login text, contact confirmations, preference-update notifications, advertisements, sponsored copy, related-story widgets and other page chrome.
-- Keep the original source URL, publisher, publication date and retrieval timestamp. Do not silently replace source text with generated or inferred content.
-- If extraction is contaminated or the page is not readable, mark the enrichment as limited/failed and retain a clearly labelled feed snippet. Never present page boilerplate as technical evidence.
-- Apply cleanup to both HTML article extraction and RSS/Atom feed summaries. Preserve technical paragraphs even when they contain product marketing terminology; filter only identifiable boilerplate/promotional content.
-
-**2. Concise, source-grounded summary**
-- Show a concise technical summary of approximately 3–5 sentences (or fewer when the source is brief), based only on relevant source statements.
-- Prioritise the vulnerability/incident, affected component, attack condition and impact when the source states them. Do not invent missing details or use generic product descriptions as the incident summary.
-- Keep full source-derived technical details available separately for analyst inspection. Clearly distinguish an extracted excerpt from an independently authored or analyst-verified summary.
-- If there is insufficient relevant source text, say that a reliable summary could not be extracted and link the primary advisory. Do not pad with generic operating-system/company descriptions, marketing text or unrelated page copy.
-
-**3. Correct product and CVE mapping**
-- Identify vendor, exact product/component/package, affected versions/branches/builds and CVE relationships independently. A vendor, operating-system distribution, advisory ID or headline is not automatically the affected product.
-- Explain advisory identifiers separately from the vulnerable product (for example, an Ubuntu USN is an advisory identifier; the affected component may be MIT Kerberos/krb5).
-- For multi-CVE advisories, retain one independently traceable record per CVE wherever evidence permits. Do not copy one CVE's impact, severity, affected versions or fix to all CVEs.
-- If the source does not establish the product/CVE/version relationship, show **Unverified / Not established** and identify what evidence is missing.
-
-**4. Remediation accuracy**
-- Prefer the authoritative vendor advisory/package security notice for fixed releases, affected release ranges, workarounds and restart/deployment requirements. Link directly to the relevant evidence.
-- Keep affected versions separate from fixed versions. State distribution/release-specific package versions only when the source explicitly supports them.
-- Never convert an extraction failure or absence of remediation text into **No patch available**. Use the defined **NOT ESTABLISHED** / **No fix confirmed in reviewed sources** semantics unless the vendor explicitly confirms no fix.
-- A candidate release extracted automatically remains unverified until exact product, edition, branch/build applicability and deployment are checked. A vendor fix statement is not proof that the user's assets are patched.
-- Show practical update/restart/mitigation steps only when the source states them; do not invent commands or operational instructions.
-
-**5. Evidence and validation**
-- Preserve per-claim source name, direct URL, publication/update date and evidence-check timestamp. Link vendor advisory, CVE/NVD and CISA KEV separately where applicable.
-- Distinguish source-reported facts, automated extraction, analyst assessment and analyst verification. Retrieval success, matching text or a green workflow does not establish factual correctness.
-- Add regression tests for common boilerplate phrases (contact confirmations, newsletters, preference notices, cookie banners and advertisements), legitimate technical paragraphs, multi-CVE mapping and source-specific remediation.
-- Validate that a record's summary is relevant, free of page chrome, concise and traceable to the linked source. If the check fails, downgrade enrichment quality rather than publishing contaminated text as technical detail.
-- Apply the same extraction, summary, mapping and remediation rules to dashboard cards, overview panels, KEV entries, daily snapshots and Markdown reports.
-
 ### Source policy
 - Use configured public government, CERT, vendor, cloud and reputable research/news sources.
 - Prefer primary advisories and company announcements. Use secondary sources for context/corroboration.
 - Public feeds are incomplete, can be delayed, rate-limited, paywalled or change format. State collection limitations.
 - Do not scrape gated services or bypass access controls. Providers requiring credentials or approval must be integrated only through approved APIs and GitHub Actions secrets after terms are reviewed.
 - Keep source URLs, publisher, publication date and retrieval/collection time distinct.
-
-
-### CVE field-level verification — global mandatory standard
-
-Apply to every CVE in New Intelligence, Overview Critical Vulnerabilities Watch, CISA KEV, Daily Briefing and generated reports. One CVE equals one independently traceable record; never map a product from a headline alone.
-
-- Verify identifier/title and CVE description against CVE.org/NVD; use the exact official title where supplied. Never truncate official titles in visible cards or tables.
-- Verify CVSS version, base score, vector and metric source against NVD; preserve unavailable, unscored, disputed and lookup-failed states without inventing a value.
-- Verify KEV membership directly against the CISA KEV catalogue. KEV membership is a known-exploitation signal, not a CVSS score and must not overwrite CVSS severity.
-- Verify vendor/product and affected version ranges against the vendor advisory and, where useful, NVD CPE data. If evidence is missing or conflicting, label the field **Unverified** and flag the mismatch.
-- Record source URL and field-level status for product, official title, CVSS, KEV, affected versions and fix/mitigation. Use only **Verified (source)** or **Unverified** in analyst-facing records; analyst verification must be separately recorded if introduced.
-- Keep vendor advisory extraction distinct from verified remediation. State **No patch available** only when the vendor explicitly confirms no patch. Otherwise use **No fix confirmed in reviewed sources** and provide source-backed compensating controls only.
-- A KEV-listed CVE must receive high operational attention, but do not falsify its CVSS severity. Display a separate Known Exploited / KEV indicator. A CVSS 9.0 score maps to Critical using the applicable CVSS version's severity classification.
-- Do not assume that a CVE in a multi-product headline affects every named product. One CVE-to-product mapping per evidence-supported relationship; explicitly flag unresolved or contradictory mappings.
-- Automated extraction, title matching and static validation do not constitute source verification. Missing vendor evidence remains Unverified.
 
 ### CVE, severity and exploitation
 - Do not fabricate a CVE or attach one to a threat without source support.
@@ -366,8 +259,7 @@ Static lint is not an official Kusto/SPL/YARA-L parser, tenant-schema validation
 | `.github/workflows/daily-threat-intel.yml` | Daily collection and canonical Pages deployment |
 | `.github/workflows/dashboard-quality-watch.yml` | Scheduled dashboard/frontend quality watch |
 | `.github/workflows/detection-query-ci.yml` | Query and repository quality checks |
-| `intel/latest.json` | Pointer to latest snapshot, separate full KEV catalogue and report artifacts |
-| `intel/kev-catalogs/YYYY/MM/DD.json` | Full dated CISA KEV catalogue, loaded on demand by the dashboard |
+| `intel/latest.json` | Pointer to latest snapshot/report artifacts |
 | `intel/snapshots/YYYY/MM/DD.json` | Dated structured intelligence snapshot |
 | `intel/daily/YYYY/MM/DD.md` | Collector-generated daily artifact, where generated |
 | `intel/source-health-state.json` | Per-source health history/state |

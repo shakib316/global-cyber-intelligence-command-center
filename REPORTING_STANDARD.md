@@ -11,17 +11,6 @@
 - Include India/APAC relevance when supported. Explain acronyms on first use or in a short glossary.
 - Show local generation time and exact coverage window in Asia/Kolkata (IST).
 
-## Global plain-English technology context — every section
-
-Every relevant intelligence item must explain unfamiliar technology names in simple English, not only repeat the headline or CVE description. Apply this in the dashboard and generated Markdown, including threat/advisory cards, CISA KEV records, Critical Vulnerabilities Watch, daily threat write-ups, and relevant business/market stories.
-
-Use:
-- **What is it?** A plain-English category (for example, website content-management system, password manager, network packet-capture library, operating system, web server or cloud identity service).
-- **What does it do?** One short sentence explaining its practical purpose.
-- **Why it matters here:** A brief link to the affected component or business event, only when supported by the source.
-
-Explain advisory IDs separately from products (for example, USN-9203-1 is an Ubuntu Security Notice identifier; libpcap is the network packet-capture library). Prefer primary vendor documentation and a maintained glossary. If a product's role is not established, state that plainly instead of guessing. Preserve product/version names and source links. Keep the explanation concise and consistent across feeds.
-
 ## 2. Fixed daily briefing structure
 
 ### 1) YESTERDAY'S THREATS — one compact table
@@ -128,10 +117,3 @@ Apply the same remediation semantics to New Intelligence, Overview / Critical Vu
 - Keep the dashboard collector and daily workflow running; business-news feeds are part of daily collection and must not be skipped.
 - Deliver the briefing in ChatGPT and publish the same day's report to the repository.
 - If a feed, GitHub write or validation step fails, disclose it. Never claim full coverage or success from a partial run.
-
- 
-## CVE evidence ledger — mandatory
-
-For each CVE, publish one independently mapped record with: Product, CVE, CVSS, KEV status, affected versions, fix/mitigation, source links and field-level verification status. Use **Verified (source)** or **Unverified** for each field, with source name and URL adjacent. Verify CVE identity/title and CVSS with NVD/CVE.org, KEV membership with CISA, and affected/fixed versions with the product vendor's advisory. Do not infer a product from a multi-vendor headline. Flag product/CVE mismatches. Never truncate official CVE titles.
-
-Keep CVSS technical severity separate from KEV exploitation urgency. KEV status does not numerically raise CVSS. CVSS 9.0 is Critical for the relevant v3.x/v4 scoring bands; preserve the metric version. If no patch is explicitly confirmed by the vendor, write **No fix confirmed in reviewed sources**, not **No patch available**. Compensating controls must be supported by vendor or authoritative guidance.

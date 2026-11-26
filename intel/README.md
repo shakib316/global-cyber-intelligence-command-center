@@ -13,8 +13,7 @@ The collector combines public government, vendor and research sources. It record
 
 ## Repository artifacts
 
-- `intel/latest.json` — pointer to the latest snapshot, full KEV catalogue and daily report.
-- `intel/kev-catalogs/YYYY/MM/DD.json` — complete dated CISA KEV catalogue, fetched by the dashboard only when the KEV section or KEV search is opened.
+- `intel/latest.json` — pointer to the latest snapshot and daily report.
 - `intel/daily/YYYY/MM/DD.md` — collector-generated daily report and source-health summary.
 - `intel/snapshots/YYYY/MM/DD.json` — structured intelligence, provenance, source health, KEV and candidate IOC data.
 - `reports/YYYY/MM/DD.md` — analyst-facing daily briefing archive.

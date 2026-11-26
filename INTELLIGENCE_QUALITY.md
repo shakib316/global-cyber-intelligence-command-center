@@ -4,16 +4,6 @@ This project is an analyst-support dashboard. Feed collection and automated extr
 
 ## Vulnerability and CVE records
 
-## Plain-English technology context
-
-- Add a concise **What is it?** and **What does it do?** explanation to each threat/advisory item and KEV record, and a company/product background to relevant business intelligence.
-- Use verified product/vendor fields and a curated glossary backed by primary product documentation.
-- Keep advisory identifiers (such as Ubuntu USN numbers) distinct from the actual affected package/library.
-- Unknown product role must remain explicitly unknown; never guess based on a product name or headline.
-- Validate the context object and dashboard rendering for threat, business and KEV records. Apply it to the entire KEV catalogue, not only the seven-day additions.
-- Keep the explanation short and consistent; it must not replace the original source details, affected versions, remediation or evidence links.
-
-
 - CVE IDs are extracted from titles, feed summaries, retrieved article text, and linked vendor-remediation evidence. CVE identifiers have variable numeric lengths.
 - The dashboard keeps the original source URL and distinguishes feed-only content from article-enriched content.
 - For CVE-bearing items, the collector follows a small number of security/advisory links explicitly present in the source article. For CISA KEV additions in the latest seven-day window, it also checks external vendor URLs supplied in the KEV notes.
@@ -87,17 +77,3 @@ Each enriched threat record carries a dated `remediation_evidence` object. State
 - Campaign detection opportunities are labelled as analyst hunt suggestions unless a detection rule is explicitly linked and independently validated. ATT&CK mapping alone is not detection coverage.
 - The initial APT29 / Operation Ghost entry is sourced to the MITRE ATT&CK G0016 profile. It is a limited seed dataset, not a comprehensive actor/campaign catalogue.
 - Run `python scripts/validate_phase2_intelligence.py` to validate structural integrity, source references and relationship endpoints. This does not establish the truth of the source claims.
-
- 
-## CVE field-level verification and product mapping
-
-Every CVE record must carry an evidence ledger for official title, vendor/product, CVSS, CISA KEV membership, affected versions and fix/mitigation. Each field records its own value, status, source label and direct source URL. Status values are **Verified (source)** or **Unverified**. A successful retrieval or automated extraction is not analyst verification.
-
-Primary-source hierarchy:
-- CVE.org / NVD for canonical CVE identity, descriptions, CVSS metrics and NVD CPE/configuration evidence.
-- CISA KEV catalogue for known-exploitation membership, date added, due date and CISA's listed vendor/product.
-- The product vendor's security advisory for affected branches/builds, fixed releases, workarounds and explicit no-patch statements.
-
-A CISA KEV entry does not itself prove a particular affected version or fixed version. Vendor/product mapping must be checked per CVE; a headline containing multiple vendors is not sufficient. Preserve mismatches as explicit flags rather than silently changing the product. Never shorten official CVE titles. Do not state “no patch exists” unless the vendor explicitly says so; otherwise report “No fix confirmed in reviewed sources” and list only evidence-backed compensating controls.
-
-CVSS severity and exploitation urgency are separate dimensions. KEV membership adds a known-exploitation signal and must not overwrite CVSS. A CVSS 9.0 score is Critical under CVSS v3.x/v4 severity bands; record the score version and source. Unavailable CVSS remains unavailable, even for KEV-listed CVEs.
