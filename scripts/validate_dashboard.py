@@ -558,8 +558,16 @@ if unknown.get("status") != "not_identified":
 usn_context = collector.describe_technology("USN-9203-1: libpcap vulnerabilities", "Ubuntu security notice affecting libpcap", "")
 if "libpcap" not in usn_context.get("name", "").lower() or "USN-9203-1" not in usn_context.get("identifier_note", ""):
     raise SystemExit("Ubuntu USN identifier must be explained separately from the affected libpcap component")
-if "technologyContextBlock" not in html or "inferTechnologyContext" not in html:
-    raise SystemExit("Dashboard is missing the global plain-English technology context renderer")
+if "technologyContextBlock" not in html or "inferTechnologyContext" in html:
+    raise SystemExit("Dashboard must render collector-provided technology context only; browser-side inference is prohibited")
+if "businessContextBlock" not in html or "Company / product background" not in html:
+    raise SystemExit("Business intelligence must use its separate company/product background renderer")
+if "def describe_business_context" not in collector_source:
+    raise SystemExit("Collector is missing the dedicated business-context generator")
+if "Technology details could not be independently verified from the available sources." not in html:
+    raise SystemExit("Dashboard does not contain the canonical technology-context fallback")
+if "x?.technology_context||inferTechnologyContext" in html:
+    raise SystemExit("Dashboard is still guessing technology context in the browser")
 for marker in ("def extract_specific_remediation", "def enrich_records", "def enrich_kev_records", "class ArticleText", '"details"', '"remediation_guidance"', '"remediation_status"', '"related_sources"', '"attack_techniques"', "CyberScoop", "SecurityWeek", "Dark Reading", "The Record", "TechCrunch Security", "canonical_url"):
     if marker not in collector_source:
         raise SystemExit("Collector missing source enrichment/correlation capability: " + marker)
@@ -597,6 +605,17 @@ for label, records in (("threat intelligence", items), ("business intelligence",
     missing = [i for i, x in enumerate(records) if not x.get("title") or not x.get("url") or not str(x.get("url")).startswith("https://")]
     if missing:
         raise SystemExit(f"{label} has {len(missing)} records missing a title or safe HTTPS source URL")
+# Context schemas are separate: threat records describe affected technology; business records describe a named product only when evidence supports it.
+for item in items:
+    ctx = item.get("technology_context")
+    if not isinstance(ctx, dict) or not ctx.get("what_is_it") or not ctx.get("what_it_does"):
+        raise SystemExit("Threat record missing technology context: " + str(item.get("title", "untitled")))
+for item in business_items:
+    ctx = item.get("business_context")
+    if not isinstance(ctx, dict) or not ctx.get("what_is_it") or not ctx.get("what_it_does"):
+        raise SystemExit("Business record missing separate company/product context: " + str(item.get("title", "untitled")))
+    if item.get("technology_context"):
+        raise SystemExit("Business record must not reuse threat technology_context: " + str(item.get("title", "untitled")))
 for item in items:
     for ref in item.get("vendor_remediation", []):
         if not str(ref.get("source_url", "")).startswith("https://") or not ref.get("guidance"):
@@ -615,18 +634,21 @@ for item in items:
 for item in business_items:
     if item.get("business_context_quality") == "limited" and item.get("enrichment_status") == "enriched":
         raise SystemExit("Headline-only business content is incorrectly labelled enriched: " + str(item.get("title", "untitled")))
-for label, records in (("threat intelligence", items), ("business intelligence", business_items)):
-    missing_details = sum(not x.get("details") for x in records)
-    if data.get("technology_context_version", 0) >= 1:
-        missing_context = [x.get("title", "untitled") for x in records if not isinstance(x.get("technology_context"), dict) or not x["technology_context"].get("what_is_it") or not x["technology_context"].get("what_it_does")]
-        if missing_context:
-            raise SystemExit(f"{label} has {len(missing_context)} records missing plain-English technology context: " + ", ".join(missing_context[:5]))
+missing_details = sum(not x.get("details") for x in items + business_items)
+if data.get("technology_context_version", 0) >= 1:
+    missing_context = [x.get("title", "untitled") for x in items if not isinstance(x.get("technology_context"), dict) or not x["technology_context"].get("what_is_it") or not x["technology_context"].get("what_it_does")]
+    if missing_context:
+        raise SystemExit("Threat records missing plain-English technology context: " + ", ".join(missing_context[:5]))
+if data.get("business_context_version", 0) >= 1:
+    missing_business = [x.get("title", "untitled") for x in business_items if not isinstance(x.get("business_context"), dict) or not x["business_context"].get("what_is_it") or not x["business_context"].get("what_it_does")]
+    if missing_business:
+        raise SystemExit("Business records missing separate company/product context: " + ", ".join(missing_business[:5]))
 if data.get("technology_context_version", 0) >= 1:
     kev_missing_context = [x.get("cveID", "unknown CVE") for x in kev if not isinstance(x.get("technology_context"), dict) or not x["technology_context"].get("what_is_it") or not x["technology_context"].get("what_it_does")]
     if kev_missing_context:
         raise SystemExit("CISA KEV records missing plain-English technology context: " + ", ".join(kev_missing_context[:5]))
     if missing_details:
-        raise SystemExit(f"{label} has {missing_details} records without an in-page detail field")
+    raise SystemExit(f"{missing_details} intelligence records have no in-page detail field")
 if any(not x.get("remediation_status") for x in items):
     raise SystemExit("Threat intelligence records are missing explicit remediation status")
 if not isinstance(data.get("ioc_candidates", []), list):
