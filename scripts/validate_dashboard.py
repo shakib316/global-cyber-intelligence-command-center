@@ -65,8 +65,12 @@ if "Not established in the reviewed source material" not in html or "No product-
 if "slice(0,4)" not in html or "urls.length<3" not in html:
     raise SystemExit("Dashboard must cap technical details at four lines and source links at three")
 collector = (root / "scripts/collect_threat_intel.py").read_text(encoding="utf-8")
-if "sentences[:limit]" not in collector or "len(urls) < 3" not in collector or "report_technology_background" not in collector:
-    raise SystemExit("Generated reports must enforce four technical-detail sentences, three source links and source-grounded technology background")
+if "extract_technical_details" not in collector or "len(urls) < 3" not in collector or "report_technology_background" not in collector:
+    raise SystemExit("Generated reports must enforce four distinct technical details, three source links and source-grounded technology background")
+if "learn.microsoft.com/en-us/nuget/what-is-nuget" not in collector or "docs.kernel.org/networking/xfrm/index.html" not in collector:
+    raise SystemExit("Curated technology definitions must retain authoritative primary-source links")
+if "new URL(u).hostname" not in html or "Source '+(i+1)" in html:
+    raise SystemExit("Dashboard source links must use meaningful publisher/domain labels, not generic numbering")
 if "function itemHtml(x)" not in html or 'remediationBlock(x,"threat")' not in html:
     raise SystemExit("Threat cards do not show adjacent remediation guidance")
 if 'name==="briefing"' not in html or 'loadReportPath(currentReportPath)' not in html:
@@ -436,6 +440,34 @@ if "version 4.2.1" not in collector.kev_remediation_text(kev_specific):
 kev_vendor = {"vendor_remediation": [{"guidance": ["Upgrade Example Product to version 4.2.1."], "source_url": "https://vendor.example/security/advisory"}]}
 if "version 4.2.1" not in collector.kev_remediation_text(kev_vendor):
     raise SystemExit("CISA KEV report did not prioritize linked vendor remediation evidence")
+
+# Global editorial standard: technology context must be a definition, not an incident recap.
+nuget_story = {
+    "title": "13 Malicious NuGet Packages Turn Fake .NET Job Assessments Into Malware Delivery Traps",
+    "summary": "Researchers discovered malicious packages targeting .NET developers.",
+    "details": "Researchers identified 13 malicious NuGet packages disguised as WinUI 3 and WPF UI components. Malicious MSBuild targets execute during project builds and download payloads. Some payloads stage a DLL beside osk.exe to perform DLL sideloading. Other packages download Windows executables and steal credentials.",
+    "url": "https://research.example/nuget-campaign",
+}
+nuget_bg = collector.extract_technology_background(nuget_story)
+if not nuget_bg or "package manager for the .NET ecosystem" not in nuget_bg["what_is_it"] or "restore and update package dependencies" not in nuget_bg["what_does_it_do"]:
+    raise SystemExit("NuGet technology background must use its primary-documentation definition and function")
+if "malicious NuGet packages" not in nuget_bg["what_is_it"]:
+    raise SystemExit("Technology background must connect the technology definition to the incident")
+if "https://learn.microsoft.com/en-us/nuget/what-is-nuget" not in nuget_bg["source_urls"]:
+    raise SystemExit("Curated technology definition lost its primary documentation provenance")
+details = collector.extract_technical_details(nuget_story)
+if len(details) > 4 or any("Researchers identified 13 malicious NuGet packages" in x for x in details):
+    raise SystemExit("Technical details must omit the duplicated opening summary and remain at four lines")
+if len(set(x.lower() for x in details)) != len(details):
+    raise SystemExit("Technical details contain duplicate lines")
+incident_only = {"title":"Fragnesia vulnerability exploited in attacks","details":"The Fragnesia vulnerability is a Linux kernel vulnerability in the XFRM ESP-in-TCP subsystem. Attackers are chaining exploits to target exposed devices."}
+incident_bg = collector.extract_technology_background(incident_only)
+if incident_bg and "vulnerability is a Linux kernel vulnerability" in incident_bg.get("what_is_it",""):
+    raise SystemExit("Incident description must not be mistaken for a technology definition")
+if "Not established in reviewed sources" not in collector.report_technology_background(incident_only):
+    raise SystemExit("Unknown technology background must use explicit non-inference fallback")
+if "Not applicable" not in collector.report_technology_background({"category":"M&A"},"business"):
+    raise SystemExit("Non-technology business news must mark technology background not applicable")
 
 # Remediation evidence states must preserve uncertainty and never auto-verify a fixed release.
 sample = {"url": "https://vendor.example/advisory", "enrichment_status": "enriched"}
