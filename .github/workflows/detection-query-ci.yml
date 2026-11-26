@@ -10,6 +10,8 @@ on:
       - "scripts/validate_dashboard.py"
       - "scripts/collect_threat_intel.py"
       - "index.html"
+      - ".github/workflows/**"
+      - ".github/workflows/**"
       - ".github/workflows/detection-query-ci.yml"
   pull_request:
     paths:
