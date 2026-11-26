@@ -716,7 +716,7 @@ function technicalDetailsBlock(value){
  if(!clean)return '<section class="card-section"><h5>Technical details</h5><p>Technical details were not established from the available source.</p></section>';
  const sentences=clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[clean];
  const lines=sentences.slice(0,4).map(x=>x.trim()).filter(Boolean);
- return '<section class="card-section technical-details"><h5>Technical details</h5><p>'+esc(lines.join(" "))+'</p></section>';
+ return '<section class="card-section technical-details"><h5>Technical details</h5><p>'+lines.map(line=>esc(line)).join("<br>")+'</p></section>';
 }
 function sourceLinksBlock(x){
  const candidates=[{url:x?.canonical_url||x?.url,label:x?.source||"Original source"},...(x?.vendor_remediation||[]).map(v=>({url:v.source_url,label:v.source_label||"Vendor advisory"})),...((x?.remediation_evidence?.evidence_sources||[]).map(u=>({url:u,label:"Evidence source"})))];
