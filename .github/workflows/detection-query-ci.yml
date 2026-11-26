@@ -2,6 +2,7 @@ name: Detection Query Quality Checks
 
 on:
   push:
+    branches: [main]
     paths:
       - "detection-queries/**"
       - "scripts/validate_detection_queries.py"
@@ -10,16 +11,17 @@ on:
       - "scripts/validate_dashboard.py"
       - "scripts/collect_threat_intel.py"
       - "index.html"
-      - ".github/workflows/detection-query-ci.yml"
+      - ".github/workflows/**"
   pull_request:
     paths:
+      - ".github/workflows/**"
       - "detection-queries/**"
       - "scripts/validate_detection_queries.py"
       - "scripts/validate_detection_formats.py"
+      - "scripts/validate_frontend_security.py"
       - "scripts/validate_dashboard.py"
       - "scripts/collect_threat_intel.py"
       - "index.html"
-      - ".github/workflows/detection-query-ci.yml"
   workflow_dispatch:
 
 permissions:
