@@ -456,6 +456,20 @@ portal_access = collector.re.search(r"temporary workaround.{0,240}(?:signing in|
 if not portal_status or not portal_access:
     raise SystemExit("Portal-gated workaround state is not detected")
 
+for example, expected in (
+    ("Drupal advisory", "content management system"),
+    ("1Password advisory", "password manager"),
+    ("libpcap advisory", "network packets"),
+):
+    context = collector.describe_technology(example, example, "")
+    combined = (context.get("what_is_it", "") + " " + context.get("what_it_does", "")).lower()
+    if expected not in combined:
+        raise SystemExit("Plain-English technology glossary regression: " + example)
+usn_context = collector.describe_technology("USN-9203-1: libpcap vulnerabilities", "Ubuntu security notice affecting libpcap", "")
+if "libpcap" not in usn_context.get("name", "").lower() or "USN-9203-1" not in usn_context.get("identifier_note", ""):
+    raise SystemExit("Ubuntu USN identifier must be explained separately from the affected libpcap component")
+if "technologyContextBlock" not in html or "inferTechnologyContext" not in html:
+    raise SystemExit("Dashboard is missing the global plain-English technology context renderer")
 for marker in ("def extract_specific_remediation", "def enrich_records", "def enrich_kev_records", "class ArticleText", '"details"', '"remediation_guidance"', '"remediation_status"', '"related_sources"', '"attack_techniques"', "CyberScoop", "SecurityWeek", "Dark Reading", "The Record", "TechCrunch Security", "canonical_url"):
     if marker not in collector_source:
         raise SystemExit("Collector missing source enrichment/correlation capability: " + marker)
@@ -513,6 +527,12 @@ for item in business_items:
         raise SystemExit("Headline-only business content is incorrectly labelled enriched: " + str(item.get("title", "untitled")))
 for label, records in (("threat intelligence", items), ("business intelligence", business_items)):
     missing_details = sum(not x.get("details") for x in records)
+    missing_context = [x.get("title", "untitled") for x in records if not isinstance(x.get("technology_context"), dict) or not x["technology_context"].get("what_is_it") or not x["technology_context"].get("what_it_does")]
+    if missing_context:
+        raise SystemExit(f"{label} has {len(missing_context)} records missing plain-English technology context: " + ", ".join(missing_context[:5]))
+kev_missing_context = [x.get("cveID", "unknown CVE") for x in kev if not isinstance(x.get("technology_context"), dict) or not x["technology_context"].get("what_is_it") or not x["technology_context"].get("what_it_does")]
+if kev_missing_context:
+    raise SystemExit("CISA KEV records missing plain-English technology context: " + ", ".join(kev_missing_context[:5]))
     if missing_details:
         raise SystemExit(f"{label} has {missing_details} records without an in-page detail field")
 if any(not x.get("remediation_status") for x in items):
