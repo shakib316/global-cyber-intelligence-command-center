@@ -68,7 +68,8 @@ def is_technical_security_story(s):
     text = str(s or "")
     technical = re.search(
         r"\bCVE-\d{4}-\d{4,}\b|zero.day|vulnerabilit|security advisory|"
-        r"actively exploited|exploited in attacks|hackers? exploit|security flaw|flaw under attack|patch(?:es|ed|ing)?\b|"
+        r"actively exploited|exploited in attacks|hackers? exploit|hackers? (?:compromise|compromised)|"
+        r"security flaw|flaw under attack|breach(?:es|ed)?\b|patch(?:es|ed|ing)?\b|"
         r"proof.of.concept|remote code execution|command injection|"
         r"privilege escalation|malware campaign|threat actor|ransomware campaign|"
         r"attackers? (?:target|exploit|abuse)|critical flaw",
