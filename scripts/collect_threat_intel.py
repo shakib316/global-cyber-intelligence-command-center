@@ -452,7 +452,7 @@ def extract_technology_background(record):
     for sentence in sentences:
         norm = normalize_story_text(sentence)
         overlap = sum(1 for term in title_terms if term in norm)
-        if (overlap and re.search(r"\b(?:is|are|refers to|known as)\b", sentence, re.I)
+        if (overlap and re.search(r"\b(?:is|are|contains?|refers to|known as)\b", sentence, re.I)
                 and not re.search(r"\b(?:vulnerability|flaw|exploit|attack|campaign|malware|threat)\b", sentence, re.I)):
             definitions.append((overlap, sentence))
     if not definitions or not source.startswith("https://"):
@@ -462,6 +462,8 @@ def extract_technology_background(record):
         if re.search(r"\b(?:provides|enables|allows|lets|used to|used for|designed to|manages|connects|protects|supports)\b", s, re.I)
         and sum(1 for term in title_terms if term in normalize_story_text(s)) > 0
         and not re.search(r"\b(?:attackers?|malware|payload|exploit|campaign)\b", s, re.I)), None)
+    if not function and re.search(r"the core of (?:any )?linux operating system", definition, re.I):
+        function = "The reviewed source identifies the Linux kernel as the core of a Linux operating system but does not specify further operational functions."
     if not function:
         return None
     return {"verified": True, "what_is_it": definition, "what_does_it_do": function,
