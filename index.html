@@ -76,7 +76,58 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 html{scroll-behavior:smooth}body{overflow-x:hidden}.shell,.main,.panel,.query,.query-card{min-width:0}
 img,svg,video,canvas{max-width:100%;height:auto}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
-\n/* Remediation evidence states: colour indicates verification state, not vulnerability severity. */\n.remediation-panel.remediation-green{background:#eef8f1;border-color:#c6e6d0;border-left-color:#23834d}.remediation-panel.remediation-amber{background:#fff8e8;border-color:#f0dfb5;border-left-color:#bd861c}.remediation-panel.remediation-red{background:#fff0f0;border-color:#f0caca;border-left-color:#bd3945}.remediation-evidence{border-top:1px solid #e8edf3;padding-top:7px;margin-top:7px;font-size:11px;color:#607287}.remediation-evidence p{margin:3px 0}.critical-item .remediation-status{display:inline-block;margin:3px 0}\n</style></head><body><div class="shell">
+\n/* Remediation evidence states: colour indicates verification state, not vulnerability severity. */\n.remediation-panel.remediation-green{background:#eef8f1;border-color:#c6e6d0;border-left-color:#23834d}.remediation-panel.remediation-amber{background:#fff8e8;border-color:#f0dfb5;border-left-color:#bd861c}.remediation-panel.remediation-red{background:#fff0f0;border-color:#f0caca;border-left-color:#bd3945}.remediation-evidence{border-top:1px solid #e8edf3;padding-top:7px;margin-top:7px;font-size:11px;color:#607287}.remediation-evidence p{margin:3px 0}.critical-item .remediation-status{display:inline-block;margin:3px 0}\n
+
+/* Phase 1 presentation-only refinements: preserve all existing sections and data. */
+:root{--ink:#18324d;--muted:#61758c}
+.headline{align-items:center;box-shadow:0 2px 10px rgba(22,55,92,.035)}
+.headline p{font-size:12px;line-height:1.5}
+.panel{border-radius:14px;box-shadow:0 2px 10px rgba(22,55,92,.045)}
+.panelhead{padding-bottom:9px;border-bottom:1px solid #e8edf4}
+.panelhead h3{font-size:15px;letter-spacing:-.01em;color:#173a5e}
+.toolbar{gap:9px;align-items:center}
+.toolbar .search{min-width:220px}
+.toolbar .select{min-width:145px}
+.intel-card{padding:16px 15px;margin:0 -2px;border:1px solid #e2e9f2;border-radius:12px;background:#fff;box-shadow:0 1px 4px rgba(23,52,82,.035)}
+.intel-card+.intel-card{margin-top:10px}
+.card-title-row{gap:14px}
+.card-title-row h4{font-size:15px;line-height:1.45;color:#142f4c}
+.card-title-row>.tag{flex:0 0 auto;white-space:nowrap}
+.label-row{align-items:center;gap:5px 6px;margin:7px 0 10px}
+.label-row .tag{max-width:100%;overflow-wrap:anywhere}
+.intel-card .meta{font-size:11px;line-height:1.5;color:#637990;margin:6px 0 10px}
+.intel-card .technology-context{margin:10px 0;background:#f7f9fc;border:1px solid #e7edf4;border-left:3px solid #8aaed7}
+.intel-card .description-block{max-width:110ch}
+.intel-card .field-label{color:#60758b}
+.intel-card .card-footer{margin-top:10px}
+.global-search-panel{box-shadow:0 2px 10px rgba(22,55,92,.04)}
+.global-search-head strong{font-size:15px}
+.global-results{border-radius:8px}
+.global-result{padding:11px 12px}
+.global-result strong{line-height:1.45}
+.kpi{border-radius:12px}
+.kpi .label{font-size:10px;letter-spacing:.055em;font-weight:750}
+.kpi .hint{font-size:11px;line-height:1.45}
+#criticalTop{box-shadow:0 2px 10px rgba(140,40,50,.04)}
+#criticalTop h3{font-size:15px}
+.critical-item{background:#fffdfd}
+.query-card{box-shadow:0 2px 8px rgba(22,55,92,.04)}
+.query-card h4{font-size:14px;line-height:1.5}
+.query-details summary,.detail-expander summary{padding:5px 0}
+button:disabled{opacity:.48;cursor:not-allowed}
+@media(max-width:760px){
+ .headline{padding:12px 13px;gap:10px}
+ .headline .actions{display:flex;gap:6px}
+ .toolbar{align-items:stretch}
+ .toolbar .search,.toolbar .select{min-width:0;width:100%}
+ .intel-card{padding:13px 11px;margin-left:0;margin-right:0}
+ .card-title-row{align-items:flex-start}
+ .card-title-row>.label-row{margin:0;justify-content:flex-start}
+ .card-title-row>.tag{white-space:normal}
+ .panelhead{gap:7px}
+ .global-search-panel{padding:12px}
+}
+</style></head><body><div class="shell">
 <header class="top"><div class="brand"><div class="mark">⌁</div><div><h1>Global Cyber Intelligence Command Center</h1></div></div><div class="live"><i class="dot"></i><span id="connection">CONNECTING</span></div></header>
 <div class="layout"><aside class="side"><nav class="side-nav" aria-label="Primary navigation"><button type="button" class="nav active" data-view="overview" aria-current="page"><b>◫</b> Overview</button><button type="button" class="nav" data-view="briefing"><b>▤</b> Daily briefing</button><button type="button" class="nav" data-view="threats"><b>⌕</b> New intelligence</button><button type="button" class="nav" data-view="business"><b>▥</b> Cyber business & market</button><button type="button" class="nav" data-view="kev"><b>⚠</b> CISA KEV watch</button><button type="button" class="nav" data-view="queries"><b>⌘</b> Detection queries</button><button type="button" class="nav" data-view="sources"><b>◉</b> Source health</button></nav><div class="sidefoot">SOURCE OF TRUTH<br><strong>GitHub repository</strong><br>Full content rendered here · Read-only</div></aside>
 <main class="main"><section class="headline"><div><h2 id="pageTitle">Operational overview</h2><p id="updated">Loading latest repository content…</p></div><div class="actions"><button class="btn" id="refresh">↻ Refresh</button><a class="btn primary" href="https://github.com/shakib316/global-cyber-intelligence-command-center" target="_blank" rel="noopener">Repository ↗</a></div></section>
@@ -334,8 +385,9 @@ function cveVerificationBlock(records){
 }
 function itemHtml(x){
  const cves=(x.cves||[]).map(c=>cveTag(c)).join(""),sev=priorityLabel(x.priority),details=cleanCopy(x.details||x.summary||"No technical detail was included in the collected feed record.");
+ const topics=(x.topics||[]).map(t=>tag(humanize(t),"blue")).join("");
  const iocs=(DATA?.ioc_candidates||[]).filter(i=>i.source_url===x.url);
- return '<article class="threat intel-card"><div class="card-title-row"><h4>'+esc(x.title)+'</h4>'+tag(sev,severityClass(sev))+'</div><div class="label-row">'+tag(x.source||"Source unavailable")+' '+tag(fmt(x.published),"neutral")+' '+cves+'</div>'+technologyContextBlock(x)+cveVerificationBlock(x.cve_verification)+descriptionBlock("What happened / technical details",conciseExcerpt(details,900)) +fullDetailsBlock("Additional technical context",details.length>900?details.slice(conciseExcerpt(details,900).replace(/ …$/,"").length):"") +remediationBlock(x,"threat")+(iocs.length?descriptionBlock("Related IOC candidates",iocs.slice(0,12).map(i=>i.type+": "+(i.defanged_value||i.value)+" · "+i.confidence).join("\n")):"")+'<div class="card-footer"><a href="'+safeUrl(x.canonical_url||x.url)+'" target="_blank" rel="noopener">Source ↗</a></div></article>';
+ return '<article class="threat intel-card"><div class="card-title-row"><h4>'+esc(x.title)+'</h4>'+tag(sev,severityClass(sev))+'</div><div class="label-row">'+tag(x.source||"Source unavailable")+' '+tag(fmt(x.published),"neutral")+' '+topics+' '+cves+'</div>'+technologyContextBlock(x)+cveVerificationBlock(x.cve_verification)+descriptionBlock("What happened / technical details",conciseExcerpt(details,900)) +fullDetailsBlock("Additional technical context",details.length>900?details.slice(conciseExcerpt(details,900).replace(/ …$/,"").length):"") +remediationBlock(x,"threat")+(iocs.length?descriptionBlock("Related IOC candidates",iocs.slice(0,12).map(i=>i.type+": "+(i.defanged_value||i.value)+" · "+i.confidence).join("\n")):"")+'<div class="card-footer"><a href="'+safeUrl(x.canonical_url||x.url)+'" target="_blank" rel="noopener">Source ↗</a></div></article>';
 }
 function globalSearch(){
  const q=$("globalSearch").value.trim().toLowerCase(),scope=$("globalScope").value,box=$("globalResults");
@@ -361,7 +413,7 @@ function businessSignificance(x){
 }
 function businessCard(x){
  const details=cleanCopy(x.details||x.summary||"No additional context was included in the collected feed record.");
- return '<article class="threat intel-card"><div class="card-title-row"><h4>'+esc(x.title)+'</h4>'+tag(humanize(x.category||"Market update"),"blue")+'</div><div class="meta">'+esc(x.publisher||"Publisher unavailable")+' · '+esc(fmt(x.published))+'</div>'+technologyContextBlock(x,"Company / technology background")+descriptionBlock("What happened",conciseExcerpt(details,1100))+descriptionBlock("What to verify next",businessSignificance(x))+(x.enrichment_status!=="enriched"?descriptionBlock("Source limitation",x.business_context_note||"Only the feed headline or snippet was available; business details have not been independently established."):"")+fullDetailsBlock("More from the source",details.length>1100?details.slice(conciseExcerpt(details,1100).replace(/ …$/,"").length):"")+'<div class="card-footer"><a href="'+safeUrl(x.canonical_url||x.url)+'" target="_blank" rel="noopener">Source ↗</a></div></article>'
+ return '<article class="threat intel-card"><div class="card-title-row"><h4>'+esc(x.title)+'</h4><span class="label-row">'+tag(humanize(x.category||"Market update"),"blue")+(x.deal_status?tag("Stage: "+humanize(x.deal_status),"neutral"):"")+'</span></div><div class="meta">'+esc(x.publisher||"Publisher unavailable")+' · '+esc(fmt(x.published))+'</div>'+technologyContextBlock(x,"Company / technology background")+descriptionBlock("What happened",conciseExcerpt(details,1100))+descriptionBlock("What to verify next",businessSignificance(x))+(x.enrichment_status!=="enriched"?descriptionBlock("Source limitation",x.business_context_note||"Only the feed headline or snippet was available; business details have not been independently established."):"")+fullDetailsBlock("More from the source",details.length>1100?details.slice(conciseExcerpt(details,1100).replace(/ …$/,"").length):"")+'<div class="card-footer"><a href="'+safeUrl(x.canonical_url||x.url)+'" target="_blank" rel="noopener">Source ↗</a></div></article>'
 }
 function renderBusiness(){const q=$("businessSearch").value.toLowerCase(),cat=$("businessCategory").value,status=$("businessStatus").value,detail=$("businessDetail").value;const list=BUSINESS.filter(x=>(!cat||x.category===cat)&&(!status||x.deal_status===status)&&(!detail||(detail==="enriched"?x.enrichment_status==="enriched":x.enrichment_status!=="enriched"))&&(!q||[x.title,x.summary,x.details,x.publisher,(x.companies||[]).join(" ")].join(" ").toLowerCase().includes(q)));const enriched=list.filter(x=>x.enrichment_status==="enriched").length;const newest=BUSINESS.map(x=>x.published).filter(Boolean).sort().pop();const collected=DATA?.retrieved_at_ist||DATA?.retrieved_at||"timestamp unavailable";const bh=(DATA?.source_health||[]).filter(x=>x.stream==="business");const bhOk=bh.filter(x=>x.status==="success").length;const freshness="Collected "+collected+" · newest event "+fmt(newest)+" · business feeds "+bhOk+"/"+bh.length+" healthy";$("businessCount").textContent=list.length+" of "+BUSINESS.length+" developments · "+freshness+" · "+enriched+" full-page / "+(list.length-enriched)+" feed-only";const counts={};BUSINESS.forEach(x=>counts[x.category]=(counts[x.category]||0)+1);$("businessSummary").innerHTML=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([k,v])=>'<div class="kpi"><span class="label">'+esc(k.toUpperCase())+'</span><strong>'+v+'</strong><span class="hint">Collected developments</span></div>').join("");const pages=Math.max(1,Math.ceil(list.length/BUSINESS_PAGE_SIZE));businessPage=Math.min(businessPage,pages-1);const rows=list.slice(businessPage*BUSINESS_PAGE_SIZE,(businessPage+1)*BUSINESS_PAGE_SIZE);$("businessPage").textContent="Page "+(businessPage+1)+" of "+pages;$("businessPrev").disabled=businessPage===0;$("businessNext").disabled=businessPage>=pages-1;$("businessList").innerHTML=rows.length?rows.map(businessCard).join(""):'<div class="empty">No business developments match these filters. Check source health or broaden the search.</div>'}
 function renderThreats(){if(!DATA)return;const q=$("threatSearch").value.toLowerCase(),topic=$("topicFilter").value,source=$("sourceFilter").value,priority=$("priorityFilter").value;const list=ALL.filter(x=>(!topic||(x.topics||[]).includes(topic))&&(!source||x.source===source)&&(!priority||String(x.priority||"").toLowerCase().includes(priority))&&(!q||[x.title,x.source,x.summary,x.details,x.remediation_guidance,(x.cves||[]).join(" "),(x.topics||[]).join(" ")].join(" ").toLowerCase().includes(q)));$("threatCount").textContent=list.length+" of "+ALL.length+" items";const pages=Math.max(1,Math.ceil(list.length/PAGE_SIZE));threatPage=Math.min(threatPage,pages-1);const rows=list.slice(threatPage*PAGE_SIZE,(threatPage+1)*PAGE_SIZE);$("threatPage").textContent="Page "+(threatPage+1)+" of "+pages;$("threatPrev").disabled=threatPage===0;$("threatNext").disabled=threatPage>=pages-1;$("threatList").innerHTML=rows.length?rows.map(itemHtml).join(""):'<div class="empty">No matching intelligence items.</div>'}
