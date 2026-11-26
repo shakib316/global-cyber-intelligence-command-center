@@ -167,7 +167,9 @@ const sourceLinksBlock=(x,kind="threat")=>{
  const add=u=>{if(typeof u==="string"&&u.startsWith("https://")&&!urls.includes(u)&&urls.length<3)urls.push(u)};
  add(x.canonical_url||x.url);
  for(const ref of (x.vendor_remediation||[]))add(ref.source_url);
- for(const ref of (x.vendor_references||[]))add(ref.url);\n const ev=x.remediation_evidence||{}; for(const u of (ev.evidence_sources||[]))add(u); for(const v of (ev.candidate_fixed_releases||[]))add(v.source_url);
+ for(const ref of (x.vendor_references||[]))add(ref.url);
+ const bg=x.technology_background||{}; for(const u of (bg.source_urls||[]))add(u);
+ const ev=x.remediation_evidence||{}; for(const u of (ev.evidence_sources||[]))add(u); for(const v of (ev.candidate_fixed_releases||[]))add(v.source_url);
  for(const u of (x.related_urls||[]))add(u);
  if(kind==="kev"){add("https://nvd.nist.gov/vuln/detail/"+encodeURIComponent(x.cveID||""));add(x.notes);}
  return '<div class="card-footer"><strong>Sources</strong> '+(urls.length?urls.map((u,i)=>'<a href="'+safeUrl(u)+'" target="_blank" rel="noopener">Source '+(i+1)+' ↗</a>').join(" · "):"Not available")+'</div>';
