@@ -1126,7 +1126,7 @@ def main():
     report=Path("intel/daily")/DAY[:4]/DAY[5:7]/(DAY[8:10]+".md")
     snapshot=Path("intel/snapshots")/DAY[:4]/DAY[5:7]/(DAY[8:10]+".json")
     (ROOT/report).parent.mkdir(parents=True,exist_ok=True);(ROOT/snapshot).parent.mkdir(parents=True,exist_ok=True)
-    data={"date_utc":DAY_UTC,"date_ist":DAY,"retrieved_at":STAMP,"retrieved_at_ist":STAMP_IST,"technology_context_version":1,"window_hours":72,"source_health":health,"successful_sources":good,"total_sources":len(health),
+    data={"date_utc":DAY_UTC,"date_ist":DAY,"retrieved_at":STAMP,"retrieved_at_ist":STAMP_IST,"technology_context_version":1,"business_context_version":1,"window_hours":72,"source_health":health,"successful_sources":good,"total_sources":len(health),
         "errors":errors,"business_items":business_items,"business_feed_count":len(business_items),"business_window_hours":168,"cisa_kev_catalog_count":len(vulns),"cisa_kev_catalog":vulns,"cisa_kev_added_last_7_days":recentkev,"items":items,"epss_enrichment":epss_enrichment,"cvss_enrichment":cvss_enrichment,
         "ioc_candidates":iocs,"ioc_policy":"Candidate extraction only near explicit IOC wording. Verify against original report and local context.",
         "limitations":["Public feeds are not exhaustive and can fail or change format.","CERT-In is an official index scrape, not an RSS feed; open advisory pages to confirm details.",
@@ -1165,8 +1165,8 @@ def main():
             f"- CVEs: {', '.join(x['cves']) or 'none extracted'} | Topic signals: {', '.join(x['topics']) or 'analyst review required'}",
             f"- Summary: {x.get('technical_summary') or 'A concise technical summary could not be extracted; review the linked source.'}",
             f"- Technical details: {x.get('details') or x.get('summary','')[:900]}",
-            f"- What is it? {x.get('technology_context',{}).get('what_is_it','Technology context not available.')}",
-            f"- What does it do? {x.get('technology_context',{}).get('what_it_does','Check the linked source for product purpose.')}",
+            f"- What is it? {x.get('technology_context',{}).get('what_is_it','Technology details could not be independently verified from the available sources.')}",
+            f"- What does it do? {x.get('technology_context',{}).get('what_it_does','Technology details could not be independently verified from the available sources.')}",
             f"- Fix / remediation: {x.get('remediation_guidance') or x.get('remediation_status') or 'Fix status unknown; check the linked vendor advisory for updates.'}",
             f"- EPSS context: {format_epss_context(x)} — FIRST.org; not an asset-specific risk score",
             f"- [Open source item]({x['url']})",""]
@@ -1180,7 +1180,7 @@ def main():
         lines += ["- Feed issues: "+"; ".join(x["source"]+" — "+str(x.get("error") or "unavailable") for x in failed_business)]
     if business_items:
         for x in business_items[:60]:
-            lines += ["### "+x["title"],"- Category: "+x["category"]+" | Deal stage: "+x["deal_status"]+" | Publisher: "+x["publisher"]+" | Published: "+(x.get("published") or "unknown")+" | Detail enrichment: "+x.get("enrichment_status","feed summary only"),"- Summary: "+x.get("summary","")[:900],"- Business background / implications: "+(x.get("details") or x.get("summary",""))[:2500],"- Company / technology background: "+x.get("technology_context",{}).get("what_is_it","The source does not identify a product or technology clearly enough to describe."),"- What it does: "+x.get("technology_context",{}).get("what_it_does","Review the source for additional context."),"- Action: Not applicable as a vulnerability fix; verify deal stage and material claims against company announcements or filings.","- Evidence: [Original report]("+x["url"]+")",""]
+            lines += ["### "+x["title"],"- Category: "+x["category"]+" | Deal stage: "+x["deal_status"]+" | Publisher: "+x["publisher"]+" | Published: "+(x.get("published") or "unknown")+" | Detail enrichment: "+x.get("enrichment_status","feed summary only"),"- Summary: "+x.get("summary","")[:900],"- Business background / implications: "+(x.get("details") or x.get("summary",""))[:2500],"- Company / product background: "+x.get("business_context",{}).get("what_is_it","Technology details could not be independently verified from the available sources."),"- What does it do? "+x.get("business_context",{}).get("what_it_does","Technology details could not be independently verified from the available sources."),"- Action: Not applicable as a vulnerability fix; verify deal stage and material claims against company announcements or filings.","- Evidence: [Original report]("+x["url"]+")",""]
     else:lines.append("- No business items collected; check business feed health.")
     lines += ["","## IOC candidates — analyst verification required",""]
     if iocs:
