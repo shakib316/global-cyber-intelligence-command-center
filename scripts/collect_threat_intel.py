@@ -61,8 +61,29 @@ BUSINESS_RULES=[
 ("Leadership",r"appoint|names? .*ceo|steps down|resign|leadership|chief .* officer"),
 ("Financial results",r"quarterly results|revenue|earnings|financial results|forecast"),
 ("Workforce & restructuring",r"layoff|job cuts|restructur|workforce|redundanc"),
+("Litigation & legal",r"lawsuit|sues? .*over|whistleblower|accounting fraud claim|court filing|settlement|indict(?:ed|ment)|charged with"),
 ("Regulation & policy",r"regulat|antitrust|sanction|policy change")]
+def is_technical_security_story(s):
+    """Keep vulnerability/threat reporting out of the business-development stream."""
+    text = str(s or "")
+    technical = re.search(
+        r"\bCVE-\d{4}-\d{4,}\b|zero.day|vulnerabilit|security advisory|"
+        r"actively exploited|exploited in attacks|hackers? exploit|hackers? (?:compromise|compromised)|"
+        r"security flaw|flaw under attack|breach(?:es|ed)?\b|patch(?:es|ed|ing)?\b|"
+        r"proof.of.concept|remote code execution|command injection|"
+        r"privilege escalation|malware campaign|threat actor|ransomware campaign|"
+        r"attackers? (?:target|exploit|abuse)|critical flaw",
+        text, re.I)
+    material_business = re.search(
+        r"acquir|acquisition|merger|buyout|takeover|funding|investment|"
+        r"partnership|appoint|names? .*ceo|steps down|resign|layoff|job cuts|"
+        r"quarterly results|revenue|earnings|IPO|regulatory filing|"
+        r"data breach|cyberattack|security incident|systems? restored",
+        text, re.I)
+    return bool(technical and not material_business)
 def business_category(s):
+    if is_technical_security_story(s):
+        return "Not a business development"
     for name,pattern in BUSINESS_RULES:
         if re.search(pattern,s,re.I):return name
     return "Company & market updates"
@@ -74,7 +95,7 @@ def deal_status(s):
     if re.search(r"rumou?red|reportedly|in talks|talks? (?:to acquire|over acquisition|reported)|reported .*acquisition talks|potential (?:acquisition|merger|buyout)|exploring (?:a sale|an acquisition)|considering acquisition|sources say",text,re.I):return "Rumoured"
     if re.search(r"definitive agreement|agreed to acquire|signed .*agreement|signed a deal",text,re.I):return "Signed"
     if re.search(r"announces? (?:plans? to )?acquir|announced .*acquisition|to acquire|acquisition announced|merger announced",text,re.I):return "Announced"
-    return "Rumoured" if re.search(r"report|potential|explor|consider|talk",text,re.I) else "Announced"
+    return "Rumoured" if re.search(r"report|potential|explor|consider|talk",text,re.I) else "Reported — status not established"
 
 def is_stock_market_noise(s):
     """Drop price-target/stock-move stories that do not report a company event."""
@@ -338,7 +359,7 @@ class ArticleText(HTMLParser):
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.skip=0;self.capture=False;self.buf=[];self.paragraphs=[];self.meta=[]
-        self.links=[];self.anchor=None
+        self.links=[];self.anchor=None;self.table_row=None
     def handle_starttag(self,tag,attrs):
         a=dict(attrs);t=tag.lower()
         if t in ("script","style","noscript","svg","nav","footer","header","aside","form"):self.skip+=1
@@ -346,6 +367,7 @@ class ArticleText(HTMLParser):
             value=a.get("content","").strip()
             if value:self.meta.append(value)
         if t=="a" and a.get("href"):self.anchor={"href":a.get("href"),"text":""}
+        if t=="tr":self.table_row=[]
         if t in ("p","li"):self.capture=True;self.buf=[]
     def handle_endtag(self,tag):
         t=tag.lower()
@@ -353,12 +375,23 @@ class ArticleText(HTMLParser):
         if t=="a" and self.anchor is not None:
             link=self.anchor;self.anchor=None;link["text"]=re.sub(r"\s+"," ",link["text"]).strip()
             if link["href"]:self.links.append(link)
+        if t=="tr" and self.table_row is not None:
+            row=re.sub(r"\\s+"," "," ".join(self.table_row)).strip();self.table_row=None
+            if len(row)>=25 and row not in self.paragraphs:self.paragraphs.append(row)
         if t in ("p","li") and self.capture:
             value=re.sub(r"\s+"," "," ".join(self.buf)).strip()
-            if len(value)>=55 and value not in self.paragraphs:self.paragraphs.append(value)
+            if len(value)>=55 and value not in self.paragraphs:
+                # Exclude author biographies and newsletter/related-story boilerplate.
+                noise = re.search(r"\b(?:is|was) (?:an? )?(?:international correspondent|senior (?:managing )?editor|reporter|journalist|staff writer)\b|"
+                    r"\b(?:holds?|earned|received) (?:a |an )?(?:bachelor|master|doctorate|degree)\b|"
+                    r"worked as .* before starting a career|subscribe to our newsletter|"
+                    r"related (?:articles|stories)|read more:", value, re.I)
+                if not noise and not is_promotional_text(value):
+                    self.paragraphs.append(value)
             self.capture=False;self.buf=[]
     def handle_data(self,data):
         if self.skip==0:
+            if self.table_row is not None:self.table_row.append(data.strip())
             if self.capture:self.buf.append(data.strip())
             if self.anchor is not None:self.anchor["text"]+=data.strip()
 
@@ -376,6 +409,38 @@ def is_promotional_text(value):
     return bool(PROMOTIONAL_TEXT.search(str(value or "").strip()))
 
 
+def extract_technology_background(record):
+    """Extract a concise definition only when the retrieved source explicitly states it."""
+    text = str(record.get("details") or record.get("summary") or "")
+    title = normalize_story_text(record.get("title") or "")
+    if not text or not title:
+        return None
+    sentences = [re.sub(r"\s+", " ", s).strip()
+        for s in re.split(r"(?<=[.!?])\s+|\n+", text) if len(s.strip()) >= 35]
+    title_terms = {w for w in title.split() if len(w) >= 4 and w not in {"security","update","vulnerability","advisory","critical","moderate","important"}}
+    definitions = []
+    for sentence in sentences:
+        norm = normalize_story_text(sentence)
+        overlap = sum(1 for term in title_terms if term in norm)
+        if overlap and re.search(r"\b(?:is|are|contains?|refers to|is the)\b", sentence, re.I):
+            if re.search(r"\b(?:is an? |is the |are |contains? )", sentence, re.I):
+                definitions.append((overlap, sentence))
+    if not definitions:
+        return None
+    definition = max(definitions, key=lambda x: (x[0], min(len(x[1]), 260)))[1][:420]
+    function = next((s[:420] for s in sentences
+        if re.search(r"\b(?:provides|enables|allows|lets|used to|used for|designed to|manages|connects|protects|supports)\b", s, re.I)
+        and sum(1 for term in title_terms if term in normalize_story_text(s)) > 0), None)
+    source = record.get("canonical_url") or record.get("url") or ""
+    if not source.startswith("https://"):
+        return None
+    return {
+        "verified": True,
+        "what_is_it": definition,
+        "what_does_it_do": function or "The reviewed source identifies the technology but does not explain its operational function.",
+        "source_urls": [source],
+        "evidence_type": "explicit source definition",
+    }
 def report_technology_background(record, kind="threat"):
     """Return only explicit, source-linked technology background; never infer product function."""
     background = record.get("technology_background")
@@ -437,7 +502,7 @@ def enrich_page(url,title=""):
             part=re.sub(r"\s+"," ",part).strip();norm=normalize_story_text(part)
             if not part or is_promotional_text(part):continue
             if title_norm and norm and difflib.SequenceMatcher(None,norm,title_norm).ratio()>=0.94:continue
-            if re.search(r"comprehensive up-to-date news coverage|aggregated from sources all over the world by google news|identify and remediate systems affected by this advisory|for more details on how to apply this update|refer to the cve page\\(s\\) listed in the references section",part,re.I):continue
+            if re.search(r"comprehensive up-to-date news coverage|aggregated from sources all over the world by google news|identify and remediate systems affected by this advisory|for more details on how to apply this update|refer to the cve page|thank you for contacting us|member of our team will be in touch|thank you for signing up|close thank you|open source software operating system that runs from the desktop|subscribe to our newsletter|all rights reserved|privacy policy",part,re.I):continue
             if len(part)>45 and part not in cleaned:cleaned.append(part)
         text_value="\n\n".join(cleaned);base_host=urlparse(resolved).netloc.lower();references=[]
         for link in parser.links:
@@ -539,7 +604,7 @@ def enrich_records(records,max_workers=10):
             item["details"]=page_details if len(page_details)>len(feed_summary) else (feed_summary or "No description was exposed by the feed or retrieved source page. Review the linked advisory for authoritative details.")
             resolved=result.get("resolved_url","")
             if resolved.startswith("https://") and urlparse(resolved).netloc.lower() not in ("news.google.com","www.google.com"):item["canonical_url"]=resolved
-            item["enrichment_status"]=result.get("status","unknown");item["enriched_at"]=STAMP
+            item["enrichment_status"]=result.get("status","unknown");item["enriched_at"]=STAMP; item["technology_background"]=item.get("technology_background") or extract_technology_background(item)
             if "category" in item:
                 title_norm=normalize_story_text(item.get("title",""))
                 details_norm=normalize_story_text(item.get("details",""))
@@ -580,6 +645,9 @@ def enrich_records(records,max_workers=10):
         else:
             item["remediation_guidance"]=" ".join(source_action)[:1800] if source_action else ""
             if no_patch and gated:item["remediation_status"]="No vendor patch stated in source; workaround is referenced but requires vendor portal access"
+            elif re.search(r"security update|security advisory|update .*available|update is now available|fixed in", evidence, re.I):
+                item["remediation_status"]="Vendor security update is referenced; exact fixed package/build must be confirmed in the advisory"
+                item["remediation_guidance"]="Review the linked vendor advisory and install the update for the affected product branch; verify the installed package/build against the vendor's fixed-version table."
             elif no_patch:item["remediation_status"]="Source states no patch/fix is available; verify current vendor status"
             elif source_action:item["remediation_status"]="Specific actionable guidance extracted"
             else:item["remediation_status"]="No specific fix identified in retrieved source text" if item.get("enrichment_status")=="enriched" else "Fix status unknown — source page not fully retrieved"
@@ -875,7 +943,7 @@ def main():
     for x in business_entries:
         if not x.get("_date") or x["_date"]<business_cutoff:continue
         body=x["title"]+" "+x["summary"];category=business_category(body);status=deal_status(body)
-        if is_stock_market_noise(body):continue
+        if category=="Not a business development" or is_stock_market_noise(body):continue
         if re.search(r"\b(?:stock|stocks|share price|price target|analyst rating)\b",body,re.I) and category=="Company & market updates":continue
         companies=sorted({name for name in ("CrowdStrike","Zscaler","Palo Alto Networks","Microsoft","Google","Cisco","Fortinet","Check Point","SentinelOne","Mandiant","Broadcom","VMware","IBM","Amazon","Cloudflare","Okta","Proofpoint","Tenable","Rapid7","Wiz","Rubrik","Splunk","Akamai") if re.search(re.escape(name),body,re.I)},key=str.lower)
         event_key=("m&a:"+ "|".join(name.lower() for name in companies[:4])+":"+status.lower()) if category=="M&A" and len(companies)>=2 else category+":"+normalize_story_text(x["title"])

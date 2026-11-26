@@ -94,6 +94,7 @@ preview_end = html.find("renderKev();", critical_end)
 if critical_end < 0 or preview_end < 0 or 'kevAction(v)' not in html[critical_end:preview_end] or 'v.requiredAction' in html[critical_end:preview_end]:
     raise SystemExit("Recent KEV preview bypasses the shared KEV remediation guard")
 
+
 scripts = re.findall(r"<script>([\s\S]*?)</script>", html, re.I)
 if not scripts:
     raise SystemExit("No inline dashboard JavaScript found")
@@ -119,6 +120,56 @@ if "          ref: main" not in daily_workflow:
 spec = importlib.util.spec_from_file_location("gci_collector", collector_path)
 collector = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(collector)
+# Source-backed technology definitions and advisory table extraction.
+tech_fixture = {
+    "title": "RHSA-2026:103817: Critical: kernel security update",
+    "details": "The kernel packages contain the Linux kernel, the core of any Linux operating system.",
+    "url": "https://access.redhat.com/errata/RHSA-2026:103817",
+}
+tech_background = collector.extract_technology_background(tech_fixture)
+if not tech_background or not tech_background.get("verified") or not tech_background.get("source_urls"):
+    raise SystemExit("Explicit source technology definition was not extracted with provenance")
+if "Linux kernel" not in tech_background["what_is_it"] or not tech_background["what_does_it_do"]:
+    raise SystemExit("Technology background extraction returned incomplete fields")
+article_parser = collector.ArticleText()
+article_parser.feed("<p>Jane Doe is a senior managing editor at Example News and worked as a teacher before starting a career in journalism.</p><table><tr><td>Ubuntu 24.04</td><td>linux-image-6.8.0-99</td><td>Fixed</td></tr></table>")
+if not any("Ubuntu 24.04" in row and "linux-image-6.8.0-99" in row for row in article_parser.paragraphs):
+    raise SystemExit("Advisory package/version table row was not extracted")
+if any("senior managing editor" in row for row in article_parser.paragraphs):
+    raise SystemExit("Author biography boilerplate was not filtered")
+
+
+# Business-news quality gates: technical advisories must not leak into business news.
+technical_business_fixtures = [
+    "Critical Juniper Session Smart Conductor Flaw Exploited in Attacks CVE-2026-103406",
+    "Mitel MiCollab Zero-Days Exploited in Suspected AI-Assisted Attacks",
+    "Drupal Installer Patch Left a Gap Attackers Are Already Exploiting",
+    "Two Newly Disclosed GeoServer Vulnerabilities Under Attack",
+    "Microsoft China hackers exploiting a security flaw",
+    "Cybersecurity in AI era: Dark AI used to breach 19 firms at once",
+    "Attackers Target .NET Developers With Poisoned Job Assessments",
+    "Hackers Exploit Two GeoServer Flaws as Researchers Warn of Unauthenticated RCE Chains",
+    "Hackers Compromise 24 Check Point Management Servers in Suspected AI-Driven Attack Campaign",
+    "Hackers Exploit 10 Vulnerabilities Across Mitel, Juniper, Vates, and Danfoss Products",
+]
+if any(collector.business_category(x) != "Not a business development" for x in technical_business_fixtures):
+    raise SystemExit("Technical vulnerability/threat story was incorrectly classified as business news")
+business_event_fixtures = [
+    "Kenya and UK advance strategic partnership on technology and cybersecurity",
+    "Ex-Palo Alto Executive Sues Over Alleged Revenue Inflation",
+    "Palo Alto Networks Faces Lawsuit Over Alleged Early $5 Million Deal",
+    "How Could WhiteHawk Expand Following Quixxi's Acquisition?",
+    "Territorial Army launches national hackathon for cybersecurity",
+    "Roanoke Schools Seek Cybersecurity Funding From State",
+    "Allstate suffers multiday tech outage ahead of Thanksgiving",
+    "Todoist confirms 6% of customers' details were stolen in data breach",
+    "CrowdStrike acquires Zscaler, creating a cyber behemoth",
+    "Fraserlight AI Launches in BC, bringing AI and cybersecurity services",
+]
+if any(collector.business_category(x) == "Not a business development" for x in business_event_fixtures):
+    raise SystemExit("A genuine business event was incorrectly excluded from business news")
+
+
 
 # Synthetic IOC extraction fixtures: supported types, normalization, defanging,
 # and exclusion of private/documentation placeholders. These are parser tests,
