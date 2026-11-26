@@ -83,8 +83,8 @@ if "function cvssOverview(v)" not in html or html.count("cvssOverview(v)") != 2:
     raise SystemExit("CVSS evidence must be rendered only in the overview critical vulnerability watch")
 if 'function kevHtml(v)' not in html or 'v.requiredAction' not in html:
     raise SystemExit("KEV remediation column is missing")
-if 'function kevAction(v)' not in html or 'const a=kevAction(v)' not in html or 'kevStatus(v),a.specific?"green":"amber"' not in html:
-    raise SystemExit("Critical watch and KEV previews must use the shared specific-remediation guard")
+if 'function kevAction(v)' not in html or 'const action=kevAction(v)' not in html or 'descriptionBlock("Remediation status",action.text)' not in html:
+    raise SystemExit("KEV entries must use the shared evidence-based remediation status")
 critical_start = html.find('$("criticalVulnList").innerHTML=')
 critical_end = html.find('$("kevPreview").innerHTML=', critical_start)
 if critical_start < 0 or critical_end < 0 or 'kevAction(v)' not in html[critical_start:critical_end] or 'v.requiredAction' in html[critical_start:critical_end]:
