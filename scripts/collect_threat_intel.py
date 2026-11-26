@@ -856,6 +856,43 @@ def extract_iocs(s,source,url):
              "confidence":"candidate near explicit IOC wording; verify against primary source"}
             for record in found.values()]
 
+
+def attach_cve_verification(records, kev_records=None):
+    """Attach a field-level evidence ledger. Extraction is never promoted to analyst verification."""
+    kev_by_id={str(x.get("cveID","")).upper():x for x in (kev_records or [])}
+    for record in records:
+        cve_ids=record.get("cves") or ([record.get("cveID")] if record.get("cveID") else [])
+        ledger=[]
+        for raw_id in cve_ids:
+            cve=str(raw_id or "").upper()
+            if not CVE.fullmatch(cve): continue
+            kev=kev_by_id.get(cve)
+            nvd=kev or record if str(record.get("cveID","")).upper()==cve else kev or {}
+            cisa_url="https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
+            nvd_url="https://nvd.nist.gov/vuln/detail/"+cve
+            vendor_urls=[]
+            if kev:
+                vendor_urls=[u.rstrip(".,)") for u in re.findall(r"https://[^\\s,;<>]+",str(kev.get("notes") or ""))]
+                vendor_urls += [x.get("source_url") for x in kev.get("vendor_remediation",[]) if x.get("source_url")]
+            vendor_urls=list(dict.fromkeys(u for u in vendor_urls if isinstance(u,str) and u.startswith("https://")))
+            metric=nvd.get("cvss") if isinstance(nvd.get("cvss"),dict) else None
+            title=(kev or {}).get("vulnerabilityName") or record.get("nvd_title") or None
+            product="/".join(str((kev or {}).get(k) or "").strip() for k in ("vendorProject","product") if (kev or {}).get(k)) or None
+            fields={
+                "cve_id":{"value":cve,"status":"Verified (source)","source":"CVE identifier extracted from source record","source_url":record.get("url")},
+                "official_title":{"value":title,"status":"Verified (source)" if title and kev else "Unverified","source":"CISA KEV vulnerabilityName" if title and kev else "No authoritative title retrieved","source_url":cisa_url if kev else nvd_url},
+                "product":{"value":product,"status":"Verified (source)" if product and kev else "Unverified","source":"CISA KEV vendorProject/product" if product and kev else "No authoritative product mapping retrieved","source_url":cisa_url if kev else nvd_url},
+                "cvss":{"value":metric,"status":"Verified (source)" if metric else "Unverified","source":"NVD CVE API metric" if metric else "NVD score not retrieved / not available","source_url":nvd_url},
+                "kev_status":{"value":"Known exploited (CISA KEV)" if kev else "Not listed in checked CISA KEV snapshot" if kev_records is not None else "Not checked","status":"Verified (source)" if kev_records is not None else "Unverified","source":"CISA KEV catalogue snapshot" if kev_records is not None else "CISA KEV not checked","source_url":cisa_url},
+                "affected_versions":{"value":None,"status":"Unverified","source":"Exact affected-version ranges require vendor advisory/CPE review; not inferred from KEV listing","source_url":vendor_urls[0] if vendor_urls else nvd_url},
+                "fix_or_mitigation":{"value":(kev or {}).get("vendor_remediation") or None,"status":"Unverified","source":"Automated extraction from CISA-linked vendor references; analyst applicability review required" if vendor_urls else "No vendor fix statement retrieved; this is not proof no patch exists","source_url":vendor_urls[0] if vendor_urls else cisa_url}
+            }
+            ledger.append({"cve":cve,"product":product,"title":title,"fields":fields,
+                "sources":{"CISA_KEV":cisa_url,"NVD":nvd_url,"vendor_advisories":vendor_urls},
+                "verification_note":"Each field has independent evidence status. Automated extraction is not analyst verification."})
+        record["cve_verification"]=ledger
+    return records
+
 def main():
     health=[];errors=[];entries=[];business_entries=[];kev={};success=0;health_state=load_source_health_state()
     # ACSC is intentionally excluded after persistent upstream timeouts; remove its stale failure from health.
@@ -956,6 +993,9 @@ def main():
     attach_kev_remediation_evidence(recentkev[:40])
     epss_enrichment=enrich_epss(recentkev[:40]+items)
     cvss_enrichment=enrich_nvd_cvss(recentkev[:20])
+    attach_cve_verification(vulns, vulns)
+    attach_cve_verification(recentkev, vulns)
+    attach_cve_verification(items, vulns)
     iocmap={}
     for x in items:
         for v in extract_iocs(x["title"]+" "+x["summary"]+" "+x.get("details",""),x["source"],x["url"]):
