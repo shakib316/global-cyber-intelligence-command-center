@@ -62,7 +62,27 @@ BUSINESS_RULES=[
 ("Financial results",r"quarterly results|revenue|earnings|financial results|forecast"),
 ("Workforce & restructuring",r"layoff|job cuts|restructur|workforce|redundanc"),
 ("Regulation & policy",r"regulat|antitrust|sanction|policy change")]
+def is_technical_security_story(s):
+    """Keep vulnerability/threat reporting out of the business-development stream."""
+    text = str(s or "")
+    technical = re.search(
+        r"\\bCVE-\\d{4}-\\d{4,}\\b|zero.day|vulnerabilit|security advisory|"
+        r"actively exploited|exploited in attacks|patch(?:es|ed|ing)?\\b|"
+        r"proof.of.concept|remote code execution|command injection|"
+        r"privilege escalation|malware campaign|threat actor|ransomware campaign|"
+        r"attackers? (?:target|exploit|abuse)|critical flaw",
+        text, re.I)
+    material_business = re.search(
+        r"acquir|acquisition|merger|buyout|takeover|funding|investment|"
+        r"partnership|appoint|names? .*ceo|steps down|resign|layoff|job cuts|"
+        r"quarterly results|revenue|earnings|IPO|regulatory filing|"
+        r"data breach|cyberattack|security incident|systems? restored",
+        text, re.I)
+    return bool(technical and not material_business)
+
 def business_category(s):
+    if is_technical_security_story(s):
+        return "Not a business development"
     for name,pattern in BUSINESS_RULES:
         if re.search(pattern,s,re.I):return name
     return "Company & market updates"
@@ -355,7 +375,14 @@ class ArticleText(HTMLParser):
             if link["href"]:self.links.append(link)
         if t in ("p","li") and self.capture:
             value=re.sub(r"\s+"," "," ".join(self.buf)).strip()
-            if len(value)>=55 and value not in self.paragraphs:self.paragraphs.append(value)
+            if len(value)>=55 and value not in self.paragraphs:
+                # Exclude author biographies and newsletter/related-story boilerplate.
+                noise = re.search(r"\\b(?:is|was) (?:an? )?(?:international correspondent|senior (?:managing )?editor|reporter|journalist|staff writer)\\b|"
+                    r"\\b(?:holds?|earned|received) (?:a |an )?(?:bachelor|master|doctorate|degree)\\b|"
+                    r"worked as .* before starting a career|subscribe to our newsletter|"
+                    r"related (?:articles|stories)|read more:", value, re.I)
+                if not noise and not is_promotional_text(value):
+                    self.paragraphs.append(value)
             self.capture=False;self.buf=[]
     def handle_data(self,data):
         if self.skip==0:
@@ -875,7 +902,7 @@ def main():
     for x in business_entries:
         if not x.get("_date") or x["_date"]<business_cutoff:continue
         body=x["title"]+" "+x["summary"];category=business_category(body);status=deal_status(body)
-        if is_stock_market_noise(body):continue
+        if category=="Not a business development" or is_stock_market_noise(body):continue
         if re.search(r"\b(?:stock|stocks|share price|price target|analyst rating)\b",body,re.I) and category=="Company & market updates":continue
         companies=sorted({name for name in ("CrowdStrike","Zscaler","Palo Alto Networks","Microsoft","Google","Cisco","Fortinet","Check Point","SentinelOne","Mandiant","Broadcom","VMware","IBM","Amazon","Cloudflare","Okta","Proofpoint","Tenable","Rapid7","Wiz","Rubrik","Splunk","Akamai") if re.search(re.escape(name),body,re.I)},key=str.lower)
         event_key=("m&a:"+ "|".join(name.lower() for name in companies[:4])+":"+status.lower()) if category=="M&A" and len(companies)>=2 else category+":"+normalize_story_text(x["title"])
