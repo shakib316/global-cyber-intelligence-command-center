@@ -341,7 +341,7 @@ class ArticleText(HTMLParser):
         self.links=[];self.anchor=None
     def handle_starttag(self,tag,attrs):
         a=dict(attrs);t=tag.lower()
-        if t in ("script","style","noscript","svg","nav","footer","header","aside","form"):self.skip+=1
+        if t in ("script","style","noscript","svg","nav","footer","header","aside","form","button","dialog"):self.skip+=1
         if t=="meta" and (a.get("name","").lower() in ("description","og:description") or a.get("property","").lower()=="og:description"):
             value=a.get("content","").strip()
             if value:self.meta.append(value)
@@ -349,7 +349,7 @@ class ArticleText(HTMLParser):
         if t in ("p","li"):self.capture=True;self.buf=[]
     def handle_endtag(self,tag):
         t=tag.lower()
-        if t in ("script","style","noscript","svg","nav","footer","header","aside","form"):self.skip=max(0,self.skip-1)
+        if t in ("script","style","noscript","svg","nav","footer","header","aside","form","button","dialog"):self.skip=max(0,self.skip-1)
         if t=="a" and self.anchor is not None:
             link=self.anchor;self.anchor=None;link["text"]=re.sub(r"\s+"," ",link["text"]).strip()
             if link["href"]:self.links.append(link)
@@ -374,6 +374,57 @@ PROMOTIONAL_TEXT = re.compile(
 def is_promotional_text(value):
     """Exclude obvious sponsored/lead-generation copy from technical context."""
     return bool(PROMOTIONAL_TEXT.search(str(value or "").strip()))
+
+
+# Common page chrome, form confirmations and consent text are not article evidence.
+BOILERPLATE_TEXT = re.compile(
+    r"thank you for (?:contacting us|getting in touch|your (?:message|request))|"
+    r"member of our team will be in touch|thank you for (?:signing up|subscribing)|"
+    r"newsletter|unsubscribe|your preferences have been successfully updated|"
+    r"close notification|accept all cookies|manage (?:your )?cookies|"
+    r"cookie preferences|privacy preferences|subscribe to our|sign up for our|"
+    r"already have an account|create an account|log in to continue|"
+    r"share this (?:article|story|page)|related (?:articles|stories)|"
+    r"read more stories|advertisement|sponsored content|"
+    r"all rights reserved|©\\s*\\d{4}|javascript is required",
+    re.I,
+)
+
+
+def is_boilerplate_text(value):
+    """Identify common non-editorial page text; false positives are deliberately avoided."""
+    text = re.sub(r"\\s+", " ", str(value or "")).strip()
+    return bool(text and (is_promotional_text(text) or BOILERPLATE_TEXT.search(text)))
+
+
+def clean_extracted_text(value):
+    """Remove obvious page chrome while preserving source wording and paragraph order."""
+    kept = []
+    for raw in re.split(r"\\n+", str(value or "")):
+        part = re.sub(r"\\s+", " ", html.unescape(raw)).strip()
+        if len(part) < 35 or is_boilerplate_text(part):
+            continue
+        if part not in kept:
+            kept.append(part)
+    return "\\n\\n".join(kept)
+
+
+def build_technical_summary(value, max_sentences=4, max_chars=1100):
+    """Create a short source-only excerpt; this is extraction, not generative paraphrasing."""
+    cleaned = clean_extracted_text(value)
+    if not cleaned:
+        return ""
+    sentences = [re.sub(r"\\s+", " ", s).strip() for s in re.split(r"(?<=[.!?])\\s+", cleaned)]
+    selected = []
+    for sentence in sentences:
+        if len(sentence) < 45 or is_boilerplate_text(sentence):
+            continue
+        if sentence not in selected:
+            selected.append(sentence)
+        if len(selected) >= max_sentences:
+            break
+    summary = " ".join(selected)
+    return summary[:max_chars].rsplit(" ", 1)[0] if len(summary) > max_chars else summary
 
 
 def normalize_story_text(value):
@@ -467,10 +518,10 @@ def enrich_page(url,title=""):
         if not isinstance(url,str) or not url.startswith("https://"):return {"status":"not_attempted","details":"","references":[]}
         raw,charset,resolved=request_url(url,{"User-Agent":UA,"Accept":"text/html,application/xhtml+xml"},timeout=8,max_bytes=1_500_000)
         parser=ArticleText();parser.feed(raw.decode(charset,errors="replace"))
-        title_norm=normalize_story_text(title);parts=parser.meta[:1]+parser.paragraphs[:18];cleaned=[]
+        title_norm=normalize_story_text(title);parts=parser.meta[:1]+parser.paragraphs[:30];cleaned=[]
         for part in parts:
             part=re.sub(r"\s+"," ",part).strip();norm=normalize_story_text(part)
-            if not part or is_promotional_text(part):continue
+            if not part or is_boilerplate_text(part):continue
             if title_norm and norm and difflib.SequenceMatcher(None,norm,title_norm).ratio()>=0.94:continue
             if re.search(r"comprehensive up-to-date news coverage|aggregated from sources all over the world by google news|identify and remediate systems affected by this advisory|for more details on how to apply this update|refer to the cve page\\(s\\) listed in the references section",part,re.I):continue
             if len(part)>45 and part not in cleaned:cleaned.append(part)
@@ -481,7 +532,7 @@ def enrich_page(url,title=""):
             if not href.startswith("https://") or not host or host==base_host:continue
             if re.search(r"security|advisory|bulletin|CVE-\d{4}-|patch|release notes|fixed version|vulnerability|hotfix",label+" "+href,re.I):
                 if href not in [x["url"] for x in references]:references.append({"label":label[:180] or "Vendor/security reference","url":href})
-        return {"status":"enriched" if len(text_value)>=250 else "limited","details":text_value[:9000],"resolved_url":resolved,"references":references[:8]}
+        return {"status":"enriched" if len(text_value)>=250 else "limited","details":text_value[:9000],"technical_summary":build_technical_summary(text_value),"resolved_url":resolved,"references":references[:8]}
     except Exception as exc:return {"status":"fetch_failed","details":"","references":[],"error":type(exc).__name__}
 
 def extract_specific_remediation(text_value):
@@ -574,7 +625,7 @@ def enrich_records(records,max_workers=10):
             item["details"]=page_details if len(page_details)>len(feed_summary) else (feed_summary or "No description was exposed by the feed or retrieved source page. Review the linked advisory for authoritative details.")
             resolved=result.get("resolved_url","")
             if resolved.startswith("https://") and urlparse(resolved).netloc.lower() not in ("news.google.com","www.google.com"):item["canonical_url"]=resolved
-            item["enrichment_status"]=result.get("status","unknown");item["enriched_at"]=STAMP
+            item["enrichment_status"]=result.get("status","unknown");item["enriched_at"]=STAMP\n            if result.get("technical_summary"):item["technical_summary"]=build_technical_summary(result["technical_summary"])
             if "category" in item:
                 title_norm=normalize_story_text(item.get("title",""))
                 details_norm=normalize_story_text(item.get("details",""))
