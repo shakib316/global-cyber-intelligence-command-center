@@ -410,6 +410,9 @@ def report_sources(record, kind="threat"):
         if isinstance(url, str) and url.startswith("https://") and url not in urls and len(urls) < 3:
             urls.append(url)
     add(record.get("canonical_url") or record.get("url"))
+    background = record.get("technology_background") or {}
+    for url in background.get("source_urls", []) if isinstance(background, dict) else []:
+        add(url)
     for ref in (record.get("vendor_remediation") or []) + (record.get("vendor_references") or []):
         add(ref.get("source_url") or ref.get("url"))
     for url in record.get("related_urls") or []:
@@ -941,7 +944,7 @@ def main():
     if recentkev:
         for v in recentkev[:40]:
             lines += [f"### {v.get('cveID','CVE unavailable')} — {v.get('vulnerabilityName','Name unavailable')}",
-                f"- Labels: {v.get('vendorProject','Vendor not disclosed')} · {v.get('product','Product not disclosed')} · Added {v.get('dateAdded','unknown')} · Due {v.get('dueDate','not stated')}",
+                f"- Labels: {v.get('vendorProject','Vendor not disclosed')} · {v.get('product','Product not disclosed')} · Added {v.get('dateAdded','unknown')} · Due {v.get('dueDate','not stated')} · CVSS: {format_cvss_context(v)} · EPSS: {format_epss_context(v)}",
                 "- Technology background: " + report_technology_background(v, "kev"),
                 "- Technical details: " + report_technical_details({"details": " ".join([str(v.get("shortDescription") or ""), "CVSS: "+format_cvss_context(v), "EPSS: "+format_epss_context(v)])}),
                 "- Remediation status: " + kev_remediation_text(v),
