@@ -1031,6 +1031,15 @@ def main():
             if tc.get("identifier_note"): lines.append("  - Identifier context: "+tc["identifier_note"])
             lines.append("  - EPSS context: "+format_epss_context(v)+" — FIRST.org; not an asset-specific risk score")
             lines.append("  - CVSS context: "+format_cvss_context(v)+" — NVD technical severity, not an asset-specific risk score")
+            for ledger in v.get("cve_verification", []):
+                fields=ledger.get("fields",{})
+                lines.append("  - CVE evidence ledger: "+str(ledger.get("cve"))+" | Product: "+str(ledger.get("product") or "Unverified")+" | Official title: "+str(ledger.get("title") or "Unverified"))
+                for key,label in (("cvss","CVSS"),("kev_status","KEV status"),("affected_versions","Affected versions"),("fix_or_mitigation","Fix / mitigation")):
+                    field=fields.get(key,{})
+                    value=field.get("value")
+                    if isinstance(value,dict): value="CVSS "+str(value.get("version"))+" "+str(value.get("base_score"))+"/10 ("+str(value.get("severity") or "severity not stated")+")"
+                    elif value is None: value="Not established"
+                    lines.append("    - "+label+": "+str(value)+" — "+str(field.get("status","Unverified"))+"; source: "+str(field.get("source","not recorded"))+"; "+str(field.get("source_url") or "no source URL"))
             for ref in v.get("vendor_remediation",[]):
                 lines.append("  - Vendor evidence: ["+str(ref.get("source_label") or "Vendor advisory")+"]("+str(ref.get("source_url") or "")+") — analyst review required")
     else:lines.append("- No additions returned, or the feed failed; check source health.")
