@@ -128,3 +128,10 @@ Apply the same remediation semantics to New Intelligence, Overview / Critical Vu
 - Keep the dashboard collector and daily workflow running; business-news feeds are part of daily collection and must not be skipped.
 - Deliver the briefing in ChatGPT and publish the same day's report to the repository.
 - If a feed, GitHub write or validation step fails, disclose it. Never claim full coverage or success from a partial run.
+
+ 
+## CVE evidence ledger — mandatory
+
+For each CVE, publish one independently mapped record with: Product, CVE, CVSS, KEV status, affected versions, fix/mitigation, source links and field-level verification status. Use **Verified (source)** or **Unverified** for each field, with source name and URL adjacent. Verify CVE identity/title and CVSS with NVD/CVE.org, KEV membership with CISA, and affected/fixed versions with the product vendor's advisory. Do not infer a product from a multi-vendor headline. Flag product/CVE mismatches. Never truncate official CVE titles.
+
+Keep CVSS technical severity separate from KEV exploitation urgency. KEV status does not numerically raise CVSS. CVSS 9.0 is Critical for the relevant v3.x/v4 scoring bands; preserve the metric version. If no patch is explicitly confirmed by the vendor, write **No fix confirmed in reviewed sources**, not **No patch available**. Compensating controls must be supported by vendor or authoritative guidance.
