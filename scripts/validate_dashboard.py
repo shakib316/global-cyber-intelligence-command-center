@@ -531,6 +531,30 @@ for example, expected in (
     combined = (context.get("what_is_it", "") + " " + context.get("what_it_does", "")).lower()
     if expected not in combined:
         raise SystemExit("Plain-English technology glossary regression: " + example)
+# Permanent technology-background accuracy regressions.
+nuget_title = "13 Malicious NuGet Packages Turn Fake .NET Job Assessments Into Malware Delivery Traps"
+nuget_context = collector.describe_technology(nuget_title, "Malicious NuGet packages target Windows .NET developers.", "Packages abuse NuGet dependency installation and build workflows.")
+if nuget_context.get("name") != "NuGet / .NET":
+    raise SystemExit("NuGet/.NET campaign was incorrectly classified as a generic operating system")
+if nuget_context.get("what_is_it") != "NuGet is the package manager for the .NET ecosystem.":
+    raise SystemExit("NuGet technology background is incorrect")
+wrong_windows = {"name":"Microsoft Windows","what_is_it":"A desktop and server operating system.","what_it_does":"It runs applications and manages devices, users, files and system services."}
+if collector.technology_context_consistency(nuget_title, "Malware / supply-chain attack", "Packages abuse NuGet dependencies.", context=wrong_windows).get("valid"):
+    raise SystemExit("Semantic validator accepted generic Windows context for a NuGet/.NET campaign")
+for label, headline, summary, expected in (
+    ("Windows vulnerability","Windows privilege escalation vulnerability","A Windows component is affected.","Microsoft Windows"),
+    ("Linux vulnerability","Linux kernel memory corruption vulnerability","The Linux kernel is affected.","Linux kernel"),
+    ("Network appliance","FortiGate firewall vulnerability","FortiOS firewall is affected.","Fortinet FortiOS / FortiGate"),
+    ("Cloud service","Kubernetes API server vulnerability","Kubernetes clusters are affected.","Kubernetes"),
+    ("Phishing campaign","Phishing campaign abuses fake Microsoft 365 login pages","Credential theft targets Microsoft 365 users.","Microsoft"),
+    ("Supply-chain attack",nuget_title,"NuGet packages deliver malware.","NuGet / .NET"),
+):
+    ctx=collector.describe_technology(headline,summary,"")
+    if ctx.get("name") != expected:
+        raise SystemExit("Technology-context regression for "+label+": "+str(ctx.get("name")))
+unknown=collector.describe_technology("Unclear security event","No affected product or component identified.","")
+if unknown.get("status") != "not_identified":
+    raise SystemExit("Insufficient technology evidence did not use safe unidentified state")
 usn_context = collector.describe_technology("USN-9203-1: libpcap vulnerabilities", "Ubuntu security notice affecting libpcap", "")
 if "libpcap" not in usn_context.get("name", "").lower() or "USN-9203-1" not in usn_context.get("identifier_note", ""):
     raise SystemExit("Ubuntu USN identifier must be explained separately from the affected libpcap component")
