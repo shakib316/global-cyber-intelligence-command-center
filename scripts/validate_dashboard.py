@@ -58,7 +58,11 @@ ids = re.findall(r'\bid="([^"]+)"', html)
 duplicates = sorted({x for x in ids if ids.count(x) > 1})
 if duplicates:
     raise SystemExit("Dashboard contains duplicate HTML IDs: " + ", ".join(duplicates))
-if 'function itemHtml(x)' not in html or 'remediationBlock(x,"threat")' not in html:
+if "technologyBackgroundBlock" not in html or "technicalDetailsBlock" not in html or "sourceLinksBlock" not in html:
+    raise SystemExit("Dashboard is missing the global six-section intelligence card helpers")
+if "Not established in the reviewed source material" not in html or "No product-function description has been inferred" not in html:
+    raise SystemExit("Dashboard technology-background fallback must explicitly prevent unsupported product-function claims")
+if "function itemHtml(x)" not in html or 'remediationBlock(x,"threat")' not in html:
     raise SystemExit("Threat cards do not show adjacent remediation guidance")
 if 'name==="briefing"' not in html or 'loadReportPath(currentReportPath)' not in html:
     raise SystemExit("Full daily report is not lazy-loaded on briefing navigation")
