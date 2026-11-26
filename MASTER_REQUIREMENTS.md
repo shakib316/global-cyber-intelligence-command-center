@@ -172,6 +172,21 @@ Rules:
 - Do not scrape gated services or bypass access controls. Providers requiring credentials or approval must be integrated only through approved APIs and GitHub Actions secrets after terms are reviewed.
 - Keep source URLs, publisher, publication date and retrieval/collection time distinct.
 
+
+### CVE field-level verification — global mandatory standard
+
+Apply to every CVE in New Intelligence, Overview Critical Vulnerabilities Watch, CISA KEV, Daily Briefing and generated reports. One CVE equals one independently traceable record; never map a product from a headline alone.
+
+- Verify identifier/title and CVE description against CVE.org/NVD; use the exact official title where supplied. Never truncate official titles in visible cards or tables.
+- Verify CVSS version, base score, vector and metric source against NVD; preserve unavailable, unscored, disputed and lookup-failed states without inventing a value.
+- Verify KEV membership directly against the CISA KEV catalogue. KEV membership is a known-exploitation signal, not a CVSS score and must not overwrite CVSS severity.
+- Verify vendor/product and affected version ranges against the vendor advisory and, where useful, NVD CPE data. If evidence is missing or conflicting, label the field **Unverified** and flag the mismatch.
+- Record source URL and field-level status for product, official title, CVSS, KEV, affected versions and fix/mitigation. Use only **Verified (source)** or **Unverified** in analyst-facing records; analyst verification must be separately recorded if introduced.
+- Keep vendor advisory extraction distinct from verified remediation. State **No patch available** only when the vendor explicitly confirms no patch. Otherwise use **No fix confirmed in reviewed sources** and provide source-backed compensating controls only.
+- A KEV-listed CVE must receive high operational attention, but do not falsify its CVSS severity. Display a separate Known Exploited / KEV indicator. A CVSS 9.0 score maps to Critical using the applicable CVSS version's severity classification.
+- Do not assume that a CVE in a multi-product headline affects every named product. One CVE-to-product mapping per evidence-supported relationship; explicitly flag unresolved or contradictory mappings.
+- Automated extraction, title matching and static validation do not constitute source verification. Missing vendor evidence remains Unverified.
+
 ### CVE, severity and exploitation
 - Do not fabricate a CVE or attach one to a threat without source support.
 - CVSS is technical severity; record its version, score and source when available.
