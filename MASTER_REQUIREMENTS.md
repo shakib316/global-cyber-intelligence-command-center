@@ -167,6 +167,9 @@ Rules:
 
 ### Technology-background accuracy — permanent data-quality gate
 
+**Website-wide implementation requirements:** The collector is the single source of truth for threat `technology_context`. Browser rendering must never infer or guess technology context from headlines. Missing context must use the exact safe fallback in both fields. Business/market stories must use a separate `business_context` schema and renderer; company mentions alone do not establish a product's purpose. Daily Markdown reports and snapshots must preserve the same separation. Validators must check all generated threat, KEV and business records and the dashboard renderers. Historical snapshots are not silently rewritten; only newly collected records use the new schema.
+
+
 Mandatory for every threat, vulnerability, advisory, KEV record and relevant business/market item in the collector, snapshot, dashboard and generated reports.
 
 **Required output structure:** exactly two fields:
