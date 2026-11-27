@@ -6,10 +6,6 @@ on:
       - "scripts/collect_threat_intel.py"
       - "scripts/validate_dashboard.py"
       - "scripts/validate_detection_queries.py"
-      - "index.html"
-      - "intel/**"
-      - "reports/**"
-      - ".github/workflows/daily-threat-intel.yml"
   schedule:
     - cron: "30 3 * * *" # 09:00 Asia/Kolkata
   workflow_dispatch:
