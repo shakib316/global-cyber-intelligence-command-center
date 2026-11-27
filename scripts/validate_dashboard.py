@@ -95,8 +95,8 @@ if len(re.findall(r"function itemHtml\(x\)", html)) != 1:
     raise SystemExit("Dashboard must have exactly one threat-card renderer")
 if 'technologyBackgroundBlock(x,"business")' not in html or 'descriptionBlock("Remediation status","Not applicable — business/industry development, not a vulnerability advisory.")' not in html:
     raise SystemExit("Business cards must follow the global six-section format and mark remediation not applicable")
-if "function cleanCopy(value)" not in html or "Compact reading layout" not in html:
-    raise SystemExit("Dashboard description cleanup or compact reading styles are missing")
+if "function cleanCopy(value)" not in html or ".intel-card{padding:18px 0" not in html or "/* Compact reading layout:" in html:
+    raise SystemExit("Dashboard description cleanup or 25 November reading layout is missing")
 if "function epssOverview(v)" not in html or html.count("epssOverview(v)") != 2:
     raise SystemExit("EPSS evidence must be rendered only in the overview critical vulnerability watch")
 if "function cvssOverview(v)" not in html or html.count("cvssOverview(v)") != 2:
