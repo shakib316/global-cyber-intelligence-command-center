@@ -556,6 +556,7 @@ def merge_daily_records(previous,current,kind):
     merged={}
     def identity(record):
         if kind=="ioc": return (record.get("type"),record.get("value"))
+        if kind=="kev": return record.get("cveID")
         urls=record.get("related_urls") or [record.get("url","")]
         canonical=next((str(u).split("#",1)[0].rstrip("/") for u in urls if u), "")
         return canonical or normalize_story_text(record.get("title"))
@@ -1060,6 +1061,7 @@ def main():
             if candidate.get("date_ist")==DAY: previous=candidate
         except (OSError,ValueError):
             print("Warning: existing daily snapshot could not be read; refusing to overwrite it."); return 1
+    recentkev=merge_daily_records(previous.get("cisa_kev_added_last_24h_date_precision",[]),recentkev,"kev")
     prior_threat_urls={str(x.get("url","")).split("#",1)[0].rstrip("/") for x in previous.get("items",[]) if x.get("url")}
     prior_business_urls={str(u).split("#",1)[0].rstrip("/") for x in previous.get("business_items",[]) for u in (x.get("related_urls") or [x.get("url","")]) if u}
     enrich_records([x for x in items if str(x.get("url","")).split("#",1)[0].rstrip("/") not in prior_threat_urls])
@@ -1110,10 +1112,10 @@ def main():
     latest={"date_utc":DAY_UTC,"date_ist":DAY,"retrieved_at":STAMP,"retrieved_at_ist":STAMP_IST,"collection_runs":int(previous.get("collection_runs",0))+1,"snapshot":f"snapshots/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.json","report":f"daily/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.md"}
     (ROOT/"intel/latest.json").write_text(json.dumps(latest,indent=2)+"\n",encoding="utf-8")
     lines=[f"# Global Cyber Threat Radar — Automated Snapshot — {DAY} IST","",f"- Retrieved: {STAMP_IST} (UTC: {STAMP})","- Coverage: rolling last 8 hours (UTC, 2-hour overlap); four runs daily, consolidated into one snapshot/report per IST date",
-        f"- Feed health: {good}/{len(health)}",f"- Advisory/research items: {len(items)}",f"- CISA KEV catalog: {len(vulns)}",f"- KEV additions at 24-hour cutoff date precision: {len(recentkev)}",f"- Undated CERT-In index entries excluded: {undated_certin_entries_excluded}",f"- IOC candidates: {len(iocs)}",
+        f"- Feed health: {good}/{len(health)}",f"- Advisory/research items: {len(items)}",f"- CISA KEV catalog: {len(vulns)}",f"- KEV additions at 8-hour cutoff date precision: {len(recentkev)}",f"- Undated CERT-In index entries excluded: {undated_certin_entries_excluded}",f"- IOC candidates: {len(iocs)}",
         "","## Feed health","","| Source | Status | Result | Records | Last successful collection (UTC) | Last attempt (UTC) | Duration (ms) | Consecutive failures |","|---|---|---|---:|---|---|---:|---:|"]
     lines += [f"| {x['source']} | {x['status']} | {x.get('collection_result','unknown')} | {x['records']} | {x.get('last_success_at') or 'never'} | {x.get('last_attempt_at','unknown')} | {x.get('duration_ms','unknown')} | {x.get('consecutive_failures',0)} |" for x in health]
-    lines += ["","## CISA KEV additions — rolling 24-hour cutoff (CISA date-only precision)",""]
+    lines += ["","## CISA KEV additions — rolling 8-hour cutoff (CISA date-only precision)",""]
     if recentkev:
         for v in recentkev[:40]:
             lines += [f"### {v.get('cveID','CVE unavailable')} — {v.get('vulnerabilityName','Name unavailable')}",
