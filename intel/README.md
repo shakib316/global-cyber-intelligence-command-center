@@ -32,7 +32,3 @@ ThreatFox, AlienVault OTX, GreyNoise and Shadowserver may require keys, registra
 - The dashboard renders the latest snapshot referenced by `intel/latest.json`; source failures remain visible in source health.
 
 ## Threat actor and campaign data
-
-The initial actor/campaign catalogue is deliberately small and evidence-led. See `phase2-intelligence.json` for APT29 (MITRE G0016) and its source-listed Operation Ghost campaign (C0023). Unknown campaign-specific targets, CVEs and IOCs remain empty or explicitly not stated. The MITRE profile's last-modified date is not treated as an actor last-observed date.
-
-Validate with `python scripts/validate_phase2_intelligence.py`. Structural validation confirms source references and relationship endpoints; it does not independently corroborate the intelligence.
