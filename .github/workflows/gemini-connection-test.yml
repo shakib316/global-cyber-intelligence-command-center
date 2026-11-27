@@ -13,9 +13,9 @@ permissions:
 jobs:
   gemini-smoke-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 6
     steps:
-      - name: Test Gemini API key and text generation
+      - name: Test Gemini API key and available text generation model
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
@@ -25,6 +25,7 @@ jobs:
           import sys
           import time
           import urllib.error
+          import urllib.parse
           import urllib.request
 
           api_key = os.environ.get("GEMINI_API_KEY", "").strip()
@@ -32,7 +33,50 @@ jobs:
               print("FAIL: GEMINI_API_KEY is not available to this workflow.")
               sys.exit(1)
 
-          url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent"
+          base = "https://generativelanguage.googleapis.com/v1beta"
+          headers = {"x-goog-api-key": api_key}
+
+          # Ask the API which models this key can actually use; do not hard-code
+          # a model that may be temporarily overloaded or no longer available.
+          list_request = urllib.request.Request(
+              f"{base}/models?pageSize=1000",
+              headers=headers,
+              method="GET"
+          )
+          try:
+              with urllib.request.urlopen(list_request, timeout=30) as response:
+                  model_data = json.loads(response.read().decode("utf-8"))
+          except urllib.error.HTTPError as error:
+              detail = error.read().decode("utf-8", errors="replace")
+              print(f"FAIL: Could not list Gemini models (HTTP {error.code}).")
+              print(detail[:2000])
+              sys.exit(1)
+
+          available = [
+              model for model in model_data.get("models", [])
+              if "generateContent" in model.get("supportedGenerationMethods", [])
+              and "gemini" in model.get("name", "").lower()
+          ]
+
+          # Prefer efficient Flash models, then try other text-generation models
+          # exposed to this API key as a fallback.
+          def rank(model):
+              name = model.get("name", "").lower()
+              if "flash-lite" in name or "flash_lite" in name:
+                  group = 0
+              elif "flash" in name:
+                  group = 1
+              elif "pro" in name:
+                  group = 3
+              else:
+                  group = 2
+              return (group, name)
+
+          candidates = sorted(available, key=rank)[:8]
+          if not candidates:
+              print("FAIL: This API key returned no Gemini models supporting generateContent.")
+              sys.exit(1)
+
           payload = {
               "contents": [{
                   "parts": [{
@@ -42,8 +86,11 @@ jobs:
               "generationConfig": {"temperature": 0, "maxOutputTokens": 40}
           }
           body = json.dumps(payload).encode("utf-8")
+          transient_errors = []
 
-          for attempt in range(1, 5):
+          for model in candidates:
+              model_name = model["name"]
+              url = f"{base}/{urllib.parse.quote(model_name, safe='/')}:generateContent"
               request = urllib.request.Request(
                   url,
                   data=body,
@@ -54,29 +101,32 @@ jobs:
                   method="POST"
               )
               try:
-                  with urllib.request.urlopen(request, timeout=90) as response:
+                  with urllib.request.urlopen(request, timeout=60) as response:
                       result = json.loads(response.read().decode("utf-8"))
-                  candidates = result.get("candidates") or []
-                  parts = candidates[0].get("content", {}).get("parts", []) if candidates else []
+                  choices = result.get("candidates") or []
+                  parts = choices[0].get("content", {}).get("parts", []) if choices else []
                   generated_text = "".join(part.get("text", "") for part in parts).strip()
-                  if not generated_text:
-                      print("FAIL: Gemini returned HTTP 200 but no generated text.")
-                      print(json.dumps(result)[:2000])
-                      sys.exit(1)
-                  print("PASS: Gemini API request succeeded (HTTP 200).")
-                  print("Gemini response:", generated_text)
-                  sys.exit(0)
+                  if generated_text:
+                      print(f"PASS: Gemini API request succeeded using {model_name} (HTTP 200).")
+                      print("Gemini response:", generated_text)
+                      sys.exit(0)
+                  print(f"Model {model_name} returned HTTP 200 without text; trying another available model.")
               except urllib.error.HTTPError as error:
                   detail = error.read().decode("utf-8", errors="replace")
-                  if error.code in (429, 500, 502, 503, 504) and attempt < 4:
-                      delay = 5 * (2 ** (attempt - 1))
-                      print(f"Gemini returned transient HTTP {error.code}; retry {attempt}/3 in {delay}s.")
-                      time.sleep(delay)
+                  if error.code in (429, 500, 502, 503, 504, 404):
+                      transient_errors.append((model_name, error.code, detail[:500]))
+                      print(f"Model {model_name} returned HTTP {error.code}; trying the next available model.")
+                      time.sleep(2)
                       continue
-                  print(f"FAIL: Gemini API returned HTTP {error.code}.")
+                  print(f"FAIL: Gemini API returned HTTP {error.code} for {model_name}.")
                   print(detail[:2000])
                   sys.exit(1)
               except Exception as error:
-                  print(f"FAIL: Gemini test could not complete: {type(error).__name__}: {error}")
-                  sys.exit(1)
+                  transient_errors.append((model_name, type(error).__name__, str(error)))
+                  print(f"Model {model_name} request failed ({type(error).__name__}); trying the next available model.")
+
+          print("FAIL: None of the available Gemini models completed text generation.")
+          for model_name, code, detail in transient_errors:
+              print(f"- {model_name}: {code} {detail}")
+          sys.exit(1)
           PY
