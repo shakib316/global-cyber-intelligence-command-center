@@ -6,6 +6,17 @@ from pathlib import Path
 root = Path(__file__).resolve().parents[1]
 html = (root / "index.html").read_text(encoding="utf-8")
 
+# The daily collector must use one rolling 24-hour UTC discovery window.
+collector_source = (root / "scripts/collect_threat_intel.py").read_text(encoding="utf-8")
+if "WINDOW_HOURS=24" not in collector_source:
+    raise SystemExit("Daily intelligence discovery window must be 24 hours")
+for obsolete in ("dt.timedelta(hours=72)", "dt.timedelta(days=7)", '"business_window_hours":168'):
+    if obsolete in collector_source:
+        raise SystemExit("Obsolete extended discovery window remains: " + obsolete)
+for required in ('"window_hours":WINDOW_HOURS', '"business_window_hours":WINDOW_HOURS', 'undated_certin_entries_excluded', 'date-only; filtered using the UTC date'):
+    if required not in collector_source:
+        raise SystemExit("24-hour window metadata/guard missing: " + required)
+
 # Frontend security and accessibility regression guards. Dynamic content must be
 # escaped before HTML insertion; Markdown links must pass the HTTPS URL guard.
 for marker in ('const esc=s=>String(s??"").replace(/[&<>"\']/g',
