@@ -1,6 +1,6 @@
 # Global Cyber Intelligence Command Center (GCI)
 
-A GitHub-hosted cyber-intelligence dashboard and daily collection pipeline for vulnerabilities, exploited flaws, threat research, campaigns, indicators, and cybersecurity business developments.
+A GitHub-hosted cyber-intelligence dashboard and daily collection pipeline for vulnerabilities, exploited flaws, threat research, and cybersecurity business developments.
 
 **Live dashboard:** https://shakib316.github.io/global-cyber-intelligence-command-center/  
 **Source repository:** https://github.com/shakib316/global-cyber-intelligence-command-center
