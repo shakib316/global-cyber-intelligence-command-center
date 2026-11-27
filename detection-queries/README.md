@@ -57,7 +57,7 @@ Never label a query validated merely because it looks syntactically plausible. K
 ## Engineering standards and recommended innovations
 
 - **Detection-as-code:** review changes through pull requests; preserve query history and changelogs.
-- **Automated quality gates:** KQL syntax validation, required-metadata checks, duplicate-ID checks, secret scanning and markdown linting before merge.
+- **Automated quality gates:** KQL metadata and structural checks, required-field checks, duplicate-ID checks, unresolved-placeholder checks and repository hygiene before merge.
 - **Synthetic test fixtures:** include positive, negative and edge-case sample events; test expected matches and false positives.
 - **Schema profiles:** record Sentinel table/column requirements and parser dependencies. Custom tables must be clearly marked and mapped to the user's actual schema before deployment.
 - **ASIM support:** prefer ASIM parsers/normalized schemas where practical; keep native-table variants when normalization is unavailable.
