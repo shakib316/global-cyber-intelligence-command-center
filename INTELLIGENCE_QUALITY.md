@@ -65,15 +65,3 @@ Provider: [NVD CVE API 2.0](https://nvd.nist.gov/developers/vulnerabilities).
 
 Each enriched threat record carries a dated `remediation_evidence` object. States distinguish vendor guidance extracted but unverified, source-reported no-fix statements, portal-gated workarounds, specific actions extracted but unverified, no fix found in reviewed source text, and source pages not fully reviewed. Automated extraction never sets `analyst_verified` or a fixed version. A verified fixed release or mitigation requires explicit analyst verification; absence of extracted guidance is not evidence that no vendor fix exists. Evidence URLs and the UTC check timestamp are retained.
 
-
-## Threat actor and campaign evidence policy
-
-- Actor and campaign records live in `intel/phase2-intelligence.json`; the JSON Schema is `intel/schemas/phase2-intelligence.schema.json`.
-- Every profile and relationship must reference one or more source IDs. Attribution confidence is explicit and includes a rationale.
-- `confirmed`, `attributed`, `suspected` and `unknown` attribution states are distinct. A source's wording is preserved; a dashboard confidence label is not a claim of independent verification.
-- A source page's last-modified date is not an actor or campaign last-observed date. Use null / “not stated” when the operational timestamp is unavailable.
-- Campaigns are not merged based on shared tools or techniques alone. A relationship is created only when the cited source explicitly supports it.
-- Empty CVE and IOC arrays are valid and do not imply that no CVEs or IOCs exist outside the reviewed source.
-- Campaign detection opportunities are labelled as analyst hunt suggestions unless a detection rule is explicitly linked and independently validated. ATT&CK mapping alone is not detection coverage.
-- The initial APT29 / Operation Ghost entry is sourced to the MITRE ATT&CK G0016 profile. It is a limited seed dataset, not a comprehensive actor/campaign catalogue.
-- Run `python scripts/validate_phase2_intelligence.py` to validate structural integrity, source references and relationship endpoints. This does not establish the truth of the source claims.
