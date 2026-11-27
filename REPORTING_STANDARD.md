@@ -49,7 +49,7 @@ Use concise threat cards/sections, not long narrative essays. Include relevant r
 - Place full queries in separate expandable details blocks with a short summary: Q1 — product: detection purpose.
 - Each query block contains: purpose, data source/table, assumed schema, query maturity, KQL code and interpretation/tuning notes.
 - Reference the same Q-number in the threat table and threat write-up. No orphan query and no threat with a dangling query reference.
-- Use Microsoft Sentinel KQL as default. Add Google SecOps YARA-L or Splunk SPL only when it materially helps.
+- Use Microsoft Sentinel / Defender KQL only. Do not add SPL or YARA-L query variants to this repository.
 - Never invent table/field names as if tenant-confirmed. Clearly label assumed schemas and use illustrative queries when no tenant schema is available.
 - If no meaningful query is possible, state why and do not create a misleading placeholder.
 - Query maturity must be honest: **Draft**, **Schema-checked**, **Syntax-validated**, **Lab-tested**, **Production-approved** or **Retired**. Static lint is not Kusto parser validation, tenant validation, lab testing or production approval.
