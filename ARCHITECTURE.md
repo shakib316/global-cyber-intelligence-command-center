@@ -21,7 +21,7 @@ Public advisory, research and vendor feeds
 | intel/source-health-state.json | Per-source last attempt, last success and consecutive failure state |
 | intel/phase2-intelligence.json | Evidence-linked actor, campaign and relationship dataset |
 | intel/schemas/phase2-intelligence.schema.json | JSON Schema 2020-12 contract for Phase 2 records |
-| detection-queries/ | KQL, SPL and Google SecOps YARA-L query library |
+| detection-queries/ | Microsoft Sentinel / Defender KQL query library |
 | reports/YYYY/MM/DD.md | Analyst-facing dated briefing |
 
 The browser loads the latest snapshot through intel/latest.json. Historical reports are discovered from the repository archive. Actor/campaign data is loaded separately from intel/phase2-intelligence.json. Detection query files are fetched from the repository when the analyst opens the query library.
@@ -57,7 +57,7 @@ Automated checks cover repository structure, latest snapshot integrity, unique I
 The current checks do not replace:
 - browser-driven end-to-end tests across desktop/tablet/mobile;
 - screen-reader, keyboard-only and manual contrast review;
-- official KQL/SPL/YARA-L parser validation;
+- official KQL parser validation;
 - positive/negative execution against representative query fixtures in each SIEM;
 - tenant schema and telemetry readiness checks;
 - analyst review of every attribution, IOC reputation and remediation claim;
