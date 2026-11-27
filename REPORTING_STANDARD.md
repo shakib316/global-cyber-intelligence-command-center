@@ -36,7 +36,7 @@ This global six-part format supersedes older per-card/per-item layouts and longe
 ## 1. Reader and editorial principles
 - Write for a Security Engineer with 7 years' experience across SIEM/SOAR, Google SecOps, Splunk, Microsoft Sentinel, detection engineering, cloud security and incident response.
 - Make the briefing concise, technically useful and scannable. Use short, consistent labels, compact paragraphs, bullets and tables. Avoid generic padding, vague remediation, repeated facts and unexplained acronyms.
-- Prioritise the last 24 hours since the previous briefing; do not widen the collection window during quiet periods. Carry older items only when exploitation, remediation or business impact remains active, and label them **Carry-forward** with original date.
+- Use the daily consolidated snapshot. Each collection run scans a rolling 8-hour UTC window with a 2-hour overlap on a 6-hour schedule; the date file accumulates discoveries across all runs for that IST date. Carry older items only when exploitation, remediation or business impact remains active, and label them **Carry-forward** with original date.
 - Deduplicate syndicated reports and multiple sources about the same event. Prefer primary vendor/government/company sources; add independent corroboration for material claims.
 - Distinguish confirmed facts, vendor statements, researcher observations, media reporting, analyst assessment and unverified extortion-group claims. Never present a leak-site listing as proof of compromise.
 - Include India/APAC relevance when supported. Explain acronyms on first use or in a short glossary.
@@ -88,7 +88,7 @@ Use concise threat cards/sections, not long narrative essays. Include relevant r
 
 ### 3) CYBERSECURITY BUSINESS & INDUSTRY NEWS — mandatory daily section
 This section must appear every day, even when no qualifying item is found.
-- Search the previous 24 hours first; use the same strict rolling 24-hour UTC discovery window; do not widen it to 7 days. Clearly show the publication/announcement date.
+- Use the daily consolidated snapshot; each collection run scans the rolling 8-hour UTC window with a 2-hour overlap. The daily file accumulates items across the four runs. Clearly show the publication/announcement date.
 - Cover cybersecurity company M&A, funding/investment/IPO, partnerships, product launches, earnings/financial results, leadership, hiring/layoffs/restructuring, regulation/policy and material industry operations.
 - Prioritise company-confirmed announcements, SEC/stock-exchange filings, regulators and reputable reporting. Cross-check major deal values and label rumours as **Rumoured**, signed agreements as **Signed**, and completed transactions as **Completed**.
 - Each item uses short labels: **Category**, **Status**, **What happened**, **Why it matters**, **Confirmed vs forecast**, **What to watch**, **Sources**.

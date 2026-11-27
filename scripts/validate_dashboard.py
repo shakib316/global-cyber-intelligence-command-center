@@ -6,14 +6,19 @@ from pathlib import Path
 root = Path(__file__).resolve().parents[1]
 html = (root / "index.html").read_text(encoding="utf-8")
 
-# The daily collector must use one rolling 24-hour UTC discovery window.
+# The collector runs every six hours with an eight-hour overlap window.
 collector_source = (root / "scripts/collect_threat_intel.py").read_text(encoding="utf-8")
-if "WINDOW_HOURS=24" not in collector_source:
-    raise SystemExit("Daily intelligence discovery window must be 24 hours")
+workflow_source = (root / ".github/workflows/daily-threat-intel.yml").read_text(encoding="utf-8")
+if "WINDOW_HOURS=8" not in collector_source:
+    raise SystemExit("Collector must use an eight-hour lookback")
+if '"30 18,0,6,12 * * *"' not in workflow_source:
+    raise SystemExit("Collector schedule must run at 00:00, 06:00, 12:00 and 18:00 IST")
+if 'git checkout refs/remotes/origin/intel-staging -- intel/ detection-queries/generated/' not in workflow_source:
+    raise SystemExit("Repeated collection must restore the existing staging snapshot before merging")
 for obsolete in ("dt.timedelta(hours=72)", "dt.timedelta(days=7)", '"business_window_hours":168'):
     if obsolete in collector_source:
         raise SystemExit("Obsolete extended discovery window remains: " + obsolete)
-for required in ('"window_hours":WINDOW_HOURS', '"business_window_hours":WINDOW_HOURS', 'undated_certin_entries_excluded', 'date-only; filtered using the UTC date'):
+for required in ('"window_hours":WINDOW_HOURS', '"business_window_hours":WINDOW_HOURS', '"collection_interval_hours":6', '"overlap_hours":2', 'collection_runs', 'merge_daily_records', 'undated_certin_entries_excluded', 'date-only; filtered using the UTC date'):
     if required not in collector_source:
         raise SystemExit("24-hour window metadata/guard missing: " + required)
 

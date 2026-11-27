@@ -12,7 +12,7 @@ on:
       - "index.html"
       - ".github/workflows/daily-threat-intel.yml"
   schedule:
-    - cron: "30 3 * * *" # 09:00 Asia/Kolkata
+    - cron: "30 18,0,6,12 * * *" # 00:00, 06:00, 12:00, 18:00 Asia/Kolkata
   workflow_dispatch:
   pull_request:
     paths:
@@ -84,6 +84,10 @@ jobs:
             STAGING_EXPECTED=""
           fi
           git checkout -B intel-staging origin/main
+          # Restore the previous staged snapshot so later runs merge into one daily file.
+          if [ -n "$STAGING_EXPECTED" ]; then
+            git checkout refs/remotes/origin/intel-staging -- intel/ detection-queries/generated/
+          fi
           git add intel/ detection-queries/generated/
           if git diff --cached --quiet; then
             echo "No intelligence changes to stage."

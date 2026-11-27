@@ -83,16 +83,16 @@ Times below are Asia/Kolkata (IST).
 
 | Workflow | Current trigger | Responsibility |
 |---|---|---|
-| Daily Threat Intelligence Collection | Daily at **09:00 IST** (`03:30 UTC`) | Collect public intelligence, validate the snapshot, commit changed `intel/` and generated detection artifacts, then deploy Pages. |
+| Daily Threat Intelligence Collection | Every 6 hours at **00:00, 06:00, 12:00 and 18:00 IST** | Collect public intelligence, validate the snapshot, commit changed `intel/` and generated detection artifacts, then deploy Pages. |
 | Dashboard Quality Watch | Every **10 minutes**, plus relevant pushes and completion of configured workflows | Validate dashboard/data integrity and frontend security. This is a quality check, not a fresh intelligence collection. |
 | Detection Query Quality Checks | Relevant pushes, pull requests and manual dispatch | Validate query metadata/structure, dashboard, collector and frontend safeguards. |
 
 ### Daily collection and AI-enrichment sequence
-1. GitHub Actions starts collection at 09:00 IST on `main`.
+1. GitHub Actions starts collection every 6 hours at 00:00, 06:00, 12:00 and 18:00 IST.
 2. Collector retrieves configured public advisories, research feeds, KEV and business-news sources; records source health and creates the current-day structured collection.
 3. Static snapshot/dashboard and detection-query checks run against the collected data.
 4. The collector commits the raw/normalized collection to the isolated `intel-staging` branch. It must not update `main` or deploy GitHub Pages.
-5. The scheduled ChatGPT AI-enrichment task (approximately 10:15 IST) reads the staged snapshot, reviews every distinct current-day item against direct sources and authoritative references, enriches and deduplicates the content, and quarantines unsupported items with reasons.
+5. The scheduled ChatGPT AI-enrichment task reads the consolidated date-scoped staged snapshot after collection, reviews every distinct current-day item against direct sources and authoritative references, enriches and deduplicates the content, and quarantines unsupported items with reasons. It processes the single merged daily snapshot, not each six-hour collection as a separate publication.
 6. Only after all required enrichment and validation succeeds does the task publish the current-day enriched snapshot, daily report and latest pointer to `main` in one atomic Git commit. This main-branch push triggers the separate GitHub Pages deployment workflow.
 7. Verify the deployment and report collection, source-health, enrichment, quarantine, validation and deployment counts/statuses. If any critical step fails, do not advance the latest pointer or publish partial content.
 8. Quality Watch continues independently on its configured schedule and workflow events.
@@ -100,7 +100,7 @@ Times below are Asia/Kolkata (IST).
 **Important implementation distinction:** `intel-staging` is a temporary raw/normalized staging branch, not the public dashboard source. The website reads only `main`. Historical records before 27 November 2026 are read-only for this new pipeline. The collector does not currently retain complete raw article bodies for every feed; source URLs, feed metadata, normalized item fields and source-health results are the evidence baseline. Analyst-facing `reports/YYYY/MM/DD.md` and collector-generated `intel/daily/` are distinct paths; the ChatGPT task must update only the current day's paths.
 
 ### Schedule maintenance rules
-- Preserve the daily 09:00 IST collection unless the user explicitly changes it.
+- Preserve the four-times-daily collection schedule unless the user explicitly changes it.
 - Do not confuse the 10-minute Quality Watch with collection frequency.
 - Do not create overlapping Pages deployments or competing scheduled collectors.
 - After changing schedules, inspect the workflow YAML and verify the next successful run.
@@ -318,13 +318,13 @@ When acting on this repository, follow these instructions as if they were the pr
 "Act as the senior engineer and security architect maintaining the Global Cyber Intelligence Command Center. Read `MASTER_REQUIREMENTS.md`, `ARCHITECTURE.md` and all relevant standards/code/workflows first. Inspect the current `main` branch before editing. Implement only the requested change, preserve all existing approved behavior and retired-feature decisions, apply secure coding and least privilege, update relevant tests/docs, run the appropriate validators, inspect workflow results and verify deployment when applicable. Do not claim success without evidence. Report changed files, commit, checks, deployment status and remaining limitations."
 
 ### B. Daily intelligence and briefing prompt
-"Produce the Global Cyber Threat Radar briefing using the current reporting window and `REPORTING_STANDARD.md`. Prioritize verified developments from the previous 24 hours, using a strict rolling 24-hour UTC discovery window across all dated threat, advisory, research and business sources; do not widen it when quiet; carry forward older material only when still operationally relevant and label it with its original date. Use primary sources first, corroborate material claims, distinguish publication date from collection time, include threat detection and concrete remediation side by side, and include the mandatory Cyber Business section. Never invent missing details. State source failures and uncertainty. Use matching Q# references and correctly fenced KQL blocks. Validate the final report against the reporting and intelligence-quality standards before publishing."
+"Produce the Global Cyber Threat Radar briefing using the current reporting window and `REPORTING_STANDARD.md`. Process the consolidated current-date snapshot, which accumulates discoveries across four daily collection runs. Each run uses an 8-hour UTC lookback with a 2-hour overlap. Carry older material only when still operationally relevant and label it with its original date. Use primary sources first, corroborate material claims, distinguish publication date from collection time, include threat detection and concrete remediation side by side, and include the mandatory Cyber Business section. Never invent missing details. State source failures and uncertainty. Use matching Q# references and correctly fenced KQL blocks. Validate the final report against the reporting and intelligence-quality standards before publishing."
 
 ### C. Dashboard UX/security audit prompt
 "Act as a senior security product designer, SOC analyst, accessibility reviewer and frontend security auditor. Audit the live dashboard and current source. Check every navigation view, content hierarchy, responsive layout, date controls, filtering/search, source links, remediation visibility, data freshness, empty/error states, keyboard/focus behavior, contrast, reduced motion, XSS/URL handling and browser-console errors. Keep Critical Vulnerabilities Watch on Overview only. Do not restore retired toolkit or actor/campaign pages. Separate verified defects from recommendations. Prioritize issues by severity and implement only after the requested scope is clear; run regression checks and verify the live deployment."
 
 ### D. Workflow/automation audit prompt
-"Inspect every current GitHub Actions workflow and its triggers, permissions, secrets, concurrency, action versions, schedules, artifact paths, commit/push behavior, retries, validation gates and deployment ordering. Confirm daily collection is 09:00 IST and distinguish it from the 10-minute quality watch. Check that the daily workflow commits the intended paths and deploys the latest `main` SHA. Identify duplicate schedules, race conditions, missing reports, stale data and excessive permissions. Do not change the schedule or require PRs until direct-push automation compatibility is addressed. Implement only approved fixes and verify actual workflow runs."
+"Inspect every current GitHub Actions workflow and its triggers, permissions, secrets, concurrency, action versions, schedules, artifact paths, commit/push behavior, retries, validation gates and deployment ordering. Confirm collection runs every 6 hours at 00:00/06:00/12:00/18:00 IST and distinguish it from the 10-minute quality watch. Check that the daily workflow commits the intended paths and deploys the latest `main` SHA. Identify duplicate schedules, race conditions, missing reports, stale data and excessive permissions. Do not change the schedule or require PRs until direct-push automation compatibility is addressed. Implement only approved fixes and verify actual workflow runs."
 
 ### E. Detection engineering prompt
 "Act as a senior detection engineer for Microsoft Sentinel, Splunk and Google SecOps. For every proposed detection, document purpose, threat behavior, telemetry prerequisites, tables/fields, assumptions, time window, query, expected matches, false positives, tuning and response guidance. Label maturity honestly: Draft, Schema-checked, Syntax-validated, Lab-tested, Production-approved or Retired. Never claim parser, tenant or production validation unless actually performed. Provide positive and negative test cases before promoting maturity."
@@ -359,4 +359,5 @@ A task is complete only when all applicable conditions are met:
 
 ## Change log
 - **2026-11-25:** Created as the controlling project requirements and operating-rules reference. Consolidates current scope, retired features, daily schedule, reporting expectations, security rules, AI prompts and definition of done.
-- **2026-11-27:** Daily discovery standardized to a rolling 24 hours. CISA KEV remains cumulative; its date-only `dateAdded` field is reported with UTC date precision. Undated CERT-In index entries are excluded from dated daily records.
+- **2026-11-27:** Daily discovery standardized to a rolling 24 hours.
+- **2026-11-27:** Collection cadence changed to every 6 hours (00:00/06:00/12:00/18:00 IST), using an 8-hour lookback with a 2-hour overlap. Runs merge into one date-scoped snapshot and report; previous dates remain unchanged. CISA KEV remains cumulative; its date-only `dateAdded` field is reported with UTC date precision. Undated CERT-In index entries are excluded from dated daily records.

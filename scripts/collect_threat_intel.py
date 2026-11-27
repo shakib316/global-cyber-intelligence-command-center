@@ -8,7 +8,7 @@ from pathlib import Path
 from urllib.parse import urljoin, urlparse, urlencode
 
 ROOT=Path(__file__).resolve().parents[1]
-WINDOW_HOURS=24
+WINDOW_HOURS=8  # 6-hour cadence plus 2-hour overlap
 NOW=dt.datetime.now(dt.timezone.utc); IST=dt.timezone(dt.timedelta(hours=5,minutes=30)); NOW_IST=NOW.astimezone(IST); DAY=NOW_IST.date().isoformat(); DAY_UTC=NOW.date().isoformat(); STAMP=NOW.strftime("%Y-%m-%dT%H:%M:%SZ"); STAMP_IST=NOW_IST.strftime("%Y-%m-%d %H:%M:%S IST")
 KEV="https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
 CERTIN="https://www.cert-in.org.in/s2cMainServlet?pageid=PUBADVLIST02&year="+str(NOW.year)
@@ -550,6 +550,33 @@ def report_sources(record, kind="threat"):
 def normalize_story_text(value):
     return re.sub(r"[^a-z0-9]+"," ",str(value or "").lower()).strip()
 
+
+def merge_daily_records(previous,current,kind):
+    """Merge repeated six-hour collections into one date-scoped record set."""
+    merged={}
+    def identity(record):
+        if kind=="ioc": return (record.get("type"),record.get("value"))
+        if kind=="kev": return record.get("cveID")
+        urls=record.get("related_urls") or [record.get("url","")]
+        canonical=next((str(u).split("#",1)[0].rstrip("/") for u in urls if u), "")
+        return canonical or normalize_story_text(record.get("title"))
+    for record in list(previous or [])+list(current or []):
+        if not isinstance(record,dict): continue
+        key=identity(record)
+        if not key: continue
+        if key not in merged:
+            merged[key]=dict(record); continue
+        old=merged[key]; new=dict(record)
+        for field,value in old.items():
+            if field not in new or new[field] in (None,"",[],{}): new[field]=value
+        for field in ("related_sources","related_urls"):
+            values=list(old.get(field) or [])
+            for value in new.get(field) or []:
+                if value not in values: values.append(value)
+            if values: new[field]=values
+        merged[key]=new
+    return list(merged.values())
+
 def enrich_page(url,title=""):
     """Fetch readable article text plus candidate security/advisory links."""
     try:
@@ -1024,9 +1051,24 @@ def main():
             if record["publisher"] not in old["related_sources"]:old["related_sources"].append(record["publisher"])
             if record["url"] not in old["related_urls"]:old["related_urls"].append(record["url"])
     business_items=sorted(business_unique.values(),key=lambda x:x.get("published") or "",reverse=True)
-    # Retrieve article-level context and follow only explicitly linked security references.
-    enrich_records(items)
-    enrich_records(business_items)
+    # Merge repeated runs into one daily snapshot. Prior dates are never read or modified.
+    report=Path("intel/daily")/DAY[:4]/DAY[5:7]/(DAY[8:10]+".md")
+    snapshot=Path("intel/snapshots")/DAY[:4]/DAY[5:7]/(DAY[8:10]+".json")
+    previous={}
+    if (ROOT/snapshot).exists():
+        try:
+            candidate=json.loads((ROOT/snapshot).read_text(encoding="utf-8"))
+            if candidate.get("date_ist")==DAY: previous=candidate
+        except (OSError,ValueError):
+            print("Warning: existing daily snapshot could not be read; refusing to overwrite it."); return 1
+    prior_threat_urls={str(x.get("url","")).split("#",1)[0].rstrip("/") for x in previous.get("items",[]) if x.get("url")}
+    prior_business_urls={str(u).split("#",1)[0].rstrip("/") for x in previous.get("business_items",[]) for u in (x.get("related_urls") or [x.get("url","")]) if u}
+    new_threat_items=[x for x in items if str(x.get("url","")).split("#",1)[0].rstrip("/") not in prior_threat_urls]
+    new_business_items=[x for x in business_items if str(x.get("url","")).split("#",1)[0].rstrip("/") not in prior_business_urls]
+    enrich_records(new_threat_items)
+    enrich_records(new_business_items)
+    items=merge_daily_records(previous.get("items",[]),items,"threat")
+    business_items=merge_daily_records(previous.get("business_items",[]),business_items,"business")
     # CVEs must be extracted after full-page retrieval; feed snippets alone are incomplete.
     for item in items:
         item["cves"]=extract_cves(item.get("title"),item.get("summary"),item.get("details"),
@@ -1046,10 +1088,13 @@ def main():
     kev_cutoff_date=cutoff.date().isoformat()
     # CISA KEV dateAdded is date-only; this is UTC calendar-day precision, not timestamp precision.
     recentkev=sorted([v for v in vulns if v.get("dateAdded","")>=kev_cutoff_date],key=lambda x:x.get("dateAdded",""),reverse=True)
-    enrich_kev_records(recentkev[:40])
-    attach_kev_remediation_evidence(recentkev[:40])
-    epss_enrichment=enrich_epss(recentkev[:40]+items)
-    cvss_enrichment=enrich_nvd_cvss(recentkev[:20])
+    prior_kev_ids={x.get("cveID") for x in previous.get("cisa_kev_added_last_8h_date_precision",previous.get("cisa_kev_added_last_24h_date_precision",[]))}
+    new_recentkev=[x for x in recentkev if x.get("cveID") not in prior_kev_ids]
+    recentkev=merge_daily_records(previous.get("cisa_kev_added_last_8h_date_precision",previous.get("cisa_kev_added_last_24h_date_precision",[])),recentkev,"kev")
+    enrich_kev_records(new_recentkev[:40])
+    attach_kev_remediation_evidence(new_recentkev[:40])
+    epss_enrichment=enrich_epss(new_recentkev[:40]+new_threat_items)
+    cvss_enrichment=enrich_nvd_cvss(new_recentkev[:20])
     iocmap={}
     for x in items:
         for v in extract_iocs(x["title"]+" "+x["summary"]+" "+x.get("details",""),x["source"],x["url"]):
@@ -1058,25 +1103,23 @@ def main():
             entry=iocmap[key]
             if v["source"] not in entry["related_sources"]:entry["related_sources"].append(v["source"])
             if v["source_url"] not in entry["related_urls"]:entry["related_urls"].append(v["source_url"])
-    iocs=list(iocmap.values())
+    iocs=merge_daily_records(previous.get("ioc_candidates",[]),list(iocmap.values()),"ioc")
     if not success:print("All feeds failed; refusing to publish.");print("\n".join(errors));return 1
     good=sum(x["status"]=="success" for x in health)
-    report=Path("intel/daily")/DAY[:4]/DAY[5:7]/(DAY[8:10]+".md")
-    snapshot=Path("intel/snapshots")/DAY[:4]/DAY[5:7]/(DAY[8:10]+".json")
     (ROOT/report).parent.mkdir(parents=True,exist_ok=True);(ROOT/snapshot).parent.mkdir(parents=True,exist_ok=True)
-    data={"date_utc":DAY_UTC,"date_ist":DAY,"retrieved_at":STAMP,"retrieved_at_ist":STAMP_IST,"window_hours":WINDOW_HOURS,"window_start_utc":cutoff.strftime("%Y-%m-%dT%H:%M:%SZ"),"source_health":health,"successful_sources":good,"total_sources":len(health),
-        "errors":errors,"business_items":business_items,"business_feed_count":len(business_items),"business_window_hours":WINDOW_HOURS,"cisa_kev_catalog_count":len(vulns),"cisa_kev_catalog":vulns,"cisa_kev_added_last_24h_date_precision":recentkev,"cisa_kev_date_precision":"date-only; filtered using the UTC date containing the rolling 24-hour cutoff","undated_certin_entries_excluded":undated_certin_entries_excluded,"items":items,"epss_enrichment":epss_enrichment,"cvss_enrichment":cvss_enrichment,
+    data={"date_utc":DAY_UTC,"date_ist":DAY,"retrieved_at":STAMP,"retrieved_at_ist":STAMP_IST,"window_hours":WINDOW_HOURS,"collection_interval_hours":6,"overlap_hours":2,"collection_runs":int(previous.get("collection_runs",0))+1,"window_start_utc":cutoff.strftime("%Y-%m-%dT%H:%M:%SZ"),"source_health":health,"successful_sources":good,"total_sources":len(health),
+        "errors":errors,"business_items":business_items,"business_feed_count":len(business_items),"business_window_hours":WINDOW_HOURS,"cisa_kev_catalog_count":len(vulns),"cisa_kev_catalog":vulns,"cisa_kev_added_last_8h_date_precision":recentkev,"cisa_kev_added_last_24h_date_precision":recentkev,"cisa_kev_date_precision":"date-only; filtered using the UTC date containing the rolling 8-hour cutoff","undated_certin_entries_excluded":undated_certin_entries_excluded,"items":items,"epss_enrichment":epss_enrichment,"cvss_enrichment":cvss_enrichment,
         "ioc_candidates":iocs,"ioc_policy":"Candidate extraction only near explicit IOC wording. Verify against original report and local context.",
         "limitations":["Public feeds are not exhaustive and can fail or change format.","CERT-In is an official index scrape, not an RSS feed; open advisory pages to confirm details.",
         "Authenticated/paid feeds are not configured.","A CVE listing or IOC match is not proof of compromise.","No automatic response actions."]}
     (ROOT/snapshot).write_text(json.dumps(data,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
-    latest={"date_utc":DAY_UTC,"date_ist":DAY,"retrieved_at":STAMP,"retrieved_at_ist":STAMP_IST,"snapshot":f"snapshots/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.json","report":f"daily/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.md"}
+    latest={"date_utc":DAY_UTC,"date_ist":DAY,"retrieved_at":STAMP,"retrieved_at_ist":STAMP_IST,"collection_runs":int(previous.get("collection_runs",0))+1,"snapshot":f"snapshots/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.json","report":f"daily/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.md"}
     (ROOT/"intel/latest.json").write_text(json.dumps(latest,indent=2)+"\n",encoding="utf-8")
-    lines=[f"# Global Cyber Threat Radar — Automated Snapshot — {DAY} IST","",f"- Retrieved: {STAMP_IST} (UTC: {STAMP})","- Coverage: rolling last 24 hours (UTC); displayed in IST",
-        f"- Feed health: {good}/{len(health)}",f"- Advisory/research items: {len(items)}",f"- CISA KEV catalog: {len(vulns)}",f"- KEV additions at 24-hour cutoff date precision: {len(recentkev)}",f"- Undated CERT-In index entries excluded: {undated_certin_entries_excluded}",f"- IOC candidates: {len(iocs)}",
+    lines=[f"# Global Cyber Threat Radar — Automated Snapshot — {DAY} IST","",f"- Retrieved: {STAMP_IST} (UTC: {STAMP})","- Coverage: rolling last 8 hours (UTC, 2-hour overlap); four runs daily, consolidated into one snapshot/report per IST date",
+        f"- Feed health: {good}/{len(health)}",f"- Advisory/research items: {len(items)}",f"- CISA KEV catalog: {len(vulns)}",f"- KEV additions at 8-hour cutoff date precision: {len(recentkev)}",f"- Undated CERT-In index entries excluded: {undated_certin_entries_excluded}",f"- IOC candidates: {len(iocs)}",
         "","## Feed health","","| Source | Status | Result | Records | Last successful collection (UTC) | Last attempt (UTC) | Duration (ms) | Consecutive failures |","|---|---|---|---:|---|---|---:|---:|"]
     lines += [f"| {x['source']} | {x['status']} | {x.get('collection_result','unknown')} | {x['records']} | {x.get('last_success_at') or 'never'} | {x.get('last_attempt_at','unknown')} | {x.get('duration_ms','unknown')} | {x.get('consecutive_failures',0)} |" for x in health]
-    lines += ["","## CISA KEV additions — rolling 24-hour cutoff (CISA date-only precision)",""]
+    lines += ["","## CISA KEV additions — rolling 8-hour cutoff (CISA date-only precision)",""]
     if recentkev:
         for v in recentkev[:40]:
             lines += [f"### {v.get('cveID','CVE unavailable')} — {v.get('vulnerabilityName','Name unavailable')}",
@@ -1086,7 +1129,7 @@ def main():
                 "- Remediation status: " + kev_remediation_text(v),
                 "- Sources: " + " · ".join(f"[{urlparse(u).netloc}]({u})" for u in report_sources(v,"kev")), ""]
     else:lines.append("- No additions returned, or the feed failed; check source health.")
-    lines += ["","## Advisories, campaigns and research — last 24 hours",""]
+    lines += ["","## Advisories, campaigns and research — rolling last 8 hours",""]
     if items:
         for x in items[:100]:lines += [f"### {x['title']}",
             "- Labels: " + " · ".join(z for z in [x.get("source"), x.get("published"), ", ".join(x.get("cves", [])) or None, ("EPSS: " + format_epss_context(x)) if x.get("epss_scores") else None] if z),
@@ -1097,8 +1140,8 @@ def main():
     else:lines.append("No dated items returned. This does not mean no threats occurred; inspect source health.")
     business_health=[x for x in health if x.get("stream")=="business"]
     business_ok=sum(x.get("status")=="success" for x in business_health)
-    lines += ["","## Cyber business & market developments — last 24 hours (newest first)",
-        f"- Updated: {STAMP_IST} | Items collected: {len(business_items)} | Business feeds healthy: {business_ok}/{len(business_health)} | Window: 24 hours"]
+    lines += ["","## Cyber business & market developments — rolling last 8 hours (newest first)",
+        f"- Updated: {STAMP_IST} | Items collected: {len(business_items)} | Business feeds healthy: {business_ok}/{len(business_health)} | Window: 8 hours (6-hour schedule + 2-hour overlap) | Consolidated runs: {int(previous.get('collection_runs',0))+1}"]
     failed_business=[x for x in business_health if x.get("status")!="success"]
     if failed_business:
         lines += ["- Feed issues: "+"; ".join(x["source"]+" — "+str(x.get("error") or "unavailable") for x in failed_business)]
@@ -1132,8 +1175,8 @@ def main():
         "","## Limitations","",
         "- Broad public-source baseline, not exhaustive global intelligence.",
         "- ThreatFox, OTX, GreyNoise and Shadowserver are not enabled; review credentials and provider terms before integration.",
-        "- All dated threat, advisory, research and business discovery uses a rolling 24-hour UTC window; undated CERT-In index entries are excluded from daily records.",
-        "- CISA KEV dateAdded has date-only precision; the daily additions view uses the UTC date containing the rolling 24-hour cutoff, while the full catalogue remains cumulative.",
+        "- All dated threat, advisory, research and business discovery uses a rolling 8-hour UTC window with a 2-hour overlap on a 6-hour schedule; undated CERT-In index entries are excluded from daily records.",
+        "- CISA KEV dateAdded has date-only precision; the daily additions view uses the UTC date containing the rolling 8-hour cutoff, while the full catalogue remains cumulative.",
         "- Google News results are reported leads and require company-announcement or filing verification.",
         "- Feed failures and quiet periods do not mean absence of threats; report timestamps are IST and machine timestamps in JSON are UTC.",
         "",f"Raw evidence: [JSON snapshot](../../../snapshots/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.json)."]
