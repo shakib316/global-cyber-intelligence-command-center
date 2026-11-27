@@ -75,6 +75,14 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch origin main
+          # Fetch the existing staging ref as well: --force-with-lease must have
+          # a current remote-tracking SHA or the second daily push can fail.
+          if git ls-remote --exit-code --heads origin intel-staging >/dev/null 2>&1; then
+            git fetch origin +refs/heads/intel-staging:refs/remotes/origin/intel-staging
+            STAGING_EXPECTED="$(git rev-parse refs/remotes/origin/intel-staging)"
+          else
+            STAGING_EXPECTED=""
+          fi
           git checkout -B intel-staging origin/main
           git add intel/ detection-queries/generated/
           if git diff --cached --quiet; then
@@ -82,5 +90,9 @@ jobs:
             exit 0
           fi
           git commit -m "Raw intelligence staging $(date -u +%F)"
-          git push --force-with-lease origin HEAD:intel-staging
+          if [ -n "$STAGING_EXPECTED" ]; then
+            git push --force-with-lease="refs/heads/intel-staging:$STAGING_EXPECTED" origin HEAD:refs/heads/intel-staging
+          else
+            git push origin HEAD:refs/heads/intel-staging
+          fi
           echo "Raw intelligence staged on intel-staging. Main and GitHub Pages were not changed."
