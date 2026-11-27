@@ -31,7 +31,7 @@ jobs:
               print("FAIL: GEMINI_API_KEY is not available to this workflow.")
               sys.exit(1)
 
-          url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+          url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent"
           payload = {
               "contents": [{
                   "parts": [{
