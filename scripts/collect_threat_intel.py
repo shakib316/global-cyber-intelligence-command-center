@@ -8,7 +8,7 @@ from pathlib import Path
 from urllib.parse import urljoin, urlparse, urlencode
 
 ROOT=Path(__file__).resolve().parents[1]
-WINDOW_HOURS=8  # 6-hour cadence plus 2-hour overlap
+WINDOW_HOURS=24  # user-requested rolling 24-hour discovery window; runs merge into one daily snapshot
 NOW=dt.datetime.now(dt.timezone.utc); IST=dt.timezone(dt.timedelta(hours=5,minutes=30)); NOW_IST=NOW.astimezone(IST); DAY=NOW_IST.date().isoformat(); DAY_UTC=NOW.date().isoformat(); STAMP=NOW.strftime("%Y-%m-%dT%H:%M:%SZ"); STAMP_IST=NOW_IST.strftime("%Y-%m-%d %H:%M:%S IST")
 KEV="https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
 CERTIN="https://www.cert-in.org.in/s2cMainServlet?pageid=PUBADVLIST02&year="+str(NOW.year)
@@ -1108,18 +1108,18 @@ def main():
     good=sum(x["status"]=="success" for x in health)
     (ROOT/report).parent.mkdir(parents=True,exist_ok=True);(ROOT/snapshot).parent.mkdir(parents=True,exist_ok=True)
     data={"date_utc":DAY_UTC,"date_ist":DAY,"retrieved_at":STAMP,"retrieved_at_ist":STAMP_IST,"window_hours":WINDOW_HOURS,"collection_interval_hours":6,"overlap_hours":2,"collection_runs":int(previous.get("collection_runs",0))+1,"window_start_utc":cutoff.strftime("%Y-%m-%dT%H:%M:%SZ"),"source_health":health,"successful_sources":good,"total_sources":len(health),
-        "errors":errors,"business_items":business_items,"business_feed_count":len(business_items),"business_window_hours":WINDOW_HOURS,"cisa_kev_catalog_count":len(vulns),"cisa_kev_catalog":vulns,"cisa_kev_added_last_8h_date_precision":recentkev,"cisa_kev_added_last_24h_date_precision":recentkev,"cisa_kev_date_precision":"date-only; filtered using the UTC date containing the rolling 8-hour cutoff","undated_certin_entries_excluded":undated_certin_entries_excluded,"items":items,"epss_enrichment":epss_enrichment,"cvss_enrichment":cvss_enrichment,
+        "errors":errors,"business_items":business_items,"business_feed_count":len(business_items),"business_window_hours":WINDOW_HOURS,"cisa_kev_catalog_count":len(vulns),"cisa_kev_catalog":vulns,"cisa_kev_added_last_24h_date_precision":recentkev,"cisa_kev_added_last_8h_date_precision":recentkev,"cisa_kev_date_precision":"date-only; filtered using the UTC date containing the rolling 24-hour cutoff","undated_certin_entries_excluded":undated_certin_entries_excluded,"items":items,"epss_enrichment":epss_enrichment,"cvss_enrichment":cvss_enrichment,
         "ioc_candidates":iocs,"ioc_policy":"Candidate extraction only near explicit IOC wording. Verify against original report and local context.",
         "limitations":["Public feeds are not exhaustive and can fail or change format.","CERT-In is an official index scrape, not an RSS feed; open advisory pages to confirm details.",
         "Authenticated/paid feeds are not configured.","A CVE listing or IOC match is not proof of compromise.","No automatic response actions."]}
     (ROOT/snapshot).write_text(json.dumps(data,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     latest={"date_utc":DAY_UTC,"date_ist":DAY,"retrieved_at":STAMP,"retrieved_at_ist":STAMP_IST,"collection_runs":int(previous.get("collection_runs",0))+1,"snapshot":f"snapshots/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.json","report":f"daily/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.md"}
     (ROOT/"intel/latest.json").write_text(json.dumps(latest,indent=2)+"\n",encoding="utf-8")
-    lines=[f"# Global Cyber Threat Radar — Automated Snapshot — {DAY} IST","",f"- Retrieved: {STAMP_IST} (UTC: {STAMP})","- Coverage: rolling last 8 hours (UTC, 2-hour overlap); four runs daily, consolidated into one snapshot/report per IST date",
-        f"- Feed health: {good}/{len(health)}",f"- Advisory/research items: {len(items)}",f"- CISA KEV catalog: {len(vulns)}",f"- KEV additions at 8-hour cutoff date precision: {len(recentkev)}",f"- Undated CERT-In index entries excluded: {undated_certin_entries_excluded}",f"- IOC candidates: {len(iocs)}",
+    lines=[f"# Global Cyber Threat Radar — Automated Snapshot — {DAY} IST","",f"- Retrieved: {STAMP_IST} (UTC: {STAMP})","- Coverage: rolling last 24 hours (UTC, 2-hour overlap); four runs daily, consolidated into one snapshot/report per IST date",
+        f"- Feed health: {good}/{len(health)}",f"- Advisory/research items: {len(items)}",f"- CISA KEV catalog: {len(vulns)}",f"- KEV additions at 24-hour cutoff date precision: {len(recentkev)}",f"- Undated CERT-In index entries excluded: {undated_certin_entries_excluded}",f"- IOC candidates: {len(iocs)}",
         "","## Feed health","","| Source | Status | Result | Records | Last successful collection (UTC) | Last attempt (UTC) | Duration (ms) | Consecutive failures |","|---|---|---|---:|---|---|---:|---:|"]
     lines += [f"| {x['source']} | {x['status']} | {x.get('collection_result','unknown')} | {x['records']} | {x.get('last_success_at') or 'never'} | {x.get('last_attempt_at','unknown')} | {x.get('duration_ms','unknown')} | {x.get('consecutive_failures',0)} |" for x in health]
-    lines += ["","## CISA KEV additions — rolling 8-hour cutoff (CISA date-only precision)",""]
+    lines += ["","## CISA KEV additions — rolling 24-hour cutoff (CISA date-only precision)",""]
     if recentkev:
         for v in recentkev[:40]:
             lines += [f"### {v.get('cveID','CVE unavailable')} — {v.get('vulnerabilityName','Name unavailable')}",
@@ -1129,7 +1129,7 @@ def main():
                 "- Remediation status: " + kev_remediation_text(v),
                 "- Sources: " + " · ".join(f"[{urlparse(u).netloc}]({u})" for u in report_sources(v,"kev")), ""]
     else:lines.append("- No additions returned, or the feed failed; check source health.")
-    lines += ["","## Advisories, campaigns and research — rolling last 8 hours",""]
+    lines += ["","## Advisories, campaigns and research — rolling last 24 hours",""]
     if items:
         for x in items[:100]:lines += [f"### {x['title']}",
             "- Labels: " + " · ".join(z for z in [x.get("source"), x.get("published"), ", ".join(x.get("cves", [])) or None, ("EPSS: " + format_epss_context(x)) if x.get("epss_scores") else None] if z),
@@ -1140,8 +1140,8 @@ def main():
     else:lines.append("No dated items returned. This does not mean no threats occurred; inspect source health.")
     business_health=[x for x in health if x.get("stream")=="business"]
     business_ok=sum(x.get("status")=="success" for x in business_health)
-    lines += ["","## Cyber business & market developments — rolling last 8 hours (newest first)",
-        f"- Updated: {STAMP_IST} | Items collected: {len(business_items)} | Business feeds healthy: {business_ok}/{len(business_health)} | Window: 8 hours (6-hour schedule + 2-hour overlap) | Consolidated runs: {int(previous.get('collection_runs',0))+1}"]
+    lines += ["","## Cyber business & market developments — rolling last 24 hours (newest first)",
+        f"- Updated: {STAMP_IST} | Items collected: {len(business_items)} | Business feeds healthy: {business_ok}/{len(business_health)} | Window: 24 hours (6-hour schedule; 18-hour overlap) | Consolidated runs: {int(previous.get('collection_runs',0))+1}"]
     failed_business=[x for x in business_health if x.get("status")!="success"]
     if failed_business:
         lines += ["- Feed issues: "+"; ".join(x["source"]+" — "+str(x.get("error") or "unavailable") for x in failed_business)]
@@ -1175,8 +1175,8 @@ def main():
         "","## Limitations","",
         "- Broad public-source baseline, not exhaustive global intelligence.",
         "- ThreatFox, OTX, GreyNoise and Shadowserver are not enabled; review credentials and provider terms before integration.",
-        "- All dated threat, advisory, research and business discovery uses a rolling 8-hour UTC window with a 2-hour overlap on a 6-hour schedule; undated CERT-In index entries are excluded from daily records.",
-        "- CISA KEV dateAdded has date-only precision; the daily additions view uses the UTC date containing the rolling 8-hour cutoff, while the full catalogue remains cumulative.",
+        "- All dated threat, advisory, research and business discovery uses a rolling 24-hour UTC window with a 2-hour overlap on a 6-hour schedule; undated CERT-In index entries are excluded from daily records.",
+        "- CISA KEV dateAdded has date-only precision; the daily additions view uses the UTC date containing the rolling 24-hour cutoff, while the full catalogue remains cumulative.",
         "- Google News results are reported leads and require company-announcement or filing verification.",
         "- Feed failures and quiet periods do not mean absence of threats; report timestamps are IST and machine timestamps in JSON are UTC.",
         "",f"Raw evidence: [JSON snapshot](../../../snapshots/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.json)."]
