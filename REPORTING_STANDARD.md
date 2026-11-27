@@ -143,8 +143,15 @@ Apply the same remediation semantics to New Intelligence, Overview / Critical Vu
 - Business news: check business-feed freshness and business_items every day; display event date, source and deal status; report no-news/source-failure state honestly.
 - Validate the final rendered Markdown and report file before committing. Keep dashboard business-feed health visible.
 
-## 4. Publishing and daily automation
-- Publish one report per date at reports/YYYY/MM/DD.md on main, with IST timestamp. Never overwrite another day's report. If updating the same day's draft, preserve audit history and use an explicit validation/update commit message.
-- Keep the dashboard collector and daily workflow running; business-news feeds are part of daily collection and must not be skipped.
-- Deliver the briefing in ChatGPT and publish the same day's report to the repository.
+## 4. Publishing and per-run manual AI enrichment
+
+- Every six-hour collection must be followed by a separate ChatGPT enrichment and validation handoff before any publication.
+- The collector writes only to `intel-staging`; it must not publish raw data to `main` or trigger a Pages deployment.
+- With no AI API key, ChatGPT enrichment is a manual user-initiated step after each successful collection. There is no automatic ChatGPT trigger or four-times-daily background AI execution.
+- ChatGPT must inspect the latest successful collection, read the latest staged snapshot and source-health evidence, enrich every distinct current-day item accumulated so far, deduplicate, quarantine unsupported items with reasons, and validate the complete current-day snapshot.
+- Publish only after all required checks pass. Use one atomic Git commit for the enriched current-day snapshot, daily report and latest pointer. Never expose a partial publication or raw unreviewed content.
+- If the handoff is not initiated, the collector failed, staged data is stale, or any critical validation fails, leave the data on `intel-staging`; do not update `main/latest.json` and do not deploy.
+- After publication, verify the Pages deployment workflow. State clearly if browser rendering was not independently checked.
+- Historical dates before 27 November 2026 are immutable. Do not overwrite another day's report.
+- Deliver the enrichment result in ChatGPT and publish the same validated current-day snapshot/report to the repository.
 - If a feed, GitHub write or validation step fails, disclose it. Never claim full coverage or success from a partial run.

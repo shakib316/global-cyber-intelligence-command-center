@@ -77,38 +77,50 @@ Do not restore these features merely because they appear in old commits, histori
 ### Critical vulnerabilities placement
 The **Critical Vulnerabilities Watch appears only on Overview**. Do not duplicate that watch panel across Daily Briefing, New Intelligence, Cyber Business, CISA KEV, Detection Queries or Source Health. The full searchable KEV catalogue belongs on the CISA KEV page.
 
-## 3. Daily automation schedule — verified configuration
+## 3. Daily collection and mandatory manual AI-enrichment gate
 
-Times below are Asia/Kolkata (IST).
+Times are Asia/Kolkata (IST).
 
 | Workflow | Current trigger | Responsibility |
 |---|---|---|
-| Daily Threat Intelligence Collection | Every 6 hours at **00:00, 06:00, 12:00 and 18:00 IST** | Collect public intelligence, validate the snapshot, commit changed `intel/` and generated detection artifacts, then deploy Pages. |
-| Dashboard Quality Watch | Every **10 minutes**, plus relevant pushes and completion of configured workflows | Validate dashboard/data integrity and frontend security. This is a quality check, not a fresh intelligence collection. |
+| Daily Threat Intelligence Collection | Every 6 hours at **00:00, 06:00, 12:00 and 18:00 IST** | Collect the rolling 24-hour window, merge into the current IST-date snapshot, validate and commit only to `intel-staging`. Never publish or deploy. |
+| Dashboard Quality Watch | Every **10 minutes**, plus relevant pushes and workflow completions | Validate dashboard/data integrity and frontend security. This is a quality check, not a collection or publication. |
 | Detection Query Quality Checks | Relevant pushes, pull requests and manual dispatch | Validate query metadata/structure, dashboard, collector and frontend safeguards. |
 
-### Daily collection and AI-enrichment sequence
-1. GitHub Actions starts collection every 6 hours at 00:00, 06:00, 12:00 and 18:00 IST.
-2. Collector retrieves configured public advisories, research feeds, KEV and business-news sources; records source health and creates the current-day structured collection.
-3. Static snapshot/dashboard and detection-query checks run against the collected data.
-4. The collector commits the raw/normalized collection to the isolated `intel-staging` branch. It must not update `main` or deploy GitHub Pages.
-5. The scheduled ChatGPT AI-enrichment task reads the consolidated date-scoped staged snapshot after collection, reviews every distinct current-day item against direct sources and authoritative references, enriches and deduplicates the content, and quarantines unsupported items with reasons. It processes the single merged daily snapshot, not each six-hour collection as a separate publication.
-6. Only after all required enrichment and validation succeeds does the task publish the current-day enriched snapshot, daily report and latest pointer to `main` in one atomic Git commit. This main-branch push triggers the separate GitHub Pages deployment workflow.
-7. Verify the deployment and report collection, source-health, enrichment, quarantine, validation and deployment counts/statuses. If any critical step fails, do not advance the latest pointer or publish partial content.
-8. Quality Watch continues independently on its configured schedule and workflow events.
+### Mandatory per-run sequence
 
-**Important implementation distinction:** `intel-staging` is a temporary raw/normalized staging branch, not the public dashboard source. The website reads only `main`. Historical records before 27 November 2026 are read-only for this new pipeline. The collector does not currently retain complete raw article bodies for every feed; source URLs, feed metadata, normalized item fields and source-health results are the evidence baseline. Analyst-facing `reports/YYYY/MM/DD.md` and collector-generated `intel/daily/` are distinct paths; the ChatGPT task must update only the current day's paths.
+Every successful six-hour collection is a separate enrichment-and-publication cycle:
+
+1. **Collect:** GitHub Actions collects configured sources using the rolling 24-hour window and merges discoveries into the current date-scoped snapshot.
+2. **Stage:** Commit the collected data and source-health state to the isolated `intel-staging` branch. The collection workflow must not update `main` or deploy Pages.
+3. **Handoff to ChatGPT:** The user initiates the manual AI-enrichment handoff in ChatGPT after the collector completes. ChatGPT reads the latest staged snapshot and source-health evidence. No external AI API key is used.
+4. **Enrich every item:** Review every distinct current-day threat/advisory and business item accumulated in the staged snapshot. Check direct sources, deduplicate, apply the six-part reporting standard, and quarantine unsupported items with reasons. Preserve the raw staging branch unchanged.
+5. **Validate:** Check schema, dates, source provenance, source-health accounting, item counts, the four-line technical-detail limit, remediation evidence states and maximum three direct source links. Run the repository validators where an execution environment is available; disclose any checks that could not actually be run.
+6. **Publish atomically:** Only after enrichment and validation pass, publish the enriched current-day snapshot/report and latest pointer to `main` in one atomic Git commit. Never publish raw collector output.
+7. **Deploy and verify:** Confirm the Pages deployment workflow succeeds. If any gate fails or the user has not initiated the handoff, leave the data in staging and do not publish.
+
+The enriched main snapshot is refreshed after each of the four collection cycles, so the latest successful cycle includes all eligible records accumulated for that IST date. A missed handoff means the corresponding staged data remains unpublished until it is processed. There is no automatic ChatGPT trigger, background four-times-daily AI execution, or automatic publication in this no-API/manual mode.
+
+### Manual handoff procedure
+
+After each successful collector run, the user asks ChatGPT to **process the latest staged collection**. ChatGPT must inspect the actual latest run and `intel-staging` branch, confirm the staged date and collection timestamp, process all accumulated current-day records, validate and publish only if all gates pass. If staging is stale, collection failed, evidence is unavailable, or validation fails, stop and report the blocker. Do not fall back to `main` raw data.
+
+### Operating safeguards
+
+- The website reads `main` only; `intel-staging` is not public website content.
+- The collector retains normalized records, source URLs and metadata; it does not necessarily archive complete original article bodies.
+- Keep historical records before 27 November 2026 immutable.
+- The daily ChatGPT automation is disabled. Do not re-enable a daily-only task as a substitute for per-run manual enrichment.
+- Quality Watch is independent and does not authorize publication.
+- A green collector run proves only that its configured collection and validation steps passed; it does not prove all claims are verified or AI-enriched.
 
 ### Schedule maintenance rules
-- Preserve the four-times-daily collection schedule unless the user explicitly changes it.
-- Do not confuse the 10-minute Quality Watch with collection frequency.
+
+- Preserve collection at 00:00, 06:00, 12:00 and 18:00 IST unless the user explicitly changes it.
+- Do not confuse Quality Watch with collection or enrichment.
 - Do not create overlapping Pages deployments or competing scheduled collectors.
-- After changing schedules, inspect the workflow YAML and verify the next successful run.
-- A green workflow means its configured steps passed; it does not prove every feed or intelligence claim is complete.
-
-## Global intelligence item format
-
-Every threat, vulnerability, advisory, incident and cybersecurity business/industry news item must use the six-part format in [REPORTING_STANDARD.md](REPORTING_STANDARD.md): Title; necessary Labels; Technology background with “What is it?” and “What does it do?”; Technical details limited to four concise lines; Remediation status; and no more than three Sources links. Technology background must be explicitly supported by reviewed source material. If not established, state that; never invent a product function. For non-technology business developments, mark technology background not applicable.
+- After changing schedules, inspect workflow YAML and verify the next successful run.
+- Never publish before the manual AI-enrichment and validation gates have passed.
 
 ## 4. Required website content
 
