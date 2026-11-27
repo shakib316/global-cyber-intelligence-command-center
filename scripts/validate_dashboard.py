@@ -116,9 +116,9 @@ ast.parse(collector_source, filename=str(collector_path))
 
 daily_workflow_path = root / ".github/workflows/daily-threat-intel.yml"
 daily_workflow = daily_workflow_path.read_text(encoding="utf-8")
-for required_step in ("name: Commit raw intelligence to isolated staging branch", "git checkout -B intel-staging origin/main", "git push --force-with-lease origin HEAD:intel-staging"):
+for required_step in ("name: Commit raw intelligence to isolated staging branch", "git checkout -B intel-staging origin/main", "git fetch origin +refs/heads/intel-staging:refs/remotes/origin/intel-staging", "git push --force-with-lease=refs/heads/intel-staging:$STAGING_EXPECTED origin HEAD:refs/heads/intel-staging"):
     if required_step not in daily_workflow:
-        raise SystemExit("Daily collection workflow must stage raw intelligence for AI enrichment: " + required_step)
+        raise SystemExit("Daily collection workflow must stage raw intelligence with a fresh lease: " + required_step)
 if re.search(r"^  deploy:", daily_workflow, re.M):
     raise SystemExit("Raw collection workflow must not deploy un-enriched intelligence")
 spec = importlib.util.spec_from_file_location("gci_collector", collector_path)
