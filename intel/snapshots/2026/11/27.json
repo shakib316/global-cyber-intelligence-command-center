@@ -965,7 +965,7 @@
       "analyst_review_date": "2026-11-27"
     }
   ],
-  "business_feed_count": 8,
+  "business_feed_count": 30,
   "business_window_hours": 24,
   "cisa_kev_catalog_count": 1805,
   "cisa_kev_catalog": [
@@ -30051,13 +30051,13 @@
     },
     {
       "source_id": "bleepingcomputer",
-      "source": "BleepingComputer",
+      "source": "Push Security",
       "source_type": "news",
       "priority": "medium",
-      "publisher": "BleepingComputer",
+      "publisher": "Push Security",
       "publisher_url": "",
       "title": "Fake paid expert interviews impersonate brands to steal Google logins",
-      "url": "https://www.bleepingcomputer.com/news/apple/fake-paid-expert-interviews-impersonate-brands-to-steal-google-logins/",
+      "url": "https://pushsecurity.com/blog/goodguys-phishing-campaign-teardown",
       "summary": "An ongoing phishing campaign dubbed \"GoodGuys\" impersonates major brands, including Google, Nvidia, Accenture, and SpaceX, to steal corporate Google and Okta credentials using fake invitations to paid expert interviews and webinars. [...]",
       "published": "2026-11-26T17:15:27Z",
       "cves": [],
@@ -30067,7 +30067,7 @@
         "phishing"
       ],
       "details": "An ongoing phishing campaign dubbed \"GoodGuys\" impersonates major brands, including Google, Nvidia, Accenture, and SpaceX, to steal corporate Google and Okta credentials using fake invitations to paid expert interviews and webinars.\n\nThe attacks offer recipients up to $600 for a 45-minute interview in an attempt to get them to sign in with their work accounts to participate.\n\nThe campaign was discovered by cybersecurity firm Push Security , which has tracked it since October 13 and found that they impersonate eight companies: Accenture, American Express, Coca-Cola, Culver's, Google Cloud, Nvidia, SpaceX, and Spotify.\n\nThe threat actors abuse legitimate email and event platforms, including HireVue, SendGrid, Mandrill, and Cvent, to distribute phishing links.\n\nIn one attack, a phishing email sent through HireVue invited recipients to attend a Google Cloud webinar about deploying AI applications into production.\n\nThe threat actors use domains themed around interviews, webinars, and research studies, creating brand-specific subdomains to host the phishing pages, such as:\n\nClicking the phishing links typically takes recipients to a CAPTCHA challenge before displaying a website impersonating the company that supposedly sent the invitation.\n\nEach website features customized branding and lures, with the Nvidia phishing site offering $500 to participate in an AI feedback study and the Accenture site offering $600 for an expert interview.\n\nThe sites ultimately prompt visitors to sign in with their Google accounts to validate their invitations, allowing the attackers to steal their credentials. The phishing kit specifically targets corporate accounts and rejects email addresses associated with Gmail, Yahoo, and Outlook.\n\nUnlike adversary-in-the-middle (AiTM) phishing kits that use reverse proxies to relay legitimate login pages, GoodGuys uses fake authentication forms controlled by an attacker-controlled server.\n\nAfter victims enter their Google credentials, the phishing page can display various multifactor authentication (MFA) challenges, including requests for SMS codes, authenticator codes, and Google sign-in prompts requiring users to select a matching number on their phones.\n\nThe kit also includes fake Okta authentication forms and support for Okta Verify push notifications.\n\nPush Security believes the threat actors manually attempt to log in using the stolen credentials, instructing the phishing page to display whatever MFA or security challenges Google or Okta show during authentication.\n\nSimilar techniques were used in vishing-based data theft attacks linked to the ShinyHunters extortion gang earlier this year to steal corporate single sign-on (SSO) credentials.\n\nOnce the process is completed, the phishing kit redirects victims to another website or displays a message thanking them for their application.\n\nThe researchers believe the phishing kit may have been developed using an AI coding assistant, based on hidden accessibility labels found in every analyzed version of the kit.\n\n\"The sign-in card in every build carries two hidden labels: \"Sign-in simulation\" and \"GoodGuys sign-in simulation.\" They sit in accessibility text that only screen readers announce, so a visitor never sees them. We think the label is a leftover from how the kit was first built,\" explained Push Security.",
-      "canonical_url": "https://www.bleepingcomputer.com/news/apple/fake-paid-expert-interviews-impersonate-brands-to-steal-google-logins/",
+      "canonical_url": "https://pushsecurity.com/blog/goodguys-phishing-campaign-teardown",
       "enrichment_status": "analyst_verified",
       "enriched_at": "2026-11-27T06:12:09Z",
       "technology_background": {
@@ -30075,8 +30075,7 @@
         "what_is_it": "GoodGuys is a browser-based phishing kit that uses branded interview and webinar lures with fake Google and Okta sign-in pages.",
         "what_does_it_do": "It captures corporate credentials and authentication responses through attacker-controlled forms and backend infrastructure.",
         "source_urls": [
-          "https://pushsecurity.com/blog/goodguys-phishing-campaign-teardown",
-          "https://www.bleepingcomputer.com/news/apple/fake-paid-expert-interviews-impersonate-brands-to-steal-google-logins/"
+          "https://pushsecurity.com/blog/goodguys-phishing-campaign-teardown"
         ],
         "evidence_type": "reviewed primary/vendor or original research source"
       },
@@ -30087,12 +30086,8 @@
       ],
       "vendor_references": [
         {
-          "label": "Primary source",
+          "label": "Primary research",
           "url": "https://pushsecurity.com/blog/goodguys-phishing-campaign-teardown"
-        },
-        {
-          "label": "Corroborating source",
-          "url": "https://www.bleepingcomputer.com/news/apple/fake-paid-expert-interviews-impersonate-brands-to-steal-google-logins/"
         }
       ],
       "remediation_guidance": "Block the identified campaign domains/URLs using current Push Security indicators; review browser and identity logs for unusual sign-ins, MFA prompts and session creation. Enforce phishing-resistant MFA and investigate credential submissions.",
@@ -30101,8 +30096,7 @@
         "state": "analyst_action_requires_environment_validation",
         "checked_at": "2026-11-27T07:27:43Z",
         "evidence_sources": [
-          "https://pushsecurity.com/blog/goodguys-phishing-campaign-teardown",
-          "https://www.bleepingcomputer.com/news/apple/fake-paid-expert-interviews-impersonate-brands-to-steal-google-logins/"
+          "https://pushsecurity.com/blog/goodguys-phishing-campaign-teardown"
         ],
         "fixed_version": null,
         "candidate_fixed_releases": [],
@@ -30116,8 +30110,7 @@
       "epss_status": "not_applicable_no_cve",
       "epss_retrieved_at": "2026-11-27T06:12:09Z",
       "source_urls": [
-        "https://pushsecurity.com/blog/goodguys-phishing-campaign-teardown",
-        "https://www.bleepingcomputer.com/news/apple/fake-paid-expert-interviews-impersonate-brands-to-steal-google-logins/"
+        "https://pushsecurity.com/blog/goodguys-phishing-campaign-teardown"
       ],
       "analyst_reviewed": true,
       "analyst_review_date": "2026-11-27"
@@ -30466,14 +30459,14 @@
     },
     {
       "source_id": "thehackernews",
-      "source": "The Hacker News",
+      "source": "SafeDep",
       "source_type": "news",
       "priority": "medium",
-      "publisher": "The Hacker News",
+      "publisher": "SafeDep",
       "publisher_url": "",
-      "title": "North Korea-Linked PolinRider Poisons Over 7,600 GitHub Repositories to Spread Malware",
-      "url": "https://thehackernews.com/2026/11/north-korea-linked-polinrider-poisons.html",
-      "summary": "The threat actors behind the PolinRider campaign have been observed planting a Python loader in GitHub repositories, as evidence emerges that the activity may have started as far back as February 2025. \"The loader hides in a small utils package or in conftest.py,\" SafeDep said in a report published this week. \"When Python imports the file, the loader reads the newest transaction that an",
+      "title": "PolinRider Python loader found in 375 GitHub repositories",
+      "url": "https://safedep.io/blog/polinrider-python-loader-ethereum-calldata",
+      "summary": "SafeDep identified a Python loader in 375 public GitHub repositories across 260 accounts. It retrieves JavaScript from Ethereum transaction calldata and executes the next stage through Node.js.",
       "published": "2026-11-26T15:13:41Z",
       "cves": [],
       "topics": [
@@ -30481,7 +30474,7 @@
         "malware_botnet"
       ],
       "details": "SafeDep found a PolinRider Python loader in 375 GitHub repositories that uses Ethereum transactions to retrieve and execute JavaScript.\n\nThe threat actors behind the PolinRider campaign have been observed planting a Python loader in GitHub repositories, as evidence emerges that the activity may have started as far back as February 2025.\n\n\"The loader hides in a small utils package or in conftest.py,\" SafeDep said in a report published this week. \"When Python imports the file, the loader reads the newest transaction that an Ethereum wallet sent to itself. It decodes the input data of that transaction as JavaScript and runs it with Node.js.\"\n\nThe JavaScript code, for its part, reads a second wallet to locate the command-and-control (C2) server and then passes the next stage to a detached interactive Node.js environment by means of a node -i process.\n\nThe software supply chain security company said it identified the loader in 375 public repositories that belong to 260 accounts. There is no evidence that the loader has been distributed via PyPI or npm.\n\nPolinRider is the name assigned to a malicious campaign linked to North Korean threat actors. Recent reports indicate that the activity employs various channels to distribute malware, including -\n\nFraudulent recruitment campaigns that make use of phishing emails and fake hiring portals like BlockNovas , AccuraSoftHire (\"accurasofthire[.]com\") and HuntRole (\"huntrole[.]org\") to trick prospective targets into running malware-laced projects under the pretext of a take-home assessment.\n\nPublishing malicious packages across open-source ecosystems by hijacking maintainer accounts to plant obfuscated malware through fake font files ( fa-solid-400.woff2 , fa-solid-500.woff2, or fa-solid-300.llf ), Visual Studio Code (VS Code) auto-run tasks, and Git history rewriting.\n\nUsing compromised developer machines to steal their GitHub tokens and force-push malicious commits into open-source repositories they have access to.\n\nAt a high level, the PolinRider loader retrieves an encrypted second-stage Node.js payload that scans the infected host for installed developer applications, such as GitHub Desktop, Cursor, VS Code, and Google Antigravity, and tampers with the most frequently used tools to execute attacker-controlled code and deliver infostealer malware.\n\nIt's worth noting here that PolinRider is assessed to be a sub-cluster operating in parallel with a long-running campaign codenamed Contagious Interview . While the latter is more of a social-engineering entry point that's used to compromise developer systems, PolinRider abuses the access to modify repositories and turn them into a distribution channel for malware.\n\n\"Cybercriminal groups deploy supply chain worms for opportunistic theft. On the other hand, North Korean state-sponsored threat actors use open-source software registries as a primary initial access vector targeting corporate environments,\" Palo Alto Networks Unit 42 said in a report published last month.\n\n\"Threat actors demonstrate how compromising a single maintainer account or registry scope converts open-source dependencies, resulting in widespread affected cloud environments.\"\n\nSome of the decoy sites have been found to incorporate two other alternate delivery paths -\n\nInstruct candidates to sideload a Google Chrome extension after enabling \"Developer mode\" to subscribe to new job alerts.\n\nEmploy ClickFix-style lures to get victims to copy and paste malicious commands into the terminal app depending on the operating system as part of a \"standard settings bundle for candidates and interview workflows.\"\n\n\"The [job] application asks for a short verification video,\" StepSecurity said . \"Until the server marks a candidate as having installed a 'driver,' the camera check always fails with a message saying the system does not have a compatible camera environment.\"\n\n\"A separate 'Technical onboarding' page on the site gives a one-line curl command to download the 'driver.' On Windows, the downloaded installer fetches a script from the careers site that installs Node.js if it is missing, downloads a JavaScript payload, runs it in the background and deletes itself. The macOS and Linux versions do the same.\"\n\nThe JavaScript malware is designed to perform the following steps -",
-      "canonical_url": "https://thehackernews.com/2026/11/north-korea-linked-polinrider-poisons.html",
+      "canonical_url": "https://safedep.io/blog/polinrider-python-loader-ethereum-calldata",
       "enrichment_status": "analyst_verified",
       "enriched_at": "2026-11-27T06:12:09Z",
       "technology_background": {
@@ -32608,10 +32601,12 @@
       "publisher": "Canadian CCCS",
       "publisher_url": "",
       "title": "PostgreSQL security advisory (AV26-1211)",
-      "url": "https://cyber.gc.ca/en/alerts-advisories/postgresql-security-advisory-av26-1211",
+      "url": "https://www.cyber.gc.ca/en/alerts-advisories/postgresql-security-advisory-av26-1211",
       "summary": "",
       "published": "2026-11-26T13:09:51Z",
-      "cves": [],
+      "cves": [
+        "CVE-2026-136515"
+      ],
       "topics": [],
       "details": "As of November 25, 2026, PostgreSQL is affected by vulnerabilities in the following product:\n\nThe Cyber Centre encourages users and administrators to review the provided web links and apply any necessary updates as they become available.\n\nMemory corruption and crashes when the driver rewrites statements for cursors and escapes",
       "canonical_url": "https://www.cyber.gc.ca/en/alerts-advisories/postgresql-security-advisory-av26-1211",
@@ -32657,7 +32652,7 @@
         "verification_note": "A primary vendor advisory or upstream security advisory explicitly publishes the applicable fixed package/release. This verifies fix availability, not deployment in any environment."
       },
       "cve_extraction_scope": "title + feed summary + retrieved article + linked vendor remediation references",
-      "cve_count": 0,
+      "cve_count": 1,
       "attack_techniques": [],
       "epss_scores": [],
       "epss_status": "not_applicable_no_cve",
@@ -32944,11 +32939,11 @@
       ],
       "vendor_references": [
         {
-          "label": "Primary source",
+          "label": "Original research coverage",
           "url": "https://thehackernews.com/2026/11/most-wanted-phishing-kits-and.html"
         },
         {
-          "label": "Corroborating source",
+          "label": "Push Security technical research",
           "url": "https://pushsecurity.com/blog/aitm-phishing-dom-mirroring"
         }
       ],
@@ -33368,13 +33363,13 @@
     },
     {
       "source_id": "thehackernews",
-      "source": "The Hacker News",
+      "source": "Drupal Security Team",
       "source_type": "news",
       "priority": "medium",
-      "publisher": "The Hacker News",
+      "publisher": "Drupal Security Team",
       "publisher_url": "",
       "title": "Drupal Warns of New Highly Critical Site Takeover Vulnerability Under Active Exploitation",
-      "url": "https://thehackernews.com/2026/11/drupal-warns-of-new-highly-critical.html",
+      "url": "https://www.drupal.org/node/3641220",
       "summary": "Drupal has warned of a new \"highly critical\" security flaw impacting Drupal core that it said has been exploited in the wild. The vulnerability, tracked as CVE-2026-136716 (CVSS score: N/A), has been described as a case of improper checking for unusual or exceptional conditions. It also relates to CVE-2026-132165 aka Fail2Install in that it addresses remaining vulnerable installation states",
       "published": "2026-11-26T07:02:34Z",
       "cves": [
@@ -33385,7 +33380,7 @@
         "active_exploitation"
       ],
       "details": "Drupal patches an actively exploited core flaw that could allow site takeover on certain sites with remotely accessible installers.\n\nDrupal has warned of a new \"highly critical\" security flaw impacting Drupal core that it said has been exploited in the wild.\n\nThe vulnerability, tracked as CVE-2026-136716 (CVSS score: N/A), has been described as a case of improper checking for unusual or exceptional conditions. It also relates to CVE-2026-132165 aka Fail2Install in that it addresses remaining vulnerable installation states that could still be abused to facilitate site takeover even after the fix.\n\nCVE-2026-132165 \"recently fixed several vulnerabilities within the Drupal core installer,\" Drupal maintainers said . \"However, certain sites in unusual or incomplete install states remain vulnerable to site takeover following that advisory, including production sites.\"\n\n\"It is not apparent in the user interface if a site is in the affected vulnerable state, and sites that are already compromised may no longer be in the vulnerable state.\"\n\nDrupal acknowledged that the vulnerability is being exploited in the wild, but emphasized that site owners who have already secured the installer (\"install.php\") are not impacted.\n\nSpecifically, any website that left its installer remotely accessible following the fix for CVE-2026-132165 may have been compromised. Drupal is urging site administrators to take the following actions -\n\nCheck site logs for unauthorized access, including unexpected changes to or by the user 1 account\n\nEnsure the user 1 email address is set to under their control, and consider resetting user 1's password.\n\nThe issue has been remediated in the following versions -\n\nAfter updating to the latest supported versions, it's recommended to run \"update.php\" to fix existing production sites in this state and secure the Drupal installer on all new and existing sites.\n\nAccording to statistics shared by StepSecurity, there are about 55,800 internet-facing Drupal sites as of November 26, 2026, out of which 31,500 services are running branches that are vulnerable to CVE-2026-132165 and roughly 15,000 are on the end-of-life 8 and 9 branches.",
-      "canonical_url": "https://thehackernews.com/2026/11/drupal-warns-of-new-highly-critical.html",
+      "canonical_url": "https://www.drupal.org/node/3641220",
       "enrichment_status": "analyst_verified",
       "enriched_at": "2026-11-27T06:12:09Z",
       "technology_background": {
@@ -33393,7 +33388,7 @@
         "what_is_it": "Drupal core is the PHP-based content-management framework that provides a site's content, routing, user and administration functions.",
         "what_does_it_do": "Its install.php endpoint is used during site installation; leaving it remotely accessible after installation can expose setup paths to abuse.",
         "source_urls": [
-          "https://www.drupal.org/sa-core-2026-019",
+          "https://www.drupal.org/node/3641220",
           "https://www.drupal.org/docs/administering-a-drupal-site/security-in-drupal/securing-the-installer-installphp"
         ],
         "evidence_type": "reviewed primary/vendor or original research source"
@@ -33405,11 +33400,11 @@
       ],
       "vendor_references": [
         {
-          "label": "Primary source",
-          "url": "https://www.drupal.org/sa-core-2026-019"
+          "label": "Official Drupal security advisory",
+          "url": "https://www.drupal.org/node/3641220"
         },
         {
-          "label": "Corroborating source",
+          "label": "Drupal installer hardening guidance",
           "url": "https://www.drupal.org/docs/administering-a-drupal-site/security-in-drupal/securing-the-installer-installphp"
         }
       ],
@@ -33419,7 +33414,7 @@
         "state": "vendor_fix_published",
         "checked_at": "2026-11-27T07:27:43Z",
         "evidence_sources": [
-          "https://www.drupal.org/sa-core-2026-019",
+          "https://www.drupal.org/node/3641220",
           "https://www.drupal.org/docs/administering-a-drupal-site/security-in-drupal/securing-the-installer-installphp"
         ],
         "fixed_version": null,
@@ -33443,7 +33438,7 @@
       "epss_status": "partially_available",
       "epss_retrieved_at": "2026-11-27T06:12:09Z",
       "source_urls": [
-        "https://www.drupal.org/sa-core-2026-019",
+        "https://www.drupal.org/node/3641220",
         "https://www.drupal.org/docs/administering-a-drupal-site/security-in-drupal/securing-the-installer-installphp"
       ],
       "analyst_reviewed": true,
@@ -34958,5 +34953,6 @@
     "technical_details_max_lines": 4,
     "source_links_max": 3,
     "history_before": "2026-11-27 immutable"
-  }
+  },
+  "business_published_count": 8
 }
