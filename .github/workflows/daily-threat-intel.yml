@@ -58,6 +58,7 @@ jobs:
       - name: Collect public advisories, research feeds and CISA KEV
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python scripts/collect_threat_intel.py
       - name: Validate newly collected intelligence snapshot and dashboard
         run: python scripts/validate_dashboard.py
