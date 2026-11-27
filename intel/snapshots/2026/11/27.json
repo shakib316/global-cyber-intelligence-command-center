@@ -34946,7 +34946,10 @@
     "raw_business_records": 30,
     "published_business_records": 8,
     "quarantined_business_records": 22,
-    "source_page_enrichment_note": "Collector automatically retrieved source pages for 33/33 threat records and 2/31 business records in the latest run; the analyst review independently verified the eight retained business records."
+    "source_page_enrichment_note": "Collector automatically retrieved source pages for 33/33 threat records and 2/31 business records in the latest run; the analyst review independently verified the eight retained business records.",
+    "status": "complete",
+    "review_scope": "All 34 threat-feed records and 30 business-feed records were reviewed. 30 threat/advisory records and 8 distinct business developments are published; 4 threat records and 22 business records remain quarantined with their raw records and exclusion reasons.",
+    "remediation_claim_scope": "FIX VERIFIED means a vendor/upstream fix is published, not that any environment is patched. MITIGATION VERIFIED means the vendor reports containment; independent validation is not available."
   },
   "report_metadata": {
     "format": "six-part analyst format",
