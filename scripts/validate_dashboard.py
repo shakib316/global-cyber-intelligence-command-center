@@ -13,6 +13,8 @@ if "WINDOW_HOURS=8" not in collector_source:
     raise SystemExit("Collector must use an eight-hour lookback")
 if '"30 18,0,6,12 * * *"' not in workflow_source:
     raise SystemExit("Collector schedule must run at 00:00, 06:00, 12:00 and 18:00 IST")
+if 'git checkout refs/remotes/origin/intel-staging -- intel/ detection-queries/generated/' not in workflow_source:
+    raise SystemExit("Repeated collection must restore the existing staging snapshot before merging")
 for obsolete in ("dt.timedelta(hours=72)", "dt.timedelta(days=7)", '"business_window_hours":168'):
     if obsolete in collector_source:
         raise SystemExit("Obsolete extended discovery window remains: " + obsolete)
