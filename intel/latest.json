@@ -1,8 +1,8 @@
 {
-  "date_utc": "2026-11-24",
-  "date_ist": "2026-11-24",
-  "retrieved_at": "2026-11-24T07:40:47Z",
-  "retrieved_at_ist": "2026-11-24 13:10:47 IST",
-  "snapshot": "snapshots/2026/11/24.json",
-  "report": "daily/2026/11/24.md"
+  "date_utc": "2026-11-27",
+  "date_ist": "2026-11-27",
+  "retrieved_at": "2026-11-27T13:52:39Z",
+  "retrieved_at_ist": "2026-11-27 19:22:39 IST",
+  "snapshot": "snapshots/2026/11/27.json",
+  "report": "daily/2026/11/27.md"
 }
