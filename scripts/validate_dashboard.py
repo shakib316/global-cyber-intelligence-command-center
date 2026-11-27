@@ -6,11 +6,11 @@ from pathlib import Path
 root = Path(__file__).resolve().parents[1]
 html = (root / "index.html").read_text(encoding="utf-8")
 
-# The collector runs every six hours with an eight-hour overlap window.
+# The collector runs every six hours with the requested rolling 24-hour lookback.
 collector_source = (root / "scripts/collect_threat_intel.py").read_text(encoding="utf-8")
 workflow_source = (root / ".github/workflows/daily-threat-intel.yml").read_text(encoding="utf-8")
-if "WINDOW_HOURS=8" not in collector_source:
-    raise SystemExit("Collector must use an eight-hour lookback")
+if "WINDOW_HOURS=24" not in collector_source:
+    raise SystemExit("Collector must use the requested 24-hour lookback")
 if '"30 18,0,6,12 * * *"' not in workflow_source:
     raise SystemExit("Collector schedule must run at 00:00, 06:00, 12:00 and 18:00 IST")
 if 'git checkout refs/remotes/origin/intel-staging -- intel/ detection-queries/generated/' not in workflow_source:
