@@ -6,12 +6,16 @@ Daily collection combines public government, vendor and research sources. The co
 
 CISA KEV JSON; CISA All and ICS Advisories; CERT-In India public advisory index; Microsoft MSRC; AWS Security Bulletins; Splunk Security Advisories; UK NCSC; Canadian CCCS; CERT-EU; SANS Internet Storm Center; Cisco Talos; Palo Alto Unit 42; Google Threat Intelligence / Mandiant; BleepingComputer; and The Hacker News.
 
-Australian ACSC is intentionally excluded at the user's request; it must not be reintroduced through feed configuration or fallback logic. Stale ACSC health state is removed by the collector.\n\nThe collector retains dated items from the last 72 hours plus undated CERT-In index entries. KEV additions are separately reported for seven days. Duplicate URLs are consolidated.
+Australian ACSC is intentionally excluded at the user's request; it must not be reintroduced through feed configuration or fallback logic. Stale ACSC health state is removed by the collector.
+
+The collector retains dated items from the last 72 hours plus undated CERT-In index entries. KEV additions are separately reported for seven days. Duplicate URLs are consolidated.
 
 ## Artifacts
 
 - intel/daily/YYYY/MM/DD.md — readable report and source health.
-- intel/snapshots/YYYY/MM/DD.json — structured evidence and provenance.\n- intel/phase2-intelligence.json — evidence-linked threat actor, campaign and relationship records.\n- intel/schemas/phase2-intelligence.schema.json — Phase 2 data contract.
+- intel/snapshots/YYYY/MM/DD.json — structured evidence and provenance.
+- intel/phase2-intelligence.json — evidence-linked threat actor, campaign and relationship records.
+- intel/schemas/phase2-intelligence.schema.json — Phase 2 data contract.
 - detection-queries/generated/YYYY/MM/ — candidate IOC KQL only when candidates are extracted.
 
 ## IOC and detection policy
