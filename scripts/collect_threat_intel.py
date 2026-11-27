@@ -1132,8 +1132,8 @@ def main():
         "","## Limitations","",
         "- Broad public-source baseline, not exhaustive global intelligence.",
         "- ThreatFox, OTX, GreyNoise and Shadowserver are not enabled; review credentials and provider terms before integration.",
-        "- All dated threat, advisory, research and business discovery uses a rolling 24-hour UTC window; undated CERT-In index entries are excluded from daily records.
-        "- CISA KEV dateAdded has date-only precision; the daily additions view uses the UTC date containing the rolling 24-hour cutoff, while the full catalogue remains cumulative.
+        "- All dated threat, advisory, research and business discovery uses a rolling 24-hour UTC window; undated CERT-In index entries are excluded from daily records.",
+        "- CISA KEV dateAdded has date-only precision; the daily additions view uses the UTC date containing the rolling 24-hour cutoff, while the full catalogue remains cumulative.",
         "- Google News results are reported leads and require company-announcement or filing verification.",
         "- Feed failures and quiet periods do not mean absence of threats; report timestamps are IST and machine timestamps in JSON are UTC.",
         "",f"Raw evidence: [JSON snapshot](../../../snapshots/{DAY[:4]}/{DAY[5:7]}/{DAY[8:10]}.json)."]
