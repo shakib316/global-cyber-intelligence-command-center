@@ -7,6 +7,7 @@ on:
       - "scripts/collect_threat_intel.py"
       - "scripts/validate_dashboard.py"
       - "scripts/validate_frontend_security.py"
+      - "scripts/validate_analyst_content.py"
       - "intel/**"
       - "reports/**"
       - ".github/workflows/dashboard-quality-watch.yml"
@@ -39,3 +40,5 @@ jobs:
         run: python scripts/validate_dashboard.py
       - name: Validate frontend security and safe rendering
         run: python scripts/validate_frontend_security.py
+      - name: Validate analyst-enriched content and quarantine
+        run: python scripts/validate_analyst_content.py

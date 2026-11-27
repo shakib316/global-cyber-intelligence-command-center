@@ -19,6 +19,7 @@ on:
       - "scripts/**"
       - "index.html"
       - "detection-queries/**"
+      - "intel/**"
       - ".github/workflows/daily-threat-intel.yml"
 
 permissions:
@@ -43,6 +44,8 @@ jobs:
           node-version: "24"
       - name: Validate dashboard, collector, CVE coverage and business classifications
         run: python scripts/validate_dashboard.py
+      - name: Validate analyst-enriched content and quarantine
+        run: python scripts/validate_analyst_content.py
       - name: Validate frontend security and safe rendering
         run: python scripts/validate_frontend_security.py
       - name: Validate detection query metadata and KQL structure
@@ -68,6 +71,8 @@ jobs:
         run: python scripts/collect_threat_intel.py
       - name: Validate newly collected intelligence snapshot and dashboard
         run: python scripts/validate_dashboard.py
+      - name: Validate analyst-enriched content and quarantine
+        run: python scripts/validate_analyst_content.py
       - name: Run static detection query quality checks
         run: python scripts/validate_detection_queries.py
       - name: Commit raw intelligence to isolated staging branch
