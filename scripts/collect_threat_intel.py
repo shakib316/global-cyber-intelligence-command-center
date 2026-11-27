@@ -1061,7 +1061,6 @@ def main():
             if candidate.get("date_ist")==DAY: previous=candidate
         except (OSError,ValueError):
             print("Warning: existing daily snapshot could not be read; refusing to overwrite it."); return 1
-    recentkev=merge_daily_records(previous.get("cisa_kev_added_last_24h_date_precision",[]),recentkev,"kev")
     prior_threat_urls={str(x.get("url","")).split("#",1)[0].rstrip("/") for x in previous.get("items",[]) if x.get("url")}
     prior_business_urls={str(u).split("#",1)[0].rstrip("/") for x in previous.get("business_items",[]) for u in (x.get("related_urls") or [x.get("url","")]) if u}
     enrich_records([x for x in items if str(x.get("url","")).split("#",1)[0].rstrip("/") not in prior_threat_urls])
@@ -1087,6 +1086,7 @@ def main():
     kev_cutoff_date=cutoff.date().isoformat()
     # CISA KEV dateAdded is date-only; this is UTC calendar-day precision, not timestamp precision.
     recentkev=sorted([v for v in vulns if v.get("dateAdded","")>=kev_cutoff_date],key=lambda x:x.get("dateAdded",""),reverse=True)
+    recentkev=merge_daily_records(previous.get("cisa_kev_added_last_8h_date_precision",previous.get("cisa_kev_added_last_24h_date_precision",[])),recentkev,"kev")
     enrich_kev_records(recentkev[:40])
     attach_kev_remediation_evidence(recentkev[:40])
     epss_enrichment=enrich_epss(recentkev[:40]+items)
@@ -1104,7 +1104,7 @@ def main():
     good=sum(x["status"]=="success" for x in health)
     (ROOT/report).parent.mkdir(parents=True,exist_ok=True);(ROOT/snapshot).parent.mkdir(parents=True,exist_ok=True)
     data={"date_utc":DAY_UTC,"date_ist":DAY,"retrieved_at":STAMP,"retrieved_at_ist":STAMP_IST,"window_hours":WINDOW_HOURS,"collection_interval_hours":6,"overlap_hours":2,"collection_runs":int(previous.get("collection_runs",0))+1,"window_start_utc":cutoff.strftime("%Y-%m-%dT%H:%M:%SZ"),"source_health":health,"successful_sources":good,"total_sources":len(health),
-        "errors":errors,"business_items":business_items,"business_feed_count":len(business_items),"business_window_hours":WINDOW_HOURS,"collection_interval_hours":6,"overlap_hours":2,"cisa_kev_catalog_count":len(vulns),"cisa_kev_catalog":vulns,"cisa_kev_added_last_24h_date_precision":recentkev,"cisa_kev_date_precision":"date-only; filtered using the UTC date containing the rolling 24-hour cutoff","undated_certin_entries_excluded":undated_certin_entries_excluded,"items":items,"epss_enrichment":epss_enrichment,"cvss_enrichment":cvss_enrichment,
+        "errors":errors,"business_items":business_items,"business_feed_count":len(business_items),"business_window_hours":WINDOW_HOURS,"cisa_kev_catalog_count":len(vulns),"cisa_kev_catalog":vulns,"cisa_kev_added_last_8h_date_precision":recentkev,"cisa_kev_added_last_24h_date_precision":recentkev,"cisa_kev_date_precision":"date-only; filtered using the UTC date containing the rolling 24-hour cutoff","undated_certin_entries_excluded":undated_certin_entries_excluded,"items":items,"epss_enrichment":epss_enrichment,"cvss_enrichment":cvss_enrichment,
         "ioc_candidates":iocs,"ioc_policy":"Candidate extraction only near explicit IOC wording. Verify against original report and local context.",
         "limitations":["Public feeds are not exhaustive and can fail or change format.","CERT-In is an official index scrape, not an RSS feed; open advisory pages to confirm details.",
         "Authenticated/paid feeds are not configured.","A CVE listing or IOC match is not proof of compromise.","No automatic response actions."]}
