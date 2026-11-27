@@ -19,7 +19,8 @@ A GitHub-hosted cyber-intelligence dashboard and daily collection pipeline for v
 - Critical vulnerability watch, searchable/filterable KEV catalogue, historical daily reports, and date navigation.
 - IOC candidate extraction for analyst verification; candidates are not blocklists.
 - Browser-local watchlist, local asset-to-KEV text matcher, snapshot comparison, and executive digest.
-- KQL, SPL and YARA-L detection-query library with maturity labels and static metadata checks.\n- Evidence-linked threat actor profiles, campaign tracking and relationship records (initially one actor and one campaign; coverage is intentionally evidence-limited).
+- KQL detection-query library with maturity labels and static metadata checks.
+- Evidence-linked threat actor profiles, campaign tracking and relationship records (initially one actor and one campaign; coverage is intentionally evidence-limited).
 - GitHub Actions for daily collection, dashboard validation, query-library checks, and GitHub Pages deployment.
 
 ## Collection and reporting model
@@ -49,7 +50,7 @@ Run `python scripts/validate_phase2_intelligence.py` to check record IDs, eviden
 
 The detection-queries directory contains KQL examples and templates. Query maturity is explicit: Draft, Schema-checked, Syntax-validated, Lab-tested, Production-approved, or Retired.
 
-Current CI validates metadata, IDs, placeholders, and repository hygiene. It does not parse KQL, validate tenant-specific table/column schemas, execute queries, measure false positives, or prove production effectiveness. Treat Draft queries as starting points requiring tenant adaptation and testing. SPL and Google SecOps YARA-L folders currently contain guidance/placeholders rather than a complete equivalent library.
+Current CI validates metadata, IDs, placeholders, and repository hygiene. It does not parse KQL, validate tenant-specific table/column schemas, execute queries, measure false positives, or prove production effectiveness. Treat Draft queries as starting points requiring tenant adaptation and testing. KQL is the sole detection-query standard maintained in this repository.
 
 ## Automation
 
@@ -73,7 +74,6 @@ A successful workflow confirms only the steps in that workflow. Feed-level failu
 ## Architecture and completion status
 
 - Architecture and trust boundaries: ARCHITECTURE.md
-- Phase 1 and Phase 2 completion matrix: PHASE1_PHASE2_STATUS.md
 
 ## Repository layout
 
