@@ -13,7 +13,7 @@ permissions:
 jobs:
   gemini-smoke-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 4
     steps:
       - name: Test Gemini API key and text generation
         env:
@@ -51,11 +51,21 @@ jobs:
           )
 
           try:
-              with urllib.request.urlopen(request, timeout=30) as response:
+              with urllib.request.urlopen(request, timeout=120) as response:
                   result = json.loads(response.read().decode("utf-8"))
-              text = result["candidates"][0]["content"]["parts"][0]["text"].strip()
+              candidates = result.get("candidates") or []
+              if not candidates:
+                  print("FAIL: Gemini returned HTTP 200 but no candidate text.")
+                  print(json.dumps(result)[:2000])
+                  sys.exit(1)
+              parts = candidates[0].get("content", {}).get("parts", [])
+              generated_text = "".join(part.get("text", "") for part in parts).strip()
+              if not generated_text:
+                  print("FAIL: Gemini returned HTTP 200 but the response contained no text.")
+                  print(json.dumps(result)[:2000])
+                  sys.exit(1)
               print("PASS: Gemini API request succeeded (HTTP 200).")
-              print("Gemini response:", text)
+              print("Gemini response:", generated_text)
           except urllib.error.HTTPError as error:
               detail = error.read().decode("utf-8", errors="replace")
               print(f"FAIL: Gemini API returned HTTP {error.code}.")
