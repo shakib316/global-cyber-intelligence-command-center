@@ -84,6 +84,10 @@ jobs:
             STAGING_EXPECTED=""
           fi
           git checkout -B intel-staging origin/main
+          # Restore the previous staged snapshot so later runs merge into one daily file.
+          if [ -n "$STAGING_EXPECTED" ]; then
+            git checkout refs/remotes/origin/intel-staging -- intel/ detection-queries/generated/
+          fi
           git add intel/ detection-queries/generated/
           if git diff --cached --quiet; then
             echo "No intelligence changes to stage."
