@@ -14,8 +14,6 @@ The collector retains dated items from the last 72 hours plus undated CERT-In in
 
 - intel/daily/YYYY/MM/DD.md — readable report and source health.
 - intel/snapshots/YYYY/MM/DD.json — structured evidence and provenance.
-- intel/phase2-intelligence.json — evidence-linked threat actor, campaign and relationship records.
-- intel/schemas/phase2-intelligence.schema.json — Phase 2 data contract.
 - detection-queries/generated/YYYY/MM/ — candidate IOC KQL only when candidates are extracted.
 
 ## IOC and detection policy
