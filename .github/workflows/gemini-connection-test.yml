@@ -13,7 +13,7 @@ permissions:
 jobs:
   gemini-smoke-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 5
     steps:
       - name: Test Gemini API key and text generation
         env:
@@ -23,6 +23,7 @@ jobs:
           import json
           import os
           import sys
+          import time
           import urllib.error
           import urllib.request
 
@@ -40,38 +41,42 @@ jobs:
               }],
               "generationConfig": {"temperature": 0, "maxOutputTokens": 40}
           }
-          request = urllib.request.Request(
-              url,
-              data=json.dumps(payload).encode("utf-8"),
-              headers={
-                  "Content-Type": "application/json",
-                  "x-goog-api-key": api_key
-              },
-              method="POST"
-          )
+          body = json.dumps(payload).encode("utf-8")
 
-          try:
-              with urllib.request.urlopen(request, timeout=120) as response:
-                  result = json.loads(response.read().decode("utf-8"))
-              candidates = result.get("candidates") or []
-              if not candidates:
-                  print("FAIL: Gemini returned HTTP 200 but no candidate text.")
-                  print(json.dumps(result)[:2000])
+          for attempt in range(1, 5):
+              request = urllib.request.Request(
+                  url,
+                  data=body,
+                  headers={
+                      "Content-Type": "application/json",
+                      "x-goog-api-key": api_key
+                  },
+                  method="POST"
+              )
+              try:
+                  with urllib.request.urlopen(request, timeout=90) as response:
+                      result = json.loads(response.read().decode("utf-8"))
+                  candidates = result.get("candidates") or []
+                  parts = candidates[0].get("content", {}).get("parts", []) if candidates else []
+                  generated_text = "".join(part.get("text", "") for part in parts).strip()
+                  if not generated_text:
+                      print("FAIL: Gemini returned HTTP 200 but no generated text.")
+                      print(json.dumps(result)[:2000])
+                      sys.exit(1)
+                  print("PASS: Gemini API request succeeded (HTTP 200).")
+                  print("Gemini response:", generated_text)
+                  sys.exit(0)
+              except urllib.error.HTTPError as error:
+                  detail = error.read().decode("utf-8", errors="replace")
+                  if error.code in (429, 500, 502, 503, 504) and attempt < 4:
+                      delay = 5 * (2 ** (attempt - 1))
+                      print(f"Gemini returned transient HTTP {error.code}; retry {attempt}/3 in {delay}s.")
+                      time.sleep(delay)
+                      continue
+                  print(f"FAIL: Gemini API returned HTTP {error.code}.")
+                  print(detail[:2000])
                   sys.exit(1)
-              parts = candidates[0].get("content", {}).get("parts", [])
-              generated_text = "".join(part.get("text", "") for part in parts).strip()
-              if not generated_text:
-                  print("FAIL: Gemini returned HTTP 200 but the response contained no text.")
-                  print(json.dumps(result)[:2000])
+              except Exception as error:
+                  print(f"FAIL: Gemini test could not complete: {type(error).__name__}: {error}")
                   sys.exit(1)
-              print("PASS: Gemini API request succeeded (HTTP 200).")
-              print("Gemini response:", generated_text)
-          except urllib.error.HTTPError as error:
-              detail = error.read().decode("utf-8", errors="replace")
-              print(f"FAIL: Gemini API returned HTTP {error.code}.")
-              print(detail[:2000])
-              sys.exit(1)
-          except Exception as error:
-              print(f"FAIL: Gemini test could not complete: {type(error).__name__}: {error}")
-              sys.exit(1)
           PY
