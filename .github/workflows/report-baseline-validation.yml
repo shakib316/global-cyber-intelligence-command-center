@@ -50,6 +50,10 @@ jobs:
               git diff --name-only "$BEFORE" "${{ github.sha }}" -- 'reports/**/*.md' > /tmp/changed-reports.txt
             fi
           fi
+          if [ ! -s /tmp/changed-reports.txt ]; then
+            LATEST_REPORT="$(git ls-files "reports/**/*.md" | sort | tail -n 1)"
+            if [ -n "$LATEST_REPORT" ]; then echo "$LATEST_REPORT" > /tmp/changed-reports.txt; fi
+          fi
           cat /tmp/changed-reports.txt
           {
             echo "files<<EOF"
