@@ -1,0 +1,66 @@
+name: Daily Report Baseline Validation
+
+on:
+  push:
+    paths:
+      - "reports/**/*.md"
+      - "scripts/validate_report_baseline.py"
+      - ".github/workflows/report-baseline-validation.yml"
+  pull_request:
+    paths:
+      - "reports/**/*.md"
+      - "scripts/validate_report_baseline.py"
+      - ".github/workflows/report-baseline-validation.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: report-baseline-validation-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Identify changed daily reports
+        id: changed
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="origin/${{ github.event.pull_request.base.ref }}"
+            git fetch origin "${{ github.event.pull_request.base.ref }}"
+            git diff --name-only "${BASE}...HEAD" -- 'reports/**/*.md' > /tmp/changed-reports.txt
+          else
+            BEFORE="${{ github.event.before }}"
+            if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+              git diff-tree --no-commit-id --name-only -r HEAD -- 'reports/**/*.md' > /tmp/changed-reports.txt
+            else
+              git diff --name-only "$BEFORE" "${{ github.sha }}" -- 'reports/**/*.md' > /tmp/changed-reports.txt
+            fi
+          fi
+          cat /tmp/changed-reports.txt
+          {
+            echo "files<<EOF"
+            cat /tmp/changed-reports.txt
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Compare changed reports with 25 November baseline
+        if: steps.changed.outputs.files != ''
+        run: python scripts/validate_report_baseline.py ${{ steps.changed.outputs.files }}
+
+      - name: Report no changed daily reports
+        if: steps.changed.outputs.files == ''
+        run: echo "No daily report markdown files changed; baseline validation not required."
